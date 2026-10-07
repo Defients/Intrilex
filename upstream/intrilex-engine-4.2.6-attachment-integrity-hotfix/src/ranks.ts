@@ -255,6 +255,7 @@ const SOLO_WILD_EFFECT_RANKS: Record<SoloWildCopiedAction["kind"], ("3" | "4" | 
   "four-row-clear": ["4"],
   "total-clear": ["4"],
   "recycle-five": ["5"],
+  "six-dig": ["6"],
   "deep-draw-six-spade": ["6"],
   "topdeck-seven": ["7"],
 };
@@ -323,6 +324,7 @@ export function resolveRankAction(input: EngineState, actorId: PlayerId, action:
           case "four-row-clear": return doFourRowClear(state, actorId, action.sourceCardId, copied.targetPlayerId, copied.row);
           case "total-clear": doTotalClear(state, action.sourceCardId); return null;
           case "recycle-five": return doRecycleFive(state, actorId, action.sourceCardId, copied.rummageCardId);
+          case "six-dig": return fail("RANK_MODE", "Solo Wild six-dig resolves through the sealed private-choice root");
           case "deep-draw-six-spade": return doDeepDrawSixSpade(state, actorId, action.sourceCardId, copied.discardCardIds, copied.keepCardIds);
           case "topdeck-seven": return doTopdeckSeven(state, actorId, action.sourceCardId, copied.handCardId, copied.effectCardId, "GY", copied.scoreCardId);
         }
@@ -359,6 +361,7 @@ export function resolveRankAction(input: EngineState, actorId: PlayerId, action:
           case "four-row-clear": return doFourRowClear(state, actorId, action.sourceCardId, copied.targetPlayerId, copied.row, wildExile);
           case "total-clear": doTotalClear(state, action.sourceCardId, wildExile); return null;
           case "recycle-five": return doRecycleFive(state, actorId, action.sourceCardId, copied.rummageCardId, wildExile);
+          case "six-dig": return fail("RANK_MODE", "Wild Sovereignty six-dig resolves through the sealed private-choice root");
           case "deep-draw-six-spade": return doDeepDrawSixSpade(state, actorId, action.sourceCardId, copied.discardCardIds, copied.keepCardIds, wildExile);
           case "topdeck-seven": return doTopdeckSeven(state, actorId, action.sourceCardId, copied.handCardId, copied.effectCardId, wildExile, copied.scoreCardId);
         }

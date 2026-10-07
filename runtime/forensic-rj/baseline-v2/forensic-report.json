@@ -1,0 +1,310 @@
+{
+  "status": "PASS",
+  "experimentHash": "8fa7be061956e63f3d930a04ec229fbc9917ed863604df013d49d5b2cdec477e",
+  "canonicalResultHash": "1572c3ebe488ce7bac664021fae2731a8e39a9f5bada2d04b478ec7172e321e0",
+  "matchCount": 100,
+  "durationMs": 82258,
+  "rank6": {
+    "rpi": 0.36985910431574226,
+    "confidence": "HIGH",
+    "axes": {
+      "selectionPower": 0.43653127652606316,
+      "victoryPower": 0.3703703703703702,
+      "scorePower": 0.27341856512901397,
+      "boardPower": 0.32446046447962773,
+      "responsePower": 0.4302207130730052,
+      "observedRankValue": 0.39872283757914007
+    },
+    "raw": {
+      "selectionRate": 0.3506787330316742,
+      "victoryRate": 0.5227272727272727,
+      "scorePerSelection": 1.4365591397849462,
+      "boardPerSelection": 0.22688172043010751,
+      "responseRate": 0.2709677419354839,
+      "observedRankValue": -0.006178165453778014,
+      "causalCoverage": 1
+    }
+  },
+  "rankRJ": {
+    "rpi": 0.4820180680342636,
+    "confidence": "MEDIUM",
+    "axes": {
+      "selectionPower": 0.3142776328608694,
+      "victoryPower": 1,
+      "scorePower": 0.2915127347854581,
+      "boardPower": 0.3855728429985856,
+      "responsePower": 0,
+      "observedRankValue": null
+    },
+    "raw": {
+      "selectionRate": 0.3191489361702128,
+      "victoryRate": 0.6,
+      "scorePerSelection": 1.5333333333333334,
+      "boardPerSelection": 0.26666666666666666,
+      "responseRate": 0,
+      "observedRankValue": null,
+      "causalCoverage": 1
+    }
+  },
+  "rank7": {
+    "rpi": 0.6467850922644331,
+    "confidence": "HIGH",
+    "axes": {
+      "selectionPower": 0.47972337854169467,
+      "victoryPower": 0.7802746566791509,
+      "scorePower": 0.5034155660953694,
+      "boardPower": 0.5793180897414939,
+      "responsePower": 0.6622145816803315,
+      "observedRankValue": 0.8729024801670004
+    },
+    "raw": {
+      "selectionRate": 0.3618181818181818,
+      "victoryRate": 0.5730337078651685,
+      "scorePerSelection": 2.666666666666667,
+      "boardPerSelection": 0.3927973199329983,
+      "responseRate": 0.41708542713567837,
+      "observedRankValue": 0.0612453072919129,
+      "causalCoverage": 1
+    }
+  },
+  "rank5": {
+    "rpi": 0.4429160629461806,
+    "confidence": "HIGH",
+    "axes": {
+      "selectionPower": 0,
+      "victoryPower": 0.7283950617283951,
+      "scorePower": 0.3612680785763904,
+      "boardPower": 0.5273637253835275,
+      "responsePower": 0.20762483130904186,
+      "observedRankValue": 0.7670988408636451
+    },
+    "raw": {
+      "selectionRate": 0.23809523809523808,
+      "victoryRate": 0.5666666666666667,
+      "scorePerSelection": 1.9064102564102565,
+      "boardPerSelection": 0.35897435897435903,
+      "responseRate": 0.13076923076923078,
+      "observedRankValue": 0.04620111696768804,
+      "causalCoverage": 1
+    }
+  },
+  "sixVariants": {
+    "6": {
+      "variantDrawCount": 0,
+      "variantAppearanceCount": 0,
+      "variantOpportunityCount": 442,
+      "variantSelectionCount": 155,
+      "variantActivationCount": 0,
+      "variantPlayRate": 0.3506787330316742,
+      "variantConversionRate": 0,
+      "variantSuccessCount": 0,
+      "variantFailureCount": 0,
+      "variantSuccessRate": 0,
+      "variantVictoryContributionCount": 46,
+      "variantDefeatExposureCount": 42,
+      "variantWinRate": 0.5227272727272727,
+      "variantSecuredPointContribution": 258,
+      "variantBoardPresenceContribution": 42,
+      "variantImmediateStateImpact": 0,
+      "variantDelayedValue": 0,
+      "variantTempoImpact": -101,
+      "variantGoalContribution": 0,
+      "variantResourceContribution": -94,
+      "variantImpactObservationCount": 0,
+      "variantImpactStatus": "not-observable",
+      "variantCounterDeclarationCount": 0,
+      "variantScuttleCount": 4,
+      "variantResponsePlayedCount": 0,
+      "variantResponseDeclinedCount": 11,
+      "variantEffectPlayCount": 71,
+      "variantGeneratedEffectCount": 0,
+      "variantAverageValueWhenActivated": 0
+    },
+    "6:normal": {
+      "variantDrawCount": 0,
+      "variantAppearanceCount": 0,
+      "variantOpportunityCount": 333,
+      "variantSelectionCount": 101,
+      "variantActivationCount": 0,
+      "variantPlayRate": 0.3033033033033033,
+      "variantConversionRate": 0,
+      "variantSuccessCount": 0,
+      "variantFailureCount": 0,
+      "variantSuccessRate": 0,
+      "variantVictoryContributionCount": 30,
+      "variantDefeatExposureCount": 26,
+      "variantWinRate": 0.5357142857142857,
+      "variantSecuredPointContribution": 150,
+      "variantBoardPresenceContribution": 23,
+      "variantImmediateStateImpact": 0,
+      "variantDelayedValue": 0,
+      "variantTempoImpact": -61,
+      "variantGoalContribution": 0,
+      "variantResourceContribution": -13,
+      "variantImpactObservationCount": 0,
+      "variantImpactStatus": "not-observable",
+      "variantCounterDeclarationCount": 0,
+      "variantScuttleCount": 2,
+      "variantResponsePlayedCount": 0,
+      "variantResponseDeclinedCount": 5,
+      "variantEffectPlayCount": 39,
+      "variantGeneratedEffectCount": 0,
+      "variantAverageValueWhenActivated": 0
+    },
+    "6:spade": {
+      "variantDrawCount": 0,
+      "variantAppearanceCount": 0,
+      "variantOpportunityCount": 136,
+      "variantSelectionCount": 38,
+      "variantActivationCount": 0,
+      "variantPlayRate": 0.27941176470588236,
+      "variantConversionRate": 0,
+      "variantSuccessCount": 0,
+      "variantFailureCount": 0,
+      "variantSuccessRate": 0,
+      "variantVictoryContributionCount": 15,
+      "variantDefeatExposureCount": 13,
+      "variantWinRate": 0.5357142857142857,
+      "variantSecuredPointContribution": 92,
+      "variantBoardPresenceContribution": 17,
+      "variantImmediateStateImpact": 0,
+      "variantDelayedValue": 0,
+      "variantTempoImpact": -28,
+      "variantGoalContribution": 0,
+      "variantResourceContribution": -23,
+      "variantImpactObservationCount": 0,
+      "variantImpactStatus": "not-observable",
+      "variantCounterDeclarationCount": 0,
+      "variantScuttleCount": 2,
+      "variantResponsePlayedCount": 0,
+      "variantResponseDeclinedCount": 0,
+      "variantEffectPlayCount": 16,
+      "variantGeneratedEffectCount": 0,
+      "variantAverageValueWhenActivated": 0
+    },
+    "6:super:super-six-dig": {
+      "variantDrawCount": 0,
+      "variantAppearanceCount": 0,
+      "variantOpportunityCount": 0,
+      "variantSelectionCount": 0,
+      "variantActivationCount": 0,
+      "variantPlayRate": 0,
+      "variantConversionRate": 0,
+      "variantSuccessCount": 0,
+      "variantFailureCount": 0,
+      "variantSuccessRate": 0,
+      "variantVictoryContributionCount": 0,
+      "variantDefeatExposureCount": 0,
+      "variantWinRate": 0,
+      "variantSecuredPointContribution": 0,
+      "variantBoardPresenceContribution": 0,
+      "variantImmediateStateImpact": 0,
+      "variantDelayedValue": 0,
+      "variantTempoImpact": 0,
+      "variantGoalContribution": 0,
+      "variantResourceContribution": 0,
+      "variantImpactObservationCount": 0,
+      "variantImpactStatus": "not-observable",
+      "variantCounterDeclarationCount": 0,
+      "variantScuttleCount": 0,
+      "variantResponsePlayedCount": 0,
+      "variantResponseDeclinedCount": 0,
+      "variantEffectPlayCount": 0,
+      "variantGeneratedEffectCount": 0,
+      "variantAverageValueWhenActivated": 0
+    },
+    "6:super:all": {
+      "variantDrawCount": 0,
+      "variantAppearanceCount": 0,
+      "variantOpportunityCount": 0,
+      "variantSelectionCount": 0,
+      "variantActivationCount": 0,
+      "variantPlayRate": 0,
+      "variantConversionRate": 0,
+      "variantSuccessCount": 0,
+      "variantFailureCount": 0,
+      "variantSuccessRate": 0,
+      "variantVictoryContributionCount": 0,
+      "variantDefeatExposureCount": 0,
+      "variantWinRate": 0,
+      "variantSecuredPointContribution": 0,
+      "variantBoardPresenceContribution": 0,
+      "variantImmediateStateImpact": 0,
+      "variantDelayedValue": 0,
+      "variantTempoImpact": 0,
+      "variantGoalContribution": 0,
+      "variantResourceContribution": 0,
+      "variantImpactObservationCount": 0,
+      "variantImpactStatus": "not-observable",
+      "variantCounterDeclarationCount": 0,
+      "variantScuttleCount": 0,
+      "variantResponsePlayedCount": 0,
+      "variantResponseDeclinedCount": 0,
+      "variantEffectPlayCount": 0,
+      "variantGeneratedEffectCount": 0,
+      "variantAverageValueWhenActivated": 0
+    }
+  },
+  "ladder": [
+    {
+      "rank": "10",
+      "rpi": 0.8018257171847047
+    },
+    {
+      "rank": "7",
+      "rpi": 0.6467850922644331
+    },
+    {
+      "rank": "BJ",
+      "rpi": 0.5865862109920773
+    },
+    {
+      "rank": "8",
+      "rpi": 0.5708328866925435
+    },
+    {
+      "rank": "9",
+      "rpi": 0.5192248005447582
+    },
+    {
+      "rank": "RJ",
+      "rpi": 0.4820180680342636
+    },
+    {
+      "rank": "K",
+      "rpi": 0.4600532221949787
+    },
+    {
+      "rank": "5",
+      "rpi": 0.4429160629461806
+    },
+    {
+      "rank": "J",
+      "rpi": 0.4231402721894316
+    },
+    {
+      "rank": "6",
+      "rpi": 0.36985910431574226
+    },
+    {
+      "rank": "3",
+      "rpi": 0.32121222785409237
+    },
+    {
+      "rank": "A",
+      "rpi": 0.31889648019353345
+    },
+    {
+      "rank": "2",
+      "rpi": 0.28298597282578697
+    },
+    {
+      "rank": "Q",
+      "rpi": 0.25361807852096335
+    },
+    {
+      "rank": "4",
+      "rpi": 0.23015917928955415
+    }
+  ]
+}

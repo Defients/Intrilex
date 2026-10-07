@@ -66,6 +66,16 @@ const sourceSet=(ids:readonly CardId[])=>new Set(ids).size===ids.length;
 const futureStart=(s:EngineState,p:PlayerId)=>({playerId:p,startSequence:(s.startPhaseSequenceByPlayer[p]??0)+1});
 function color(s:EngineState,id:CardId):"black"|"red"|null{const x=suit(s,id);return x==="♣"||x==="♠"?"black":x==="♦"||x==="♥"?"red":null;}
 function allRank(s:EngineState,ids:readonly CardId[],r:string,p:PlayerId){return sourceSet(ids)&&ids.every(id=>inHand(s,id,p)&&rank(s,id)===r);}
+// 2 Wild Rule (rulebook §2): a 2 may act as the second card for the Super of a
+// rank 3-7 card only when both cards share the same suit. Never creates ⭐2.
+const WILD_SUPER_RANKS=new Set(["3","4","5","6","7"]);
+function superSourcesOk(s:EngineState,ids:readonly CardId[],r:string,p:PlayerId):boolean{
+  if(allRank(s,ids,r,p))return true;
+  if(!WILD_SUPER_RANKS.has(r)||ids.length!==2||!sourceSet(ids))return false;
+  if(!ids.every(id=>inHand(s,id,p)))return false;
+  const rs=ids.filter(id=>rank(s,id)===r),twos=ids.filter(id=>rank(s,id)==="2");
+  return rs.length===1&&twos.length===1&&suit(s,rs[0]!)===suit(s,twos[0]!);
+}
 function exileBoundDestination(s:EngineState,id:CardId){return s.cards[id]?.state.exileBound===true?"EXILE":"GY" as const;}
 function consumeRank10(s:EngineState,p:PlayerId,id:CardId):string|null{if(!inHand(s,id,p)||rank(s,id)!=="10")return "Rank-10 source must be controlled in hand";if(s.players[p]!.limits.rank10PlayedThisFT)return "Rank-10 effect limit already used";s.players[p]!.limits.rank10PlayedThisFT=true;markExileBound(s.cards[id]!);return null;}
 function consumeUltra(s:EngineState,p:PlayerId,ids:readonly CardId[],recipe:"3-black"|"3-red"|"2-black-2-red"):string|null{if(s.players[p]!.limits.ultraPlayedThisFT)return "Ultra limit already used";if(!sourceSet(ids)||!ids.every(id=>inHand(s,id,p)))return "Ultra sources must be distinct controlled hand cards";const cs=ids.map(id=>color(s,id));if(recipe==="3-black"&&(ids.length!==3||cs.some(c=>c!=="black")))return "3 Black requires exactly three black cards";if(recipe==="3-red"&&(ids.length!==3||cs.some(c=>c!=="red")))return "3 Red requires exactly three red cards";if(recipe==="2-black-2-red"&&(ids.length!==4||cs.filter(c=>c==="black").length!==2||cs.filter(c=>c==="red").length!==2))return "2 Black + 2 Red requires two of each color";s.players[p]!.limits.ultraPlayedThisFT=true;return null;}
@@ -117,7 +127,7 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
       if(!allRank(s,a.sourceCardIds,"2",actorId))return fail("SUPER_TWO_SOURCE","⭐2 requires two Twos in hand");const t=s.cards[a.targetCardId];if(!t||t.controllerId===actorId||(!t.zone.endsWith("_PR")&&!t.zone.endsWith("_ER")))return fail("SUPER_TWO_TARGET","⭐2 requires enemy OTT target");const ev=evaluateProtection(s,actorId,t.id,{channel:"effect",shape:"single-target",hostile:true,operation:"control-change",bypasses:["guard","rank-effect-immunity"]});if(!ev.legal)return fail("PROTECTION_BLOCK",`⭐2 blocked by ${ev.blockedBy.join(", ")}`,ev);const row=t.zone.endsWith("_PR")?"PR":"ER";for(const id of a.sourceCardIds)moveCard(s,id,"GY");moveCard(s,t.id,`${actorId}_${row}`,actorId);if(a.disposition==="hold"){applyTap(t,{kind:"start-phase",sourceRef:"⭐2",expiresAt:futureStart(s,actorId)});}else{moveCard(s,t.id,`${actorId}_PR`,actorId);delete t.state.tapped;delete t.state.tapState;}events.push(...revalidateAttachments(s).map(e=>({type:e.type,payload:e.payload as Record<string,unknown>})));events.push({type:"CORE_ADVANCED_SUPER_TWO_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,targetCardId:t.id,disposition:a.disposition}});break;
     }
     case "advanced-super-four-exchange":{
-      if(!allRank(s,a.sourceCardIds,"4",actorId))return fail("SUPER_FOUR_SOURCE","⭐4 requires two Fours in hand");const opp=s.players[a.targetPlayerId];if(!opp||a.targetPlayerId===actorId)return fail("SUPER_FOUR_TARGET","⭐4 requires opponent row");for(const id of a.sourceCardIds)moveCard(s,id,"GY");const own=[...(a.row==="pr"?s.players[actorId]!.pr:s.players[actorId]!.er)],theirs=[...(a.row==="pr"?opp.pr:opp.er)];for(const id of own)moveCard(s,id,`${a.targetPlayerId}_${a.row.toUpperCase()}` as import("./types.js").ZoneName,a.targetPlayerId);for(const id of theirs)moveCard(s,id,`${actorId}_${a.row.toUpperCase()}` as import("./types.js").ZoneName,actorId);for(const id of [...own,...theirs])if(rank(s,id)!=="9")applyAegis(s.cards[id]!,"Super-Four-exchange",futureStart(s,s.cards[id]!.controllerId));events.push(...revalidateAttachments(s).map(e=>({type:e.type,payload:e.payload as Record<string,unknown>})));events.push({type:"CORE_ADVANCED_SUPER_FOUR_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,row:a.row,targetPlayerId:a.targetPlayerId,actorCards:own,opponentCards:theirs}});break;
+      if(!superSourcesOk(s,a.sourceCardIds,"4",actorId))return fail("SUPER_FOUR_SOURCE","⭐4 requires two Fours, or a Four plus a same-suit Two, in hand");const opp=s.players[a.targetPlayerId];if(!opp||a.targetPlayerId===actorId)return fail("SUPER_FOUR_TARGET","⭐4 requires opponent row");for(const id of a.sourceCardIds)moveCard(s,id,"GY");const own=[...(a.row==="pr"?s.players[actorId]!.pr:s.players[actorId]!.er)],theirs=[...(a.row==="pr"?opp.pr:opp.er)];for(const id of own)moveCard(s,id,`${a.targetPlayerId}_${a.row.toUpperCase()}` as import("./types.js").ZoneName,a.targetPlayerId);for(const id of theirs)moveCard(s,id,`${actorId}_${a.row.toUpperCase()}` as import("./types.js").ZoneName,actorId);for(const id of [...own,...theirs])if(rank(s,id)!=="9")applyAegis(s.cards[id]!,"Super-Four-exchange",futureStart(s,s.cards[id]!.controllerId));events.push(...revalidateAttachments(s).map(e=>({type:e.type,payload:e.payload as Record<string,unknown>})));events.push({type:"CORE_ADVANCED_SUPER_FOUR_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,row:a.row,targetPlayerId:a.targetPlayerId,actorCards:own,opponentCards:theirs}});break;
     }
     case "advanced-super-eight-scuttle":{
       if(!allRank(s,a.sourceCardIds,"8",actorId))return fail("SUPER_EIGHT_SOURCE","⭐8 requires two Eights in hand");const t=s.cards[a.targetCardId];if(!t||t.controllerId===actorId||!t.zone.endsWith("_PR")||hasAegis(t))return fail("SUPER_EIGHT_TARGET","⭐8 requires enemy non-Aegis PR target");for(const id of a.sourceCardIds)moveCard(s,id,"GY");moveCard(s,t.id,"GY");events.push(...revalidateAttachments(s).map(e=>({type:e.type,payload:e.payload as Record<string,unknown>})));events.push({type:"CORE_ADVANCED_SUPER_EIGHT_RESOLVED",payload:{sourceCardIds:a.sourceCardIds,targetCardId:t.id}});break;
@@ -127,7 +137,7 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
     }
     case "advanced-super-three-raid":{
       if(!isUnrestricted(input))return fail("UNRESTRICTED_REQUIRED","⭐3 Raid requires the unrestricted Core authority profile");
-      if(!allRank(s,a.sourceCardIds,"3",actorId))return fail("SUPER_THREE_SOURCE","⭐3 requires two Threes in hand");
+      if(!superSourcesOk(s,a.sourceCardIds,"3",actorId))return fail("SUPER_THREE_SOURCE","⭐3 requires two Threes, or a Three plus a same-suit Two, in hand");
       const opp=s.players[a.targetPlayerId];if(!opp||a.targetPlayerId===actorId)return fail("SUPER_THREE_TARGET","⭐3 requires an opponent");
       for(const id of a.takeCardIds){if(!opp.hand.includes(id))return fail("SUPER_THREE_TARGET","⭐3 raid target must be in opponent's hand");}
       for(const id of a.sourceCardIds)moveCard(s,id,"GY");
@@ -137,7 +147,7 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
     }
     case "advanced-super-five-recycle":{
       if(!isUnrestricted(input))return fail("UNRESTRICTED_REQUIRED","⭐5 Recycle requires the unrestricted Core authority profile");
-      if(!allRank(s,a.sourceCardIds,"5",actorId))return fail("SUPER_FIVE_SOURCE","⭐5 requires two Fives in hand");
+      if(!superSourcesOk(s,a.sourceCardIds,"5",actorId))return fail("SUPER_FIVE_SOURCE","⭐5 requires two Fives, or a Five plus a same-suit Two, in hand");
       for(const id of a.sourceCardIds)moveCard(s,id,"GY");
       const milled=s.zones.dp.splice(0,Math.min(4,s.zones.dp.length));
       for(const id of milled){s.cards[id]!.zone="VOID";moveCard(s,id,"GY");}
@@ -150,7 +160,7 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
     }
     case "advanced-super-six-dig":{
       if(!isUnrestricted(input))return fail("UNRESTRICTED_REQUIRED","⭐6 Dig requires the unrestricted Core authority profile");
-      if(!allRank(s,a.sourceCardIds,"6",actorId))return fail("SUPER_SIX_SOURCE","⭐6 requires two Sixes in hand");
+      if(!superSourcesOk(s,a.sourceCardIds,"6",actorId))return fail("SUPER_SIX_SOURCE","⭐6 requires two Sixes, or a Six plus a same-suit Two, in hand");
       if(a.discardCardIds.length<1||a.discardCardIds.length>2||a.discardCardIds.some(id=>a.sourceCardIds.includes(id)||!inHand(s,id,actorId)))return fail("SUPER_SIX_COST","⭐6 requires one or two other hand cards to discard");
       const maxKeep=a.discardCardIds.length===1?5:6;
       if(a.keepCardIds.length>maxKeep)return fail("SUPER_SIX_CHOICE",`⭐6 may keep at most ${maxKeep}`);
@@ -166,7 +176,7 @@ export function resolveAdvancedCoreAction(input:EngineState,actorId:PlayerId,a:C
     }
     case "advanced-super-seven-topdeck":{
       if(!isUnrestricted(input))return fail("UNRESTRICTED_REQUIRED","⭐7 Topdeck requires the unrestricted Core authority profile");
-      if(!allRank(s,a.sourceCardIds,"7",actorId))return fail("SUPER_SEVEN_SOURCE","⭐7 requires two Sevens in hand");
+      if(!superSourcesOk(s,a.sourceCardIds,"7",actorId))return fail("SUPER_SEVEN_SOURCE","⭐7 requires two Sevens, or a Seven plus a same-suit Two, in hand");
       for(const id of a.sourceCardIds)moveCard(s,id,"GY");
       const revealed=s.zones.dp.splice(0,Math.min(2,s.zones.dp.length));
       for(const id of revealed)s.cards[id]!.zone="VOID";
@@ -394,6 +404,15 @@ export interface AdvancedCoreCandidate {
   featureVector: Record<string, number | boolean | string | null>;
 }
 function combos<T>(v:readonly T[],n:number):T[][]{const out:T[][]=[];const walk=(i:number,c:T[])=>{if(c.length===n){out.push([...c]);return;}for(let x=i;x<v.length;x++){c.push(v[x]!);walk(x+1,c);c.pop();}};walk(0,[]);return out;}
+// 2 Wild Rule (rulebook §2): for Super ranks 3-7, legal source pairs are
+// [R,R] and [R, same-suit 2]. The Two participates as the wild second card —
+// the resolved Super is ⭐R, never ⭐2 (which requires two actual Twos).
+function wildSuperPairs(s:EngineState,p:{hand:readonly CardId[]},r:string):CardId[][]{
+  const rankIds=p.hand.filter(id=>rank(s,id)===r).sort();
+  const out=combos(rankIds,2);
+  if(WILD_SUPER_RANKS.has(r))for(const twoId of p.hand.filter(id=>rank(s,id)==="2").sort())for(const rId of rankIds)if(suit(s,twoId)===suit(s,rId))out.push([rId,twoId]);
+  return out;
+}
 export function enumerateAdvancedCoreCandidates(state:Readonly<EngineState>,actorId:PlayerId):AdvancedCoreCandidate[]{
   if(!isAdvancedProfile(state))return [];
   const s=state as EngineState,p=s.players[actorId];if(!p)return [];
@@ -445,7 +464,7 @@ export function enumerateAdvancedCoreCandidates(state:Readonly<EngineState>,acto
       }
     }
   }
-  for(const pair of combos(byRank("4"),2))for(const oid of opponents)for(const row of ["pr","er"] as const)out.push({family:"super",mode:`four-exchange-${row}`,timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-four-exchange",sourceCardIds:pair as [CardId,CardId],targetPlayerId:oid,row},featureVector:{structural:true,row}});
+  for(const pair of wildSuperPairs(s,p,"4"))for(const oid of opponents)for(const row of ["pr","er"] as const)out.push({family:"super",mode:`four-exchange-${row}`,timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-four-exchange",sourceCardIds:pair as [CardId,CardId],targetPlayerId:oid,row},featureVector:{structural:true,row}});
   for (const pair of combos(byRank("8"), 2)) {
     for (const oid of opponents) {
       for (const targetId of s.players[oid]!.pr) {
@@ -498,16 +517,16 @@ export function enumerateAdvancedCoreCandidates(state:Readonly<EngineState>,acto
   if(s.phase==="Start"&&(snap?.rank5 ?? 0)>=5&&!used["5"]&&p.hand.length>0&&s.zones.dp.length)for(const discardId of p.hand)out.push({family:"voltage",mode:"five-refine",timingClass:"INSTANT",sourceCardIds:[discardId],targetCardIds:[],advanced:{kind:"advanced-voltage-five",branch:"refine",discardCardId:discardId},featureVector:{rank:5,refine:true,draw:1}});
   // Hidden Super branches (unrestricted only)
   if(isUnrestricted(s)){
-    for(const pair of combos(byRank("3"),2))for(const oid of opponents){
+    for(const pair of wildSuperPairs(s,p,"3"))for(const oid of opponents){
       const opp=s.players[oid]!;
       for(const takeId of opp.hand.slice(0,6))out.push({family:"super",mode:"three-raid",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[takeId],advanced:{kind:"advanced-super-three-raid",sourceCardIds:pair as [CardId,CardId],targetPlayerId:oid,takeCardIds:[takeId]},featureVector:{raid:true,handTheft:true}});
     }
-    for(const pair of combos(byRank("5"),2))out.push({family:"super",mode:"five-recycle",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-five-recycle",sourceCardIds:pair as [CardId,CardId],rummageCardIds:[]},featureVector:{recycle:true,mill:4}});
-    for(const pair of combos(byRank("6"),2)){
+    for(const pair of wildSuperPairs(s,p,"5"))out.push({family:"super",mode:"five-recycle",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-five-recycle",sourceCardIds:pair as [CardId,CardId],rummageCardIds:[]},featureVector:{recycle:true,mill:4}});
+    for(const pair of wildSuperPairs(s,p,"6")){
       const otherHand=[...p.hand].filter(id=>!pair.includes(id));
       for(const d1 of otherHand)out.push({family:"super",mode:"six-dig",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[d1],advanced:{kind:"advanced-super-six-dig",sourceCardIds:pair as [CardId,CardId],discardCardIds:[d1],keepCardIds:[]},featureVector:{dig:true,draw:8}});
     }
-    for(const pair of combos(byRank("7"),2))out.push({family:"super",mode:"seven-topdeck",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-seven-topdeck",sourceCardIds:pair as [CardId,CardId],handCardIds:[],effectCardIds:[],scoreCardIds:[]},featureVector:{topdeck:true,reveal:2}});
+    for(const pair of wildSuperPairs(s,p,"7"))out.push({family:"super",mode:"seven-topdeck",timingClass:"ACTION",sourceCardIds:[...pair],targetCardIds:[],advanced:{kind:"advanced-super-seven-topdeck",sourceCardIds:pair as [CardId,CardId],handCardIds:[],effectCardIds:[],scoreCardIds:[]},featureVector:{topdeck:true,reveal:2}});
     // 10♦ Mimic — per rulebook v4.3.1 §10♦:
     //   Solo: mimic one ⭐ effect from ranks 3-7
     //   Paired with any 2: mimic one ⭐ effect from ranks 3-8, Ace, Jack

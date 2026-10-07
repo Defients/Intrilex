@@ -2367,11 +2367,11 @@ test("v4.1.1 Interrupt hotfix removes generic skips while preserving printed exc
 test("4.2.3 Core Private Choice profile declares sealed ordinary hidden-choice scope", async () => {
   const { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, coreAuthorityCapabilities } = await import("../src/index.js");
   assert.equal(CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.engineVersion, "4.2.3");
-  assert.deepEqual([...CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.supportedChoices], ["3-present-take","3-force-discard","5-recycle-rummage","6-deep-dig","7-topdeck-casting","9-anchor-discard"]);
+  assert.deepEqual([...CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.supportedChoices], ["2-quick-discard","3-present-take","3-force-discard","5-recycle-rummage","6-deep-dig","7-topdeck-casting","9-anchor-discard"]);
   const capability = coreAuthorityCapabilities().find((entry) => entry.profileId === CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id);
   assert.equal(capability?.status, "SUPPORTED");
   assert.ok(capability?.reasonCodes.includes("SEALED_PRIVATE_CHOICE_TOKENS"));
-  for (const blocked of ["two-quick","six-swap-peek-quick","supers","rank10","voltage","ultras"]) assert.ok(CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.excludedSystems.includes(blocked as any));
+  for (const blocked of ["six-swap-peek-quick","supers","rank10","voltage","ultras"]) assert.ok(CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.excludedSystems.includes(blocked as any));
 });
 
 test("4.2.3 every enumerated private-choice root is engine-accepted and command-vault isolated", async () => {
@@ -2790,4 +2790,209 @@ test("Solo Wild Copy: 2♥ copying 4♥ row-clear clears opponent PR cards", asy
   assert.equal(r.state.cards[by["2♥"]!]?.zone, "GY");
   assert.equal(r.state.cards[by["3♣"]!]?.zone, "GY");
   assert.equal(r.state.cards[by["6♦"]!]?.zone, "GY");
+});
+
+// === 2 Quick — Score + Discard (rulebook §2) ================================
+
+function driveTwoQuickResolution(engine: IntrilexEngine, state: any, prefix: string, maxIter = 24): any {
+  for (let i = 0; i < maxIter && state.stack.length > 0; i++) {
+    if ((state.metadata.coreAuthority as any)?.privateChoice) return state;
+    if (state.priority?.open === true) {
+      const r = engine.execute(state, { id: `${prefix}-DECLINE-${i}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: state.priority.order[state.priority.index]!, action: { kind: "core-pass-priority", semantic: "DECLINE_RESPONSE" } } as any);
+      assert.equal(r.accepted, true); state = r.state;
+    } else {
+      const r = engine.execute(state, { id: `${prefix}-RESOLVE-${i}`, type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: state.activePlayerId, action: { kind: "core-resolve-response-top" } } as any);
+      assert.equal(r.accepted, true); state = r.state;
+    }
+  }
+  return state;
+}
+
+test("2 Quick declares on own Full Turn, scores the 2 into PR, and opens the opponent discard rider", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_UNRESTRICTED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_UNRESTRICTED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42901 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["2♣"]!, "P1_HAND", "P1");
+  moveCard(state, by["9♣"]!, "P2_HAND", "P2");
+  d = advanceCoreToDecision(state);
+  const quick = d.legalActionFrame!.actions.find((entry) => entry.family === "quick" && entry.mode === "two-score-discard");
+  assert.ok(quick, "2 Quick must be enumerated during the controller's own Full Turn");
+  const declared = engine.execute(d.state, quick.command);
+  assert.equal(declared.accepted, true);
+  assert.equal(declared.events.some((e) => e.type === "CORE_TWO_QUICK_DECLARED"), true);
+  state = driveTwoQuickResolution(engine, declared.state, "TQ1");
+  // The 2 scores into the controller's PR for 2 points — not sent to GY.
+  assert.equal(state.cards[by["2♣"]!]!.zone, "P1_PR");
+  assert.equal(state.cards[by["2♣"]!]!.state.pointValue, 2);
+  const choice = (state.metadata.coreAuthority as any)?.privateChoice;
+  assert.ok(choice, "opponent discard choice must open after scoring");
+  assert.equal(choice.kind, "core-two-quick-discard");
+  assert.equal(choice.chooserId, "P2");
+  const submitted = engine.execute(state, { id: "TQ1-SUBMIT", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P2", action: { kind: "core-submit-private-choice", token: choice.token, submission: { kind: "core-two-quick-discard", selectedCardIds: [by["9♣"]!] } } } as any);
+  assert.equal(submitted.accepted, true);
+  assert.equal(submitted.events.some((e) => e.type === "CORE_TWO_QUICK_DISCARD_RESOLVED"), true);
+  assert.equal(submitted.state.cards[by["9♣"]!]!.zone, "GY");
+});
+
+test("2 Quick once-per-Full-Turn is consumed at resolution only; a second pending declaration is refused", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_UNRESTRICTED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_UNRESTRICTED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42902 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["2♣"]!, "P1_HAND", "P1");
+  moveCard(state, by["2♦"]!, "P1_HAND", "P1");
+  moveCard(state, by["9♣"]!, "P2_HAND", "P2");
+  d = advanceCoreToDecision(state);
+  const quick = d.legalActionFrame!.actions.find((entry) => entry.mode === "two-score-discard" && entry.sourceCardIds.includes(by["2♣"]!))!;
+  const declared = engine.execute(d.state, quick.command);
+  assert.equal(declared.accepted, true);
+  // P2 declines → priority returns to P1 with the first 2 Quick still pending.
+  let d2 = advanceCoreToDecision(declared.state);
+  const decline = d2.legalActionFrame!.actions.find((entry) => entry.family === "response-decline")!;
+  state = engine.execute(d2.state, decline.command).state;
+  // Second 2 Quick while the first is pending → refused.
+  const pending = engine.execute(state, { id: "TQ2-PENDING", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P1", action: { kind: "core-declare-two-quick", sourceCardId: by["2♦"]!, targetPlayerId: "P2" } } as any);
+  assert.equal(pending.accepted, false);
+  assert.equal(pending.error?.code, "CORE_QUICK_LIMIT");
+  state = driveTwoQuickResolution(engine, state, "TQ2");
+  const choice = (state.metadata.coreAuthority as any)?.privateChoice;
+  assert.equal(choice?.kind, "core-two-quick-discard");
+  const submitted = engine.execute(state, { id: "TQ2-SUBMIT", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P2", action: { kind: "core-submit-private-choice", token: choice.token, submission: { kind: "core-two-quick-discard", selectedCardIds: [by["9♣"]!] } } } as any);
+  state = submitted.state;
+  // Resolved this FT → another 2 Quick declaration in the same FT is refused.
+  if (state.stack.length === 0 && state.phase === "Action" && state.activePlayerId === "P1") {
+    const again = engine.execute(state, { id: "TQ2-AGAIN", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P1", action: { kind: "core-declare-two-quick", sourceCardId: by["2♦"]!, targetPlayerId: "P2" } } as any);
+    assert.equal(again.accepted, false);
+    assert.equal(again.error?.code, "CORE_QUICK_LIMIT");
+  }
+});
+
+test("a countered 2 Quick does not consume the resolved-use limit", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_UNRESTRICTED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_UNRESTRICTED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42903 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["2♣"]!, "P1_HAND", "P1");
+  moveCard(state, by["2♦"]!, "P1_HAND", "P1");
+  moveCard(state, by["A♣"]!, "P2_HAND", "P2");
+  moveCard(state, by["9♣"]!, "P2_HAND", "P2");
+  d = advanceCoreToDecision(state);
+  const quick = d.legalActionFrame!.actions.find((entry) => entry.mode === "two-score-discard" && entry.sourceCardIds.includes(by["2♣"]!))!;
+  const declared = engine.execute(d.state, quick.command);
+  assert.equal(declared.accepted, true);
+  // P2 counters the pending 2 Quick with a base Ace.
+  d = advanceCoreToDecision(declared.state);
+  const counter = d.legalActionFrame!.actions.find((entry) => entry.family === "counter" && entry.sourceCardIds.includes(by["A♣"]!));
+  assert.ok(counter, "P2 must be able to counter the pending 2 Quick");
+  const countered = engine.execute(d.state, counter.command);
+  assert.equal(countered.accepted, true);
+  state = driveTwoQuickResolution(engine, countered.state, "TQ3");
+  // The countered source 2 must NOT be scored, and the per-FT limit is free.
+  assert.equal(state.cards[by["2♣"]!]!.zone === "P1_PR", false);
+  const runtime = (state.metadata.coreAuthority as any);
+  assert.equal(runtime?.twoQuickResolvedFullTurnByPlayer?.P1 === state.fullTurnSequence, false);
+});
+
+test("2 Quick resolves and consumes the limit even when the target opponent has no discardable cards", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_UNRESTRICTED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_UNRESTRICTED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42904 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["2♣"]!, "P1_HAND", "P1");
+  for (const id of [...state.players.P2!.hand]) moveCard(state, id, "GY");
+  d = advanceCoreToDecision(state);
+  const quick = d.legalActionFrame!.actions.find((entry) => entry.mode === "two-score-discard" && entry.sourceCardIds.includes(by["2♣"]!))!;
+  const declared = engine.execute(d.state, quick.command);
+  assert.equal(declared.accepted, true);
+  state = driveTwoQuickResolution(engine, declared.state, "TQ4");
+  assert.equal(state.cards[by["2♣"]!]!.zone, "P1_PR");
+  assert.equal(state.cards[by["2♣"]!]!.state.pointValue, 2);
+  assert.equal((state.metadata.coreAuthority as any)?.privateChoice ?? null, null);
+  const runtime = (state.metadata.coreAuthority as any);
+  assert.equal(runtime?.twoQuickResolvedFullTurnByPlayer?.P1, state.fullTurnSequence);
+});
+
+test("2 Quick requires the private-choice layer — fail-closed on the response profile", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_RESPONSE_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_RESPONSE_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42905 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["2♣"]!, "P1_HAND", "P1");
+  d = advanceCoreToDecision(state);
+  assert.equal(d.legalActionFrame!.actions.some((entry) => entry.mode === "two-score-discard"), false);
+  const r = engine.execute(state, { id: "TQ5", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P1", action: { kind: "core-declare-two-quick", sourceCardId: by["2♣"]!, targetPlayerId: "P2" } } as any);
+  assert.equal(r.accepted, false);
+});
+
+// === Wild-catalyst Supers: 2 + same-suit rank 3-7 (rulebook §2) ==============
+
+test("wild-catalyst Super: a same-suit 2 plus a rank card validates as that rank's Super", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_UNRESTRICTED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_UNRESTRICTED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42910 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["5♥"]!, "P1_HAND", "P1");
+  moveCard(state, by["2♥"]!, "P1_HAND", "P1");
+  const accepted = engine.execute(state, { id: "WC5-OK", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P1", action: { kind: "core-resolve-advanced", advanced: { kind: "advanced-super-five-recycle", sourceCardIds: [by["5♥"]!, by["2♥"]!], rummageCardIds: [] } } } as any);
+  assert.equal(accepted.accepted, true);
+  const resolved = accepted.events.find((e) => e.type === "CORE_ADVANCED_SUPER_FIVE_RECYCLE_RESOLVED");
+  assert.ok(resolved, "the wild-catalyst ⭐5 must resolve");
+  assert.deepEqual([...(resolved.payload as any).sourceCardIds].sort(), [by["2♥"]!, by["5♥"]!].sort());
+});
+
+test("wild-catalyst Super rejects mismatched suits and never produces ⭐2", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_UNRESTRICTED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_UNRESTRICTED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42911 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["5♥"]!, "P1_HAND", "P1");
+  moveCard(state, by["2♣"]!, "P1_HAND", "P1");
+  const mismatched = engine.execute(state, { id: "WC5-SUIT", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P1", action: { kind: "core-resolve-advanced", advanced: { kind: "advanced-super-five-recycle", sourceCardIds: [by["5♥"]!, by["2♣"]!], rummageCardIds: [] } } } as any);
+  assert.equal(mismatched.accepted, false);
+  assert.equal(mismatched.error?.code, "SUPER_FIVE_SOURCE");
+  // A single 2 plus a non-2 rank is never ⭐2 — Commandeer still requires two actual Twos.
+  const notStarTwo = engine.execute(state, { id: "WC5-NOT-STAR2", type: "RESOLVE_CORE_AUTHORITY_ACTION", actorId: "P1", action: { kind: "core-resolve-advanced", advanced: { kind: "advanced-super-two", sourceCardIds: [by["5♥"]!, by["2♣"]!], targetCardId: by["5♥"]!, disposition: "hold" } } } as any);
+  assert.equal(notStarTwo.accepted, false);
+});
+
+test("wild-catalyst Super pairs are enumerated in legal-action frames", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_UNRESTRICTED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_UNRESTRICTED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42912 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["3♦"]!, "P1_HAND", "P1");
+  moveCard(state, by["2♦"]!, "P1_HAND", "P1");
+  moveCard(state, by["9♣"]!, "P2_HAND", "P2");
+  d = advanceCoreToDecision(state);
+  const wildPair = d.legalActionFrame!.actions.find((entry) => entry.family === "super" && entry.mode === "three-raid" && entry.sourceCardIds.includes(by["2♦"]!) && entry.sourceCardIds.includes(by["3♦"]!));
+  assert.ok(wildPair, "3♦ + 2♦ must enumerate a ⭐3 wild-catalyst pair");
+  assert.equal(engine.execute(d.state, wildPair.command).accepted, true);
+});
+
+test("solo-wild Rank 6 Base dig is legal for a non-Spade 2 through the sealed choice root", async () => {
+  const { advanceCoreToDecision, createCoreMatchState, CORE_UNRESTRICTED_AUTHORITY_PROFILE, moveCard } = await import("../src/index.js");
+  const engine = new IntrilexEngine();
+  let state = createCoreMatchState({ profileId: CORE_UNRESTRICTED_AUTHORITY_PROFILE.id, playerIds: ["P1", "P2"], seatOrder: ["P1", "P2"], enabledModules: [], seed: 42913 });
+  let d = advanceCoreToDecision(state); state = engine.execute(d.state, d.legalActionFrame!.actions.find((entry) => entry.mode === "enter-action")!.command).state;
+  const by = Object.fromEntries(Object.values(state.cards).map((card) => [card.identity, card.id]));
+  moveCard(state, by["2♥"]!, "P1_HAND", "P1");
+  d = advanceCoreToDecision(state);
+  const dig = d.legalActionFrame!.actions.find((entry) => entry.family === "solo-wild" && entry.mode === "six-dig-♥");
+  assert.ok(dig, "2♥ must enumerate the Rank 6 Base dig solo-wild copy");
+  const r = engine.execute(d.state, dig.command);
+  assert.equal(r.accepted, true);
+  // The solo-wild copy declares as a stack item; drive responses to resolution.
+  state = driveTwoQuickResolution(engine, r.state, "SW6");
+  const choice = (state.metadata.coreAuthority as any)?.privateChoice;
+  assert.ok(choice, "solo-wild six-dig must open the sealed dig choice");
+  assert.equal(choice.sourceCardId, by["2♥"], "the choice source must remain the wild 2");
 });

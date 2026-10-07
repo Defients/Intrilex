@@ -409,7 +409,7 @@ export async function executeInformationStudy({informationSet,plan,event,checkpo
     try{
       const applied=authority.execute(structuredClone(world.frame.state),world.frame.resolve(actionId));if(!applied.accepted)throw new Error('INFORMATION_ACTION_REJECTED');
       row.disposition=v2?subjectDispositionV2(applied.state,informationSet.actorId,handles,action,plan.requestedSubject):disposition(world.frame.state,applied.state,subjectIds,action);
-      const result=await continueMatch({initialState:applied.state,seed,policyIds:frozen.map(c=>c.policyId),policyStates:frozen.map(c=>c.schemaVersion===2?c.policyState:null),profileId:plan.rulesProfile,decisionLimit:plan.decisionLimit,orchestrationCommandLimit:256,telemetryEnabled:false});
+      const result=await continueMatch({initialState:applied.state,seed,policyIds:frozen.map(c=>c.policyId),policyStates:frozen.map(c=>c.schemaVersion===2?c.policyState:null),adaptiveConfigs:frozen.map(c=>c.schemaVersion===2?(c.adaptive??null):null),profileId:plan.rulesProfile,decisionLimit:plan.decisionLimit,orchestrationCommandLimit:256,telemetryEnabled:false});
       const s=result.summary??result;row={...row,winner:s.winner,terminationReason:s.terminationReason,finalStateHash:s.finalStateHash,clean:CLEAN_ENDINGS.includes(s.terminationReason)&&['P1','P2','DRAW'].includes(s.winner)};
       row.score=row.clean?(s.winner==='DRAW'?.5:s.winner===event.actorId?1:0):null;
     }catch(error){row.error=error.message;}

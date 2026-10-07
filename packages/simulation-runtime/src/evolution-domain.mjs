@@ -2,6 +2,7 @@ import { hashCanonical } from '@intrilex/shared';
 import { WEIGHTED_POLICY_ID, validatePolicyState, baselinePolicyState } from '../../policies/src/weighted-heuristic.mjs';
 import { validateStrategicTelemetry } from './strategic-telemetry.mjs';
 import { validateDecisionEvent } from './strategy-contracts.mjs';
+import { validateAdaptiveConfig, validateAdaptiveTelemetry } from './adaptive-strategy.mjs';
 
 /** @typedef {{schemaVersion:number, fingerprint:string, engineHash:string, policyImplementationHash:string, runtimeHash:string, engineVersion:string, rulesVersion:string}} RulesetFingerprint */
 /** @typedef {{checkpointId:string, agentId:string, lineageId:string, generation:number, parentCheckpointId:string|null, policyId:string, policyVersion:string, policyState:object, identity:RulesetFingerprint, createdAt:string}} AgentCheckpoint */
@@ -101,18 +102,25 @@ function checkpointSemanticBody(checkpoint) {
   const {checkpointId:_checkpointId,createdAt:_createdAt,tags:_tags,protected:_protectedFlag,favorite:_favorite,...semantic}=checkpoint;
   return semantic;
 }
-export function createTrainableCheckpoint({identity,agentId,lineageId=agentId,parent=null,policyState,trainingConfiguration=null,mutation=null,experimentId=null,createdAt=new Date().toISOString()}) {
+export function createTrainableCheckpoint({identity,agentId,lineageId=agentId,parent=null,policyState,trainingConfiguration=null,mutation=null,experimentId=null,adaptive,createdAt=new Date().toISOString()}) {
   assertIdentity(identity); validatePolicyState(policyState);
   if(parent) { validateCheckpoint(parent,identity); if(parent.schemaVersion!==2 || parent.lineageId!==lineageId) fail('INVALID_CHECKPOINT_PARENT'); }
+  // Adaptive strategy is a checkpoint-level strategic layer, not part of the
+  // genome digest. Descendants inherit it by default so training lineages keep
+  // the parent's posture rules until an authored edit or a future optimizer
+  // mutates them; an explicit null clears it.
+  const adaptiveConfig = adaptive === undefined ? (parent?.adaptive ?? null) : adaptive;
   const body={schemaVersion:2,policyId:WEIGHTED_POLICY_ID,policyVersion:'1.0.0',policyImplementationHash:identity.policyImplementationHash,
     agentId,lineageId,parentCheckpointId:parent?.checkpointId ?? null,generation:parent ? parent.generation+1 : 0,
     policyState:structuredClone(policyState),trainingConfiguration:structuredClone(trainingConfiguration),mutation:structuredClone(mutation),
+    ...(adaptiveConfig != null ? { adaptive: structuredClone(validateAdaptiveConfig(adaptiveConfig)) } : {}),
     experimentId,identity:structuredClone(identity),createdAt,tags:parent ? ['experimental'] : ['baseline'],protected:!parent,favorite:false};
   const checkpoint={...body,checkpointId:`CP2-${hashCanonical(checkpointSemanticBody(body))}`};
   return validateTrainableCheckpoint(checkpoint,identity);
 }
 function validateTrainableCheckpoint(checkpoint,identity) {
   assertIdentity(checkpoint.identity,identity); validatePolicyState(checkpoint.policyState);
+  if(checkpoint.adaptive!=null)validateAdaptiveConfig(checkpoint.adaptive);
   if(checkpoint.policyId!==WEIGHTED_POLICY_ID || checkpoint.policyVersion!=='1.0.0' || checkpoint.policyImplementationHash!==identity.policyImplementationHash || checkpoint.checkpointId!==`CP2-${hashCanonical(checkpointSemanticBody(checkpoint))}`) fail('INCOMPATIBLE_CHECKPOINT');
   if(typeof checkpoint.agentId!=='string' || !checkpoint.agentId || typeof checkpoint.lineageId!=='string' || !checkpoint.lineageId || !Number.isInteger(checkpoint.generation) || checkpoint.generation<0 || !Number.isFinite(Date.parse(checkpoint.createdAt)) || (checkpoint.generation===0 ? checkpoint.parentCheckpointId!==null : !/^CP2-[a-f0-9]{64}$/.test(checkpoint.parentCheckpointId))) fail('INVALID_CHECKPOINT_METADATA');
   return deepFreeze(structuredClone(checkpoint));
@@ -160,6 +168,7 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     ...(summary.exhaustedPassActionCount!=null?{exhaustedPassActionCount:summary.exhaustedPassActionCount}:{}) ,
     ...(summary.triggerCount!=null?{triggerCount:summary.triggerCount}:{}) ,
     ...(summary.strategicTelemetry ? {strategicTelemetry:summary.strategicTelemetry} : {}),
+    ...(summary.adaptiveTelemetry ? {adaptiveTelemetry:jsonClean(summary.adaptiveTelemetry)} : {}),
     ...(summary.comboTelemetry ? {comboTelemetry:jsonClean(summary.comboTelemetry)} : {}),
     ...(summary.strategyDecisions ? {strategyDecisions:summary.strategyDecisions} : {}),
     ...(summary.terminalEvidence ? {terminalEvidence:summary.terminalEvidence} : {}),
@@ -190,6 +199,7 @@ export function validateRecord(record, run) {
   if (record.decisions > LAB_LIMITS.decisions || record.commandCount > LAB_LIMITS.commands) fail('RESULT_BUDGET_EXCEEDED');
   if (record.terminationReason !== 'WORKER_FAULT' && !['initialStateHash', 'actionSequenceHash', 'finalStateHash'].every(k => digest(record[k]))) fail('INVALID_RESULT_EVIDENCE');
   if(record.strategicTelemetry!==undefined)validateStrategicTelemetry(record.strategicTelemetry,record.decisions);
+  if(record.adaptiveTelemetry!==undefined)validateAdaptiveTelemetry(record.adaptiveTelemetry);
   if(record.strategyDecisions!==undefined) {
     if(!Array.isArray(record.strategyDecisions) || record.strategyDecisions.length!==record.decisions) fail('STRATEGY_DECISION_COUNT_MISMATCH');
     for(const [i,event] of record.strategyDecisions.entries()) {

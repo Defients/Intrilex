@@ -1,0 +1,8875 @@
+{
+  "experimentHash": "8fa7be061956e63f3d930a04ec229fbc9917ed863604df013d49d5b2cdec477e",
+  "profileId": "core-advanced-authority",
+  "matchCount": 100,
+  "rolloutCount": 16,
+  "counterfactualNote": "paired continuation rollouts from identical post-action state; only the focal decision differs; seeds shared across arms",
+  "modeRows": [
+    {
+      "matchId": "M-1bf76059b3e86070f410",
+      "ordinal": 5,
+      "decisionIndex": 5,
+      "actorId": "P2",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "4",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 23,
+      "fullTurn": 2,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 10,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 17,
+        "points": 9,
+        "counterValue": 5.5,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 3,
+        "points": 2,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 1
+      },
+      "dp": 40,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "swap-bar:face-down",
+          "r": "4",
+          "s": 260
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "A",
+          "s": -190
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": -190
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-1bf76059b3e86070f410",
+      "ordinal": 5,
+      "decisionIndex": 7,
+      "actorId": "P2",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "rank10",
+      "selectedMode": "diamond-mimic-row-exchange-pr",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 23,
+      "fullTurn": 2,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 10,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 18.5,
+        "points": 9,
+        "counterValue": 5.5,
+        "recipeValue": 1.5,
+        "flex": 2.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 3,
+        "points": 2,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 1
+      },
+      "dp": 40,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "rank10:diamond-mimic-row-exchange-pr",
+          "r": "10",
+          "s": 3410
+        },
+        {
+          "f": "ultra:three-black-bounce-top",
+          "r": "8",
+          "s": 2838
+        },
+        {
+          "f": "ultra:three-black-bounce-top",
+          "r": "8",
+          "s": 2578
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 2415
+        },
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1640
+        },
+        {
+          "f": "ultra:2-black-2-red-rummage",
+          "r": "10",
+          "s": 1630
+        },
+        {
+          "f": "ultra:2-black-2-red-rummage",
+          "r": "10",
+          "s": 1628
+        },
+        {
+          "f": "ultra:2-black-2-red-rummage",
+          "r": "10",
+          "s": 1578
+        },
+        {
+          "f": "score:points",
+          "r": "8",
+          "s": 1572
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "A",
+          "s": 1436
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-1bf76059b3e86070f410",
+      "ordinal": 5,
+      "decisionIndex": 11,
+      "actorId": "P2",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "8",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 23,
+      "fullTurn": 4,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 0,
+        "P2": 10
+      },
+      "ownQ": {
+        "total": 17.5,
+        "points": 9,
+        "counterValue": 5.5,
+        "recipeValue": 1.5,
+        "flex": 1.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 3,
+        "points": 2,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 2
+      },
+      "dp": 40,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "8",
+          "s": 1572
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "quick:eight-aegis-field",
+          "r": "8",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "A",
+          "s": 1436
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 1402
+        },
+        {
+          "f": "ultra:three-black-purge-anchor-bounce",
+          "r": "8",
+          "s": 1344
+        },
+        {
+          "f": "ultra:three-black-bounce-top",
+          "r": "8",
+          "s": 1344
+        },
+        {
+          "f": "ultra:three-black-ace",
+          "r": "8",
+          "s": 1308
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1120
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 1085
+        },
+        {
+          "f": "ultra:three-black-bounce-top",
+          "r": "8",
+          "s": 1084
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-1bf76059b3e86070f410",
+      "ordinal": 5,
+      "decisionIndex": 17,
+      "actorId": "P2",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "5",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 23,
+      "fullTurn": 6,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 0,
+        "P2": 18
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 40,
+      "gy": 3,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 10158
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 10158
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 10090
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 1085
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1070
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1000
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 960
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 890
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 565
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 320
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": -140
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": -140
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-1b8ddabb2fbe2d2e9766",
+      "ordinal": 6,
+      "decisionIndex": 119,
+      "actorId": "P2",
+      "policyId": "control-tactical",
+      "selectedFamily": "effect-red-joker",
+      "selectedMode": "hand-swap",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": true,
+      "outcome": "win",
+      "scoreMargin": 20,
+      "fullTurn": 38,
+      "totalTurns": 39,
+      "secured": {
+        "P1": 2,
+        "P2": 12
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 5.5,
+        "points": 3,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 2
+      },
+      "dp": 3,
+      "gy": 41,
+      "postQuality": {
+        "ownAfter": {
+          "total": 5.5,
+          "points": 3,
+          "counterValue": 1.5,
+          "recipeValue": 0,
+          "flex": 1,
+          "count": 2
+        },
+        "oppAfter": {
+          "total": 0,
+          "points": 0,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 0,
+          "count": 0
+        },
+        "dpAfter": 3,
+        "gyAfter": 42,
+        "responded": false
+      },
+      "scores": [
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1710
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1410
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1380
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1290
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1211
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1195
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-d5cf43da2cca5b2f434f",
+      "ordinal": 8,
+      "decisionIndex": 45,
+      "actorId": "P1",
+      "policyId": "random-legal",
+      "selectedFamily": "effect-four",
+      "selectedMode": "clear-er",
+      "selectedRank": "4",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 22,
+      "fullTurn": 17,
+      "totalTurns": 21,
+      "secured": {
+        "P1": 16,
+        "P2": 5
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 37,
+      "gy": 9,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "score:points",
+          "r": "4",
+          "s": 786
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 784
+        },
+        {
+          "f": "effect-private-choice:natural-four",
+          "r": "4",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 760
+        },
+        {
+          "f": "effect-four:clear-er",
+          "r": "4",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-four:clear-pr",
+          "r": "4",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-d5cf43da2cca5b2f434f",
+      "ordinal": 8,
+      "decisionIndex": 50,
+      "actorId": "P1",
+      "policyId": "random-legal",
+      "selectedFamily": "effect-red-joker",
+      "selectedMode": "hand-swap",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": true,
+      "outcome": "loss",
+      "scoreMargin": 22,
+      "fullTurn": 19,
+      "totalTurns": 21,
+      "secured": {
+        "P1": 0,
+        "P2": 5
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 37,
+      "gy": 13,
+      "postQuality": {
+        "ownAfter": {
+          "total": 0,
+          "points": 0,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 0,
+          "count": 0
+        },
+        "oppAfter": {
+          "total": 0,
+          "points": 0,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 0,
+          "count": 0
+        },
+        "dpAfter": 37,
+        "gyAfter": 14,
+        "responded": false
+      },
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 784
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 760
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-75163a5f7bea7b5b1f54",
+      "ordinal": 14,
+      "decisionIndex": 83,
+      "actorId": "P2",
+      "policyId": "hybrix-support",
+      "selectedFamily": "anchor",
+      "selectedMode": "king",
+      "selectedRank": "K",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 28,
+      "fullTurn": 30,
+      "totalTurns": 39,
+      "secured": {
+        "P1": 0,
+        "P2": 14
+      },
+      "ownQ": {
+        "total": 17.5,
+        "points": 13,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 1,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 1
+      },
+      "dp": 20,
+      "gy": 26,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "anchor:king",
+          "r": "K",
+          "s": 935
+        },
+        {
+          "f": "score:points",
+          "r": "K",
+          "s": 922
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-75163a5f7bea7b5b1f54",
+      "ordinal": 14,
+      "decisionIndex": 87,
+      "actorId": "P2",
+      "policyId": "hybrix-support",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 28,
+      "fullTurn": 32,
+      "totalTurns": 39,
+      "secured": {
+        "P1": 10,
+        "P2": 14
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 20,
+      "gy": 26,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1065
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-c2d7ac654cf6fa83830b",
+      "ordinal": 15,
+      "decisionIndex": 124,
+      "actorId": "P2",
+      "policyId": "hybrix-tank",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 6,
+      "fullTurn": 46,
+      "totalTurns": 61,
+      "secured": {
+        "P1": 12,
+        "P2": 10
+      },
+      "ownQ": {
+        "total": 9,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 1.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 1
+      },
+      "dp": 13,
+      "gy": 30,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1009
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 888
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 888
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:seven-topdeck",
+          "r": "7",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:seven-topdeck",
+          "r": "7",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 510
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-ea5605e6823cf15701c5",
+      "ordinal": 18,
+      "decisionIndex": 0,
+      "actorId": "P1",
+      "policyId": "score-rush",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 7,
+      "fullTurn": 1,
+      "totalTurns": 4,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 34.5,
+        "points": 24,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 6,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": 590
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": 590
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": 590
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": 590
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ea5605e6823cf15701c5",
+      "ordinal": 18,
+      "decisionIndex": 1,
+      "actorId": "P1",
+      "policyId": "score-rush",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 7,
+      "fullTurn": 1,
+      "totalTurns": 4,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 34.5,
+        "points": 24,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 6,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1640
+        },
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1640
+        },
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "10",
+          "s": 1563
+        },
+        {
+          "f": "rank10:heart-tempo",
+          "r": "10",
+          "s": 1525
+        },
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 1504
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 1410
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 1402
+        },
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 1338
+        },
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 1320
+        },
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 1284
+        },
+        {
+          "f": "rank10:club-foundation",
+          "r": "10",
+          "s": 1230
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ea5605e6823cf15701c5",
+      "ordinal": 18,
+      "decisionIndex": 5,
+      "actorId": "P1",
+      "policyId": "score-rush",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 7,
+      "fullTurn": 3,
+      "totalTurns": 4,
+      "secured": {
+        "P1": 10,
+        "P2": 11
+      },
+      "ownQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 17,
+        "points": 10,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 4,
+        "count": 5
+      },
+      "dp": 39,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": 590
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": 590
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ea5605e6823cf15701c5",
+      "ordinal": 18,
+      "decisionIndex": 6,
+      "actorId": "P1",
+      "policyId": "score-rush",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 7,
+      "fullTurn": 3,
+      "totalTurns": 4,
+      "secured": {
+        "P1": 10,
+        "P2": 11
+      },
+      "ownQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 17,
+        "points": 10,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 4,
+        "count": 5
+      },
+      "dp": 39,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1640
+        },
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 1504
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 1402
+        },
+        {
+          "f": "rank10:club-foundation",
+          "r": "10",
+          "s": 1230
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 1002
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 980
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 910
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ea5605e6823cf15701c5",
+      "ordinal": 18,
+      "decisionIndex": 12,
+      "actorId": "P1",
+      "policyId": "score-rush",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 7,
+      "fullTurn": 5,
+      "totalTurns": 4,
+      "secured": {
+        "P1": 20,
+        "P2": 19
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 37,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ea5605e6823cf15701c5",
+      "ordinal": 18,
+      "decisionIndex": 13,
+      "actorId": "P1",
+      "policyId": "score-rush",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "6",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 7,
+      "fullTurn": 5,
+      "totalTurns": 4,
+      "secured": {
+        "P1": 20,
+        "P2": 19
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 37,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 6204
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 6170
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 6102
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 1002
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 980
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 980
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 910
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 897
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "6",
+          "s": 890
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 848
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 760
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-105cc67103dbca1477fb",
+      "ordinal": 23,
+      "decisionIndex": 49,
+      "actorId": "P2",
+      "policyId": "control-tactical",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 0,
+      "fullTurn": 20,
+      "totalTurns": 54,
+      "secured": {
+        "P1": 15,
+        "P2": 2
+      },
+      "ownQ": {
+        "total": 14.5,
+        "points": 9,
+        "counterValue": 4,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 29,
+      "gy": 15,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1709
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1626
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1290
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1195
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1190
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 1130
+        },
+        {
+          "f": "anchor:ace",
+          "r": "A",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 935
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        },
+        {
+          "f": "score:points",
+          "r": "A",
+          "s": 698
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 500
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 150
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "ordinal": 34,
+      "decisionIndex": 67,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "draw",
+      "selectedMode": "top",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 2,
+      "fullTurn": 23,
+      "totalTurns": 55,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 12.5,
+        "points": 7,
+        "counterValue": 5.5,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 23,
+      "gy": 25,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 796
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "ordinal": 34,
+      "decisionIndex": 72,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "anchor",
+      "selectedMode": "king",
+      "selectedRank": "K",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 2,
+      "fullTurn": 25,
+      "totalTurns": 55,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 17.5,
+        "points": 13,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 25,
+        "points": 15,
+        "counterValue": 8.5,
+        "recipeValue": 1.5,
+        "flex": 0,
+        "count": 3
+      },
+      "dp": 21,
+      "gy": 25,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "anchor:king",
+          "r": "K",
+          "s": 1225
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 796
+        },
+        {
+          "f": "score:points",
+          "r": "K",
+          "s": 746
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "ordinal": 34,
+      "decisionIndex": 77,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "draw",
+      "selectedMode": "top",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 2,
+      "fullTurn": 27,
+      "totalTurns": 55,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 15.5,
+        "points": 7,
+        "counterValue": 7,
+        "recipeValue": 1.5,
+        "flex": 0,
+        "count": 3
+      },
+      "dp": 21,
+      "gy": 27,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "ordinal": 34,
+      "decisionIndex": 82,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 2,
+      "fullTurn": 29,
+      "totalTurns": 55,
+      "secured": {
+        "P1": 0,
+        "P2": 8
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 20,
+      "gy": 27,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1269
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 1050
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 710
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-1011c764e8b424cf09eb",
+      "ordinal": 35,
+      "decisionIndex": 2,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "effect-red-joker",
+      "selectedMode": "self-reset",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": true,
+      "outcome": "loss",
+      "scoreMargin": 21,
+      "fullTurn": 1,
+      "totalTurns": 7,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 20.5,
+        "points": 8,
+        "counterValue": 8,
+        "recipeValue": 2.5,
+        "flex": 2,
+        "count": 6
+      },
+      "dp": 38,
+      "gy": 4,
+      "postQuality": {
+        "ownAfter": {
+          "total": 1,
+          "points": 0,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 1,
+          "count": 2
+        },
+        "oppAfter": {
+          "total": 2,
+          "points": 0,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 2,
+          "count": 4
+        },
+        "dpAfter": 38,
+        "gyAfter": 7,
+        "responded": true
+      },
+      "scores": [
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-private-choice:natural-four",
+          "r": "4",
+          "s": 1050
+        },
+        {
+          "f": "effect-four:clear-er",
+          "r": "4",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-four:clear-pr",
+          "r": "4",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "anchor-private-choice:nine",
+          "r": "9",
+          "s": 1050
+        },
+        {
+          "f": "instant:nine-goal-shift-5",
+          "r": "9",
+          "s": 900
+        },
+        {
+          "f": "instant:nine-goal-shift-3",
+          "r": "9",
+          "s": 900
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 796
+        },
+        {
+          "f": "score:points",
+          "r": "9",
+          "s": 758
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ed123e23841332200c85",
+      "ordinal": 43,
+      "decisionIndex": 2,
+      "actorId": "P2",
+      "policyId": "control-conversion-tactical",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "3",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 29,
+      "fullTurn": 2,
+      "totalTurns": 7,
+      "secured": {
+        "P1": 2,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 20.5,
+        "points": 9,
+        "counterValue": 4,
+        "recipeValue": 4,
+        "flex": 3.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 13,
+        "points": 11,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2,
+        "count": 2
+      },
+      "dp": 40,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 335
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 335
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "A",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "A",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": -302.5
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": -302.5
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": -302.5
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ed123e23841332200c85",
+      "ordinal": 43,
+      "decisionIndex": 4,
+      "actorId": "P2",
+      "policyId": "control-conversion-tactical",
+      "selectedFamily": "rank10",
+      "selectedMode": "club-foundation-bonus",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 29,
+      "fullTurn": 2,
+      "totalTurns": 7,
+      "secured": {
+        "P1": 2,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 23,
+        "points": 9,
+        "counterValue": 4,
+        "recipeValue": 6.5,
+        "flex": 3.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 13,
+        "points": 11,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2,
+        "count": 2
+      },
+      "dp": 40,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 2226
+        },
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 1801
+        },
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 1801
+        },
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 1801
+        },
+        {
+          "f": "rank10:club-foundation-bonus",
+          "r": "10",
+          "s": 1716
+        },
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1612.7
+        },
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1612.7
+        },
+        {
+          "f": "rank10:club-foundation",
+          "r": "10",
+          "s": 1454
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1157.9
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1154.9
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1154.9
+        },
+        {
+          "f": "score:points",
+          "r": "A",
+          "s": 1058.3
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ed123e23841332200c85",
+      "ordinal": 43,
+      "decisionIndex": 7,
+      "actorId": "P2",
+      "policyId": "control-conversion-tactical",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 29,
+      "fullTurn": 4,
+      "totalTurns": 7,
+      "secured": {
+        "P1": 2,
+        "P2": 10
+      },
+      "ownQ": {
+        "total": 18.5,
+        "points": 9,
+        "counterValue": 4,
+        "recipeValue": 4,
+        "flex": 1.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 1
+      },
+      "dp": 40,
+      "gy": 3,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 72.5
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 72.5
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "A",
+          "s": -40
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-c6f2df43037417ae933d",
+      "ordinal": 45,
+      "decisionIndex": 87,
+      "actorId": "P2",
+      "policyId": "hybrix-defender",
+      "selectedFamily": "effect-red-joker",
+      "selectedMode": "shuffle-reset",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": true,
+      "outcome": "win",
+      "scoreMargin": 17,
+      "fullTurn": 32,
+      "totalTurns": 33,
+      "secured": {
+        "P1": 8,
+        "P2": 19
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 18,
+      "gy": 26,
+      "postQuality": {
+        "ownAfter": {
+          "total": 4,
+          "points": 4,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 0,
+          "count": 3
+        },
+        "oppAfter": {
+          "total": 0,
+          "points": 0,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 0,
+          "count": 0
+        },
+        "dpAfter": 42,
+        "gyAfter": 1,
+        "responded": false
+      },
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 6204
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 6170
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 910
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 841
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 841
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "6",
+          "s": 834
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 8,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 27,
+      "fullTurn": 3,
+      "totalTurns": 15,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 23,
+        "points": 12,
+        "counterValue": 7,
+        "recipeValue": 4,
+        "flex": 0,
+        "count": 5
+      },
+      "dp": 36,
+      "gy": 7,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": 590
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 9,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "rank10",
+      "selectedMode": "heart-tempo",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 27,
+      "fullTurn": 3,
+      "totalTurns": 15,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 23,
+        "points": 12,
+        "counterValue": 7,
+        "recipeValue": 4,
+        "flex": 0,
+        "count": 5
+      },
+      "dp": 36,
+      "gy": 7,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "rank10:heart-tempo",
+          "r": "10",
+          "s": 1605
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 1050
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 770
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 686
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 15,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "effect-three",
+      "selectedMode": "bounce-top",
+      "selectedRank": "3",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 27,
+      "fullTurn": 5,
+      "totalTurns": 15,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 7,
+        "points": 3,
+        "counterValue": 1.5,
+        "recipeValue": 2.5,
+        "flex": 0,
+        "count": 3
+      },
+      "dp": 36,
+      "gy": 9,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 1226
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 772
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 21,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "draw",
+      "selectedMode": "top",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 27,
+      "fullTurn": 7,
+      "totalTurns": 15,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 26.5,
+        "points": 19,
+        "counterValue": 3,
+        "recipeValue": 2.5,
+        "flex": 2,
+        "count": 4
+      },
+      "dp": 34,
+      "gy": 12,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 772
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 25,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "effect-ace",
+      "selectedMode": "purge-anchor-bounce",
+      "selectedRank": "A",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 27,
+      "fullTurn": 9,
+      "totalTurns": 15,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 14.5,
+        "points": 9,
+        "counterValue": 4,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 15.5,
+        "points": 11,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 2,
+        "count": 3
+      },
+      "dp": 33,
+      "gy": 12,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "effect-ace:purge-anchor-bounce",
+          "r": "A",
+          "s": 1226
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "anchor:ace",
+          "r": "A",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 772
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        },
+        {
+          "f": "score:points",
+          "r": "A",
+          "s": 698
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 29,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "anchor",
+      "selectedMode": "king",
+      "selectedRank": "K",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 27,
+      "fullTurn": 11,
+      "totalTurns": 15,
+      "secured": {
+        "P1": 0,
+        "P2": 11
+      },
+      "ownQ": {
+        "total": 17.5,
+        "points": 13,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 2.5,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 33,
+      "gy": 13,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "anchor:king",
+          "r": "K",
+          "s": 1225
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 772
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        },
+        {
+          "f": "score:points",
+          "r": "K",
+          "s": 746
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 34,
+      "actorId": "P1",
+      "policyId": "control",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 27,
+      "fullTurn": 13,
+      "totalTurns": 15,
+      "secured": {
+        "P1": 0,
+        "P2": 18
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 2,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2,
+        "count": 2
+      },
+      "dp": 32,
+      "gy": 13,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1241
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 772
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 710
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-bbc346d896606590e3e6",
+      "ordinal": 48,
+      "decisionIndex": 29,
+      "actorId": "P2",
+      "policyId": "hybrix-support",
+      "selectedFamily": "effect-red-joker",
+      "selectedMode": "hand-swap",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": true,
+      "outcome": "win",
+      "scoreMargin": 20,
+      "fullTurn": 10,
+      "totalTurns": 29,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 1,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 3
+      },
+      "dp": 36,
+      "gy": 9,
+      "postQuality": {
+        "ownAfter": {
+          "total": 1,
+          "points": 0,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 1,
+          "count": 3
+        },
+        "oppAfter": {
+          "total": 0,
+          "points": 0,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 0,
+          "count": 1
+        },
+        "dpAfter": 36,
+        "gyAfter": 10,
+        "responded": false
+      },
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 752
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-0ed06d7836b1e9f31a1b",
+      "ordinal": 49,
+      "decisionIndex": 7,
+      "actorId": "P2",
+      "policyId": "hybrix-tank",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 30,
+      "fullTurn": 2,
+      "totalTurns": 26,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 18.5,
+        "points": 5,
+        "counterValue": 3,
+        "recipeValue": 5,
+        "flex": 5.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 4.5,
+        "points": 3,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 40,
+      "gy": 3,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 614
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 614
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 614
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 614
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": 596
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": 596
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": 596
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": 596
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-21f76fbae3a2850d8b89",
+      "ordinal": 54,
+      "decisionIndex": 24,
+      "actorId": "P2",
+      "policyId": "tempo",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 8,
+      "fullTurn": 8,
+      "totalTurns": 10,
+      "secured": {
+        "P1": 20,
+        "P2": 13
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 35,
+      "gy": 8,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "voltage:four-guess-6-♥",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-6-♣",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-K-♠",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-9-♠",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-7-♣",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-9-♣",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-5-♣",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-8-♦",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-7-♦",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-8-♠",
+          "r": null,
+          "s": 1410
+        },
+        {
+          "f": "voltage:four-guess-J-♣",
+          "r": null,
+          "s": 1410
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-21f76fbae3a2850d8b89",
+      "ordinal": 54,
+      "decisionIndex": 25,
+      "actorId": "P2",
+      "policyId": "tempo",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 8,
+      "fullTurn": 8,
+      "totalTurns": 10,
+      "secured": {
+        "P1": 20,
+        "P2": 13
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 35,
+      "gy": 8,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1065
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 869
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 841
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 808
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-a7032ff5f7e18ca6706f",
+      "ordinal": 55,
+      "decisionIndex": 4,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 9,
+      "fullTurn": 1,
+      "totalTurns": 2,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 23.5,
+        "points": 12,
+        "counterValue": 3,
+        "recipeValue": 6.5,
+        "flex": 2,
+        "count": 6
+      },
+      "dp": 36,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1380
+        },
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1380
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 832
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 620
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-a7032ff5f7e18ca6706f",
+      "ordinal": 55,
+      "decisionIndex": 5,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 9,
+      "fullTurn": 1,
+      "totalTurns": 2,
+      "secured": {
+        "P1": 10,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 23.5,
+        "points": 12,
+        "counterValue": 3,
+        "recipeValue": 6.5,
+        "flex": 2,
+        "count": 6
+      },
+      "dp": 36,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1380
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 832
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-a7032ff5f7e18ca6706f",
+      "ordinal": 55,
+      "decisionIndex": 10,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 9,
+      "fullTurn": 3,
+      "totalTurns": 2,
+      "secured": {
+        "P1": 20,
+        "P2": 16
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 34,
+      "gy": 10,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-a7032ff5f7e18ca6706f",
+      "ordinal": 55,
+      "decisionIndex": 11,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 9,
+      "fullTurn": 3,
+      "totalTurns": 2,
+      "secured": {
+        "P1": 20,
+        "P2": 16
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 34,
+      "gy": 10,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 6170
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1009
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1009
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 832
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-62fdff6544b65b495076",
+      "ordinal": 58,
+      "decisionIndex": 4,
+      "actorId": "P2",
+      "policyId": "tempo-tactical",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "4",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 2,
+      "totalTurns": 11,
+      "secured": {
+        "P1": 3,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 21,
+        "points": 13,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 3.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 1
+      },
+      "dp": 38,
+      "gy": 4,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "swap-bar:face-down",
+          "r": "4",
+          "s": 260
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 260
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 260
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "4",
+          "s": 260
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "K",
+          "s": -190
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-62fdff6544b65b495076",
+      "ordinal": 58,
+      "decisionIndex": 6,
+      "actorId": "P2",
+      "policyId": "tempo-tactical",
+      "selectedFamily": "anchor",
+      "selectedMode": "king",
+      "selectedRank": "K",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 2,
+      "totalTurns": 11,
+      "secured": {
+        "P1": 3,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 23.5,
+        "points": 13,
+        "counterValue": 4.5,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 1
+      },
+      "dp": 38,
+      "gy": 4,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "anchor:king",
+          "r": "K",
+          "s": 1530
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "8",
+          "s": 1412
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "8",
+          "s": 1385.5
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "8",
+          "s": 1385.5
+        },
+        {
+          "f": "score:points",
+          "r": "8",
+          "s": 1312
+        },
+        {
+          "f": "score:points",
+          "r": "K",
+          "s": 1312
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "K",
+          "s": 1236.5
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "K",
+          "s": 1236.5
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1210
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "K",
+          "s": 1210
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "K",
+          "s": 1210
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-62fdff6544b65b495076",
+      "ordinal": 58,
+      "decisionIndex": 10,
+      "actorId": "P2",
+      "policyId": "tempo-tactical",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "2",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 4,
+      "totalTurns": 11,
+      "secured": {
+        "P1": 3,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 38,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 260
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 72.5
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 72.5
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-62fdff6544b65b495076",
+      "ordinal": 58,
+      "decisionIndex": 12,
+      "actorId": "P2",
+      "policyId": "tempo-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "5",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 4,
+      "totalTurns": 11,
+      "secured": {
+        "P1": 3,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 38,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1210
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1210
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1140
+        },
+        {
+          "f": "quick:two-score-discard",
+          "r": "2",
+          "s": 1120
+        },
+        {
+          "f": "score:points",
+          "r": "2",
+          "s": 1108
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 1100
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1034
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "5",
+          "s": 1034
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "5",
+          "s": 1034
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-62fdff6544b65b495076",
+      "ordinal": 58,
+      "decisionIndex": 15,
+      "actorId": "P2",
+      "policyId": "tempo-tactical",
+      "selectedFamily": "voltage",
+      "selectedMode": "five-gy-bottom",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 6,
+      "totalTurns": 11,
+      "secured": {
+        "P1": 3,
+        "P2": 5
+      },
+      "ownQ": {
+        "total": 8.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 3.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 2
+      },
+      "dp": 36,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "voltage:five-gy-bottom",
+          "r": null,
+          "s": 600
+        },
+        {
+          "f": "voltage:five-refine",
+          "r": "2",
+          "s": 260
+        },
+        {
+          "f": "voltage:five-refine",
+          "r": "5",
+          "s": 185
+        },
+        {
+          "f": "voltage:five-refine",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-62fdff6544b65b495076",
+      "ordinal": 58,
+      "decisionIndex": 17,
+      "actorId": "P2",
+      "policyId": "tempo-tactical",
+      "selectedFamily": "effect-red-joker",
+      "selectedMode": "opponent-attack",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": true,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 6,
+      "totalTurns": 11,
+      "secured": {
+        "P1": 3,
+        "P2": 5
+      },
+      "ownQ": {
+        "total": 13,
+        "points": 8,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 3.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 2
+      },
+      "dp": 36,
+      "gy": 5,
+      "postQuality": {
+        "ownAfter": {
+          "total": 4.5,
+          "points": 3,
+          "counterValue": 1.5,
+          "recipeValue": 0,
+          "flex": 0,
+          "count": 2
+        },
+        "oppAfter": {
+          "total": 3,
+          "points": 2,
+          "counterValue": 0,
+          "recipeValue": 0,
+          "flex": 1,
+          "count": 1
+        },
+        "dpAfter": 36,
+        "gyAfter": 5,
+        "responded": true
+      },
+      "scores": [
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1260
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1210
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1200
+        },
+        {
+          "f": "score:points",
+          "r": "J",
+          "s": 1142
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1140
+        },
+        {
+          "f": "quick:two-score-discard",
+          "r": "2",
+          "s": 1120
+        },
+        {
+          "f": "score:points",
+          "r": "2",
+          "s": 1108
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 1100
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "J",
+          "s": 1048
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1034
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "5",
+          "s": 1034
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-c0b6a96902862a0be848",
+      "ordinal": 60,
+      "decisionIndex": 0,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 3,
+      "fullTurn": 1,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 20,
+        "points": 11,
+        "counterValue": 3,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 32.5,
+        "points": 24,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 4,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 614
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "2",
+          "s": 614
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-c0b6a96902862a0be848",
+      "ordinal": 60,
+      "decisionIndex": 1,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "super",
+      "selectedMode": "jack-tempo",
+      "selectedRank": "J",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 3,
+      "fullTurn": 1,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 20,
+        "points": 11,
+        "counterValue": 3,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 32.5,
+        "points": 24,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 4,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "super:jack-tempo",
+          "r": "J",
+          "s": 1522
+        },
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 1244
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "score:points",
+          "r": "J",
+          "s": 1142
+        },
+        {
+          "f": "score:points",
+          "r": "J",
+          "s": 1142
+        },
+        {
+          "f": "quick:two-score-discard",
+          "r": "2",
+          "s": 1120
+        },
+        {
+          "f": "score:points",
+          "r": "2",
+          "s": 1108
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 900
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-c0b6a96902862a0be848",
+      "ordinal": 60,
+      "decisionIndex": 8,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "6",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 3,
+      "fullTurn": 1,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 2,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 31.5,
+        "points": 21,
+        "counterValue": 3,
+        "recipeValue": 2.5,
+        "flex": 5,
+        "count": 5
+      },
+      "dp": 39,
+      "gy": 4,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 1244
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-c0b6a96902862a0be848",
+      "ordinal": 60,
+      "decisionIndex": 10,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 3,
+      "fullTurn": 1,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 8,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 31.5,
+        "points": 21,
+        "counterValue": 3,
+        "recipeValue": 2.5,
+        "flex": 5,
+        "count": 5
+      },
+      "dp": 39,
+      "gy": 4,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-896cd21d0090f74b8ff3",
+      "ordinal": 62,
+      "decisionIndex": 22,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "5",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 24,
+      "fullTurn": 9,
+      "totalTurns": 22,
+      "secured": {
+        "P1": 9,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 38,
+      "gy": 9,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1210
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 784
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-896cd21d0090f74b8ff3",
+      "ordinal": 62,
+      "decisionIndex": 25,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 24,
+      "fullTurn": 11,
+      "totalTurns": 22,
+      "secured": {
+        "P1": 14,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 15.5,
+        "points": 11,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 36,
+      "gy": 9,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "voltage:five-refine",
+          "r": "RJ",
+          "s": 1450
+        },
+        {
+          "f": "voltage:five-gy-bottom",
+          "r": null,
+          "s": 1420
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-896cd21d0090f74b8ff3",
+      "ordinal": 62,
+      "decisionIndex": 26,
+      "actorId": "P1",
+      "policyId": "tempo",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 24,
+      "fullTurn": 11,
+      "totalTurns": 22,
+      "secured": {
+        "P1": 14,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 15.5,
+        "points": 11,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 36,
+      "gy": 9,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1210
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 784
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-085bb75a598193bb3415",
+      "ordinal": 64,
+      "decisionIndex": 2,
+      "actorId": "P2",
+      "policyId": "hybrix-sniper",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "Q",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 5,
+      "fullTurn": 2,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 9,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 12,
+        "points": 7,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 2.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 9,
+        "points": 3,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 3,
+        "count": 4
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "Q",
+          "s": 614
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "Q",
+          "s": 614
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "7",
+          "s": 599
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-085bb75a598193bb3415",
+      "ordinal": 64,
+      "decisionIndex": 4,
+      "actorId": "P2",
+      "policyId": "hybrix-sniper",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "J",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 5,
+      "fullTurn": 2,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 9,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 13.5,
+        "points": 8,
+        "counterValue": 1.5,
+        "recipeValue": 2.5,
+        "flex": 1.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 9,
+        "points": 3,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 3,
+        "count": 4
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "J",
+          "s": 1051
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1037
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 958
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 958
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 888
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 820
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 760
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-085bb75a598193bb3415",
+      "ordinal": 64,
+      "decisionIndex": 10,
+      "actorId": "P2",
+      "policyId": "hybrix-sniper",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "3",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 5,
+      "fullTurn": 4,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 9,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 2,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2,
+        "count": 2
+      },
+      "dp": 39,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-085bb75a598193bb3415",
+      "ordinal": 64,
+      "decisionIndex": 12,
+      "actorId": "P2",
+      "policyId": "hybrix-sniper",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 5,
+      "fullTurn": 4,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 9,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 19.5,
+        "points": 16,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 3.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 2,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2,
+        "count": 2
+      },
+      "dp": 39,
+      "gy": 6,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1037
+        },
+        {
+          "f": "score:points",
+          "r": "BJ",
+          "s": 1024
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "BJ",
+          "s": 995
+        },
+        {
+          "f": "quick:board-lock",
+          "r": "BJ",
+          "s": 940
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 820
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 510
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-ab005c31fb9e696b935a",
+      "ordinal": 66,
+      "decisionIndex": 5,
+      "actorId": "P2",
+      "policyId": "hybrix-tank",
+      "selectedFamily": "ultra",
+      "selectedMode": "three-black-jack-pr",
+      "selectedRank": "9",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 2,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 8,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 24,
+        "points": 11,
+        "counterValue": 4.5,
+        "recipeValue": 5,
+        "flex": 3.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 5,
+        "points": 2,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 3,
+        "count": 4
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "9",
+          "s": 1481
+        },
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "9",
+          "s": 1478
+        },
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "9",
+          "s": 1463
+        },
+        {
+          "f": "super:jack-tempo",
+          "r": "J",
+          "s": 1302
+        },
+        {
+          "f": "ultra:three-black-jack-pr",
+          "r": "9",
+          "s": 1284
+        },
+        {
+          "f": "ultra:three-black-jack-pr",
+          "r": "9",
+          "s": 1284
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "J",
+          "s": 1023
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "J",
+          "s": 1023
+        },
+        {
+          "f": "quick:eight-aegis-field",
+          "r": "8",
+          "s": 1020
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1009
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "9",
+          "s": 981
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "9",
+          "s": 981
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-ab005c31fb9e696b935a",
+      "ordinal": 66,
+      "decisionIndex": 10,
+      "actorId": "P2",
+      "policyId": "hybrix-tank",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "J",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 4,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 15,
+        "P2": 9
+      },
+      "ownQ": {
+        "total": 12,
+        "points": 8,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 20,
+        "points": 10,
+        "counterValue": 3,
+        "recipeValue": 4,
+        "flex": 3,
+        "count": 4
+      },
+      "dp": 39,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "9",
+          "s": 593
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-ab005c31fb9e696b935a",
+      "ordinal": 66,
+      "decisionIndex": 12,
+      "actorId": "P2",
+      "policyId": "hybrix-tank",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 4,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 15,
+        "P2": 9
+      },
+      "ownQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 20,
+        "points": 10,
+        "counterValue": 3,
+        "recipeValue": 4,
+        "flex": 3,
+        "count": 4
+      },
+      "dp": 39,
+      "gy": 1,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1009
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 981
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "9",
+          "s": 981
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 958
+        },
+        {
+          "f": "score:points",
+          "r": "9",
+          "s": 956
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "9",
+          "s": 953
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 914
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "anchor-private-choice:nine",
+          "r": "9",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-42f4facd94b10989657e",
+      "ordinal": 74,
+      "decisionIndex": 0,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 14,
+      "fullTurn": 1,
+      "totalTurns": 12,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 8,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 12,
+        "points": 4,
+        "counterValue": 5.5,
+        "recipeValue": 1.5,
+        "flex": 1,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 891
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 891
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 891
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 891
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 885
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 885
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 885
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 885
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 882
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 882
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-42f4facd94b10989657e",
+      "ordinal": 74,
+      "decisionIndex": 1,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "ultra",
+      "selectedMode": "2-black-2-red-draw",
+      "selectedRank": "6",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 14,
+      "fullTurn": 1,
+      "totalTurns": 12,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 8,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 12,
+        "points": 4,
+        "counterValue": 5.5,
+        "recipeValue": 1.5,
+        "flex": 1,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "6",
+          "s": 1659
+        },
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 1404
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1370
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 1370
+        },
+        {
+          "f": "score:points",
+          "r": "J",
+          "s": 1302
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 1302
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 1080
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": 930
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 930
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-42f4facd94b10989657e",
+      "ordinal": 74,
+      "decisionIndex": 2,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "6",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 14,
+      "fullTurn": 1,
+      "totalTurns": 12,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 12,
+        "points": 4,
+        "counterValue": 5.5,
+        "recipeValue": 1.5,
+        "flex": 1,
+        "count": 6
+      },
+      "dp": 38,
+      "gy": 4,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 1404
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1370
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 1302
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 1080
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 510
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-42f4facd94b10989657e",
+      "ordinal": 74,
+      "decisionIndex": 3,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 14,
+      "fullTurn": 1,
+      "totalTurns": 12,
+      "secured": {
+        "P1": 6,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 12,
+        "points": 4,
+        "counterValue": 5.5,
+        "recipeValue": 1.5,
+        "flex": 1,
+        "count": 6
+      },
+      "dp": 38,
+      "gy": 4,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1370
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 1302
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 1062
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 930
+        },
+        {
+          "f": "effect-private-choice:three-present-take",
+          "r": "3",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-9a3926a666ef22118da0",
+      "ordinal": 75,
+      "decisionIndex": 2,
+      "actorId": "P2",
+      "policyId": "tempo-tactical",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 12,
+      "fullTurn": 2,
+      "totalTurns": 6,
+      "secured": {
+        "P1": 11,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 21,
+        "points": 11,
+        "counterValue": 4,
+        "recipeValue": 2.5,
+        "flex": 3.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 6.5,
+        "points": 3,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 2,
+        "count": 4
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "Q",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "Q",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 72.5
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 72.5
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 72.5
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "5",
+          "s": 72.5
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "9",
+          "s": -115
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "9",
+          "s": -115
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "A",
+          "s": -190
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-402def555b3b527c4938",
+      "ordinal": 77,
+      "decisionIndex": 0,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "phase",
+      "selectedMode": "enter-action",
+      "selectedRank": null,
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 20,
+      "fullTurn": 1,
+      "totalTurns": 3,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 10,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 2.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 18.5,
+        "points": 11,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 3,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 885
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 885
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 882
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 882
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "7",
+          "s": 879
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "7",
+          "s": 879
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "7",
+          "s": 879
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "7",
+          "s": 879
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "9",
+          "s": 873
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "9",
+          "s": 873
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-402def555b3b527c4938",
+      "ordinal": 77,
+      "decisionIndex": 1,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "ultra",
+      "selectedMode": "2-black-2-red-draw",
+      "selectedRank": "9",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 20,
+      "fullTurn": 1,
+      "totalTurns": 3,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 10,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 2.5,
+        "flex": 2.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 18.5,
+        "points": 11,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 3,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "9",
+          "s": 1623
+        },
+        {
+          "f": "score:points",
+          "r": "9",
+          "s": 1506
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 1438
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 1438
+        },
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 1404
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1370
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 1080
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-private-choice:seven-topdeck",
+          "r": "7",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 930
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 930
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-402def555b3b527c4938",
+      "ordinal": 77,
+      "decisionIndex": 3,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "8",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 20,
+      "fullTurn": 1,
+      "totalTurns": 3,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 7,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 14,
+        "points": 8,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 3,
+        "count": 6
+      },
+      "dp": 37,
+      "gy": 5,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "8",
+          "s": 1472
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1370
+        },
+        {
+          "f": "score:points",
+          "r": "Q",
+          "s": 1268
+        },
+        {
+          "f": "quick:eight-aegis-field",
+          "r": "8",
+          "s": 1140
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 510
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-402def555b3b527c4938",
+      "ordinal": 77,
+      "decisionIndex": 4,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 20,
+      "fullTurn": 1,
+      "totalTurns": 3,
+      "secured": {
+        "P1": 8,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 9.5,
+        "points": 7,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 14,
+        "points": 8,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 3,
+        "count": 6
+      },
+      "dp": 37,
+      "gy": 5,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1370
+        },
+        {
+          "f": "score:points",
+          "r": "Q",
+          "s": 1268
+        },
+        {
+          "f": "quick:queen-aegis",
+          "r": "Q",
+          "s": 1140
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-fb151a512f79ad9d26cf",
+      "ordinal": 84,
+      "decisionIndex": 3,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "9",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 22,
+      "fullTurn": 1,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 9.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 4.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 14.5,
+        "points": 8,
+        "counterValue": 3,
+        "recipeValue": 2.5,
+        "flex": 1,
+        "count": 6
+      },
+      "dp": 37,
+      "gy": 5,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "9",
+          "s": 1506
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1370
+        },
+        {
+          "f": "score:points",
+          "r": "2",
+          "s": 1268
+        },
+        {
+          "f": "quick:two-score-discard",
+          "r": "2",
+          "s": 1060
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 808
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 510
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-fb151a512f79ad9d26cf",
+      "ordinal": 84,
+      "decisionIndex": 4,
+      "actorId": "P1",
+      "policyId": "value",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 22,
+      "fullTurn": 1,
+      "totalTurns": 9,
+      "secured": {
+        "P1": 9,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 8.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 3.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 14.5,
+        "points": 8,
+        "counterValue": 3,
+        "recipeValue": 2.5,
+        "flex": 1,
+        "count": 6
+      },
+      "dp": 37,
+      "gy": 5,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1370
+        },
+        {
+          "f": "score:points",
+          "r": "2",
+          "s": 1268
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "quick:two-score-discard",
+          "r": "2",
+          "s": 1060
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 808
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-3de8965082511d7fe42f",
+      "ordinal": 86,
+      "decisionIndex": 29,
+      "actorId": "P2",
+      "policyId": "score-rush",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 6,
+      "fullTurn": 12,
+      "totalTurns": 12,
+      "secured": {
+        "P1": 17,
+        "P2": 11
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 1
+      },
+      "dp": 35,
+      "gy": 9,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1065
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 981
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 784
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 748
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-4fd97b7d981279b857c4",
+      "ordinal": 87,
+      "decisionIndex": 21,
+      "actorId": "P2",
+      "policyId": "control",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 20,
+      "fullTurn": 6,
+      "totalTurns": 14,
+      "secured": {
+        "P1": 15,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 2,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2,
+        "count": 2
+      },
+      "dp": 34,
+      "gy": 10,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1269
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1241
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-private-choice:seven-topdeck",
+          "r": "7",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 796
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 734
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 724
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-7a682d224e41c60f69a5",
+      "ordinal": 88,
+      "decisionIndex": 10,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "ultra",
+      "selectedMode": "three-black-clear-pr",
+      "selectedRank": "7",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 3,
+      "totalTurns": 12,
+      "secured": {
+        "P1": 0,
+        "P2": 7
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 38,
+      "gy": 7,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "ultra:three-black-clear-pr",
+          "r": "7",
+          "s": 1685
+        },
+        {
+          "f": "ultra:three-black-total-clear",
+          "r": "7",
+          "s": 1585
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 1538
+        },
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 1504
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "4",
+          "s": 1436
+        },
+        {
+          "f": "effect-four:total-clear",
+          "r": "4",
+          "s": 1325
+        },
+        {
+          "f": "effect-four:clear-pr",
+          "r": "4",
+          "s": 1245
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 1075
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "4",
+          "s": 1041
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1034
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "6",
+          "s": 1027
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-7a682d224e41c60f69a5",
+      "ordinal": 88,
+      "decisionIndex": 14,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 11,
+      "fullTurn": 5,
+      "totalTurns": 12,
+      "secured": {
+        "P1": 6,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 5.5,
+        "points": 3,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 2
+      },
+      "dp": 36,
+      "gy": 10,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1420
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1195
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1120
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1090
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1000
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 1000
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 1000
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 935
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-5b85d0f6a30826ddc9eb",
+      "ordinal": 91,
+      "decisionIndex": 42,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "rank10",
+      "selectedMode": "club-foundation",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 23,
+      "fullTurn": 15,
+      "totalTurns": 16,
+      "secured": {
+        "P1": 8,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 7.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 11,
+        "points": 8,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 30,
+      "gy": 15,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "rank10:club-foundation",
+          "r": "10",
+          "s": 1980
+        },
+        {
+          "f": "score:points",
+          "r": "10",
+          "s": 1640
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1195
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 1130
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1120
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1000
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 935
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 935
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 900
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 870
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-5b85d0f6a30826ddc9eb",
+      "ordinal": 91,
+      "decisionIndex": 46,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 23,
+      "fullTurn": 17,
+      "totalTurns": 16,
+      "secured": {
+        "P1": 18,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 1
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 1
+      },
+      "dp": 30,
+      "gy": 15,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 10158
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1195
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 1130
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1090
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1090
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1000
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 940
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 935
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 935
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-7f0fb54a0a4c7a02d5be",
+      "ordinal": 92,
+      "decisionIndex": 0,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "J",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 27,
+      "fullTurn": 1,
+      "totalTurns": 14,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 23.5,
+        "points": 16,
+        "counterValue": 6,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 18,
+        "points": 4,
+        "counterValue": 4,
+        "recipeValue": 4,
+        "flex": 6,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 335
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 335
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 335
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 335
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "K",
+          "s": -340
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "K",
+          "s": -340
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-7f0fb54a0a4c7a02d5be",
+      "ordinal": 92,
+      "decisionIndex": 2,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "8",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 27,
+      "fullTurn": 1,
+      "totalTurns": 14,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 19,
+        "points": 13,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 18,
+        "points": 4,
+        "counterValue": 4,
+        "recipeValue": 4,
+        "flex": 6,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "8",
+          "s": 1572
+        },
+        {
+          "f": "score:points",
+          "r": "K",
+          "s": 1572
+        },
+        {
+          "f": "anchor:king",
+          "r": "K",
+          "s": 1570
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 1538
+        },
+        {
+          "f": "effect-private-choice:three-force-discard",
+          "r": "3",
+          "s": 1480
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 1402
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "8",
+          "s": 1242
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1120
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1090
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1000
+        },
+        {
+          "f": "effect-private-choice:seven-topdeck",
+          "r": "7",
+          "s": 940
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-7f0fb54a0a4c7a02d5be",
+      "ordinal": 92,
+      "decisionIndex": 7,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 27,
+      "fullTurn": 3,
+      "totalTurns": 14,
+      "secured": {
+        "P1": 8,
+        "P2": 19
+      },
+      "ownQ": {
+        "total": 17.5,
+        "points": 13,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 16,
+        "points": 4,
+        "counterValue": 4,
+        "recipeValue": 4,
+        "flex": 4,
+        "count": 4
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 2307
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "K",
+          "s": 2286
+        },
+        {
+          "f": "effect-three:bounce-top",
+          "r": "3",
+          "s": 2228
+        },
+        {
+          "f": "score:points",
+          "r": "K",
+          "s": 1572
+        },
+        {
+          "f": "anchor:king",
+          "r": "K",
+          "s": 1570
+        },
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 1538
+        },
+        {
+          "f": "wild-sovereignty:three-bounce",
+          "r": "K",
+          "s": 1514
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "wild-sovereignty:three-bounce",
+          "r": "K",
+          "s": 1426
+        },
+        {
+          "f": "score:points",
+          "r": "3",
+          "s": 1402
+        },
+        {
+          "f": "wild-sovereignty:four-row-clear-pr",
+          "r": "K",
+          "s": 1354
+        },
+        {
+          "f": "wild-sovereignty:total-clear",
+          "r": "K",
+          "s": 1249
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-73634389d3772f229bd8",
+      "ordinal": 95,
+      "decisionIndex": 5,
+      "actorId": "P2",
+      "policyId": "hybrix-rusher",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "3",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 10,
+      "fullTurn": 2,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 10,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 18.5,
+        "points": 13,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 38,
+      "gy": 2,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 5000
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "3",
+          "s": 611
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "4",
+          "s": 608
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 605
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "6",
+          "s": 602
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "K",
+          "s": 596
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "10",
+          "s": 590
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-73634389d3772f229bd8",
+      "ordinal": 95,
+      "decisionIndex": 7,
+      "actorId": "P2",
+      "policyId": "hybrix-rusher",
+      "selectedFamily": "rank10",
+      "selectedMode": "diamond-mimic-row-exchange-pr",
+      "selectedRank": "10",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 10,
+      "fullTurn": 2,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 10,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 18.5,
+        "points": 13,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 6
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 38,
+      "gy": 2,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "ultra:2-black-2-red-rummage",
+          "r": "10",
+          "s": 1499
+        },
+        {
+          "f": "ultra:2-black-2-red-rummage",
+          "r": "10",
+          "s": 1493
+        },
+        {
+          "f": "ultra:2-black-2-red-rummage",
+          "r": "10",
+          "s": 1487
+        },
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "10",
+          "s": 1469
+        },
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "10",
+          "s": 1463
+        },
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "10",
+          "s": 1457
+        },
+        {
+          "f": "rank10:diamond-mimic-row-exchange-er",
+          "r": "10",
+          "s": 1310
+        },
+        {
+          "f": "rank10:diamond-mimic-row-exchange-pr",
+          "r": "10",
+          "s": 1310
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "ultra:three-black-clear-er",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "ultra:three-black-clear-er",
+          "r": "K",
+          "s": 1146
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-73634389d3772f229bd8",
+      "ordinal": 95,
+      "decisionIndex": 12,
+      "actorId": "P2",
+      "policyId": "hybrix-rusher",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "K",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 10,
+      "fullTurn": 4,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 7,
+        "P2": 10
+      },
+      "ownQ": {
+        "total": 17.5,
+        "points": 13,
+        "counterValue": 3,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 1.5,
+        "points": 0,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 37,
+      "gy": 2,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "ultra:three-black-king",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "ultra:three-black-clear-er",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "ultra:three-black-king",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "ultra:three-black-clear-pr",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "ultra:three-black-clear-pr",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "ultra:three-black-clear-er",
+          "r": "K",
+          "s": 1146
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 981
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "7",
+          "s": 967
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "K",
+          "s": 960
+        },
+        {
+          "f": "anchor:king",
+          "r": "K",
+          "s": 935
+        },
+        {
+          "f": "score:points",
+          "r": "K",
+          "s": 922
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 910
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-73634389d3772f229bd8",
+      "ordinal": 95,
+      "decisionIndex": 16,
+      "actorId": "P2",
+      "policyId": "hybrix-rusher",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "7",
+      "selectedIsRJEffect": false,
+      "outcome": "win",
+      "scoreMargin": 10,
+      "fullTurn": 6,
+      "totalTurns": 5,
+      "secured": {
+        "P1": 15,
+        "P2": 18
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 4
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 1
+      },
+      "dp": 37,
+      "gy": 2,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "7",
+          "s": 6238
+        },
+        {
+          "f": "score:points",
+          "r": "6",
+          "s": 6204
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 6170
+        },
+        {
+          "f": "score:points",
+          "r": "4",
+          "s": 6136
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1009
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 981
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "7",
+          "s": 967
+        },
+        {
+          "f": "effect-private-choice:six-dig",
+          "r": "6",
+          "s": 910
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-four:clear-pr",
+          "r": "4",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        }
+      ],
+      "scoringApproxOnly": true
+    },
+    {
+      "matchId": "M-ecb9b494d74db6f2d2da",
+      "ordinal": 97,
+      "decisionIndex": 0,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "swap-bar",
+      "selectedMode": "face-down",
+      "selectedRank": "J",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 16,
+      "fullTurn": 1,
+      "totalTurns": 25,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 23,
+        "points": 12,
+        "counterValue": 7,
+        "recipeValue": 1.5,
+        "flex": 2.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 18.5,
+        "points": 13,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 335
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "J",
+          "s": 335
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "RJ",
+          "s": 185
+        },
+        {
+          "f": "phase:enter-action",
+          "r": null,
+          "s": 0
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "A",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "8",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "A",
+          "s": -40
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "9",
+          "s": -115
+        },
+        {
+          "f": "swap-bar:face-down",
+          "r": "9",
+          "s": -115
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ecb9b494d74db6f2d2da",
+      "ordinal": 97,
+      "decisionIndex": 2,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "9",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 16,
+      "fullTurn": 1,
+      "totalTurns": 25,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 21.5,
+        "points": 11,
+        "counterValue": 5.5,
+        "recipeValue": 1.5,
+        "flex": 3.5,
+        "count": 5
+      },
+      "oppQ": {
+        "total": 18.5,
+        "points": 13,
+        "counterValue": 4.5,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 6
+      },
+      "dp": 40,
+      "gy": 0,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "9",
+          "s": 1606
+        },
+        {
+          "f": "score:points",
+          "r": "8",
+          "s": 1572
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "A",
+          "s": 1436
+        },
+        {
+          "f": "score:points",
+          "r": "Q",
+          "s": 1368
+        },
+        {
+          "f": "ultra:2-black-2-red-draw",
+          "r": "9",
+          "s": 1241
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1120
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1090
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1000
+        },
+        {
+          "f": "anchor:queen",
+          "r": "Q",
+          "s": 970
+        },
+        {
+          "f": "anchor-private-choice:nine",
+          "r": "9",
+          "s": 940
+        },
+        {
+          "f": "instant:nine-goal-shift-5",
+          "r": "9",
+          "s": 855
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ecb9b494d74db6f2d2da",
+      "ordinal": 97,
+      "decisionIndex": 10,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "8",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 16,
+      "fullTurn": 3,
+      "totalTurns": 25,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 11,
+        "points": 7,
+        "counterValue": 1.5,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 3
+      },
+      "oppQ": {
+        "total": 3,
+        "points": 2,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1,
+        "count": 3
+      },
+      "dp": 40,
+      "gy": 5,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "8",
+          "s": 1572
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "Q",
+          "s": 1368
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1120
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1035
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1000
+        },
+        {
+          "f": "anchor:queen",
+          "r": "Q",
+          "s": 970
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 920
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 890
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 695
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 695
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 565
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-ecb9b494d74db6f2d2da",
+      "ordinal": 97,
+      "decisionIndex": 14,
+      "actorId": "P1",
+      "policyId": "score-rush-tactical",
+      "selectedFamily": "score",
+      "selectedMode": "points",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 16,
+      "fullTurn": 5,
+      "totalTurns": 25,
+      "secured": {
+        "P1": 0,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 9.5,
+        "points": 7,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 2.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 2
+      },
+      "dp": 40,
+      "gy": 7,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 1470
+        },
+        {
+          "f": "score:points",
+          "r": "Q",
+          "s": 1368
+        },
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1195
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 1145
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 1130
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 1120
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 1050
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 1000
+        },
+        {
+          "f": "anchor:queen",
+          "r": "Q",
+          "s": 970
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 935
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 935
+        }
+      ],
+      "scoringApproxOnly": false
+    },
+    {
+      "matchId": "M-bfb4911cab03e0e69503",
+      "ordinal": 99,
+      "decisionIndex": 49,
+      "actorId": "P2",
+      "policyId": "hybrix-support",
+      "selectedFamily": "scuttle",
+      "selectedMode": "ordinary",
+      "selectedRank": "RJ",
+      "selectedIsRJEffect": false,
+      "outcome": "loss",
+      "scoreMargin": 16,
+      "fullTurn": 20,
+      "totalTurns": 30,
+      "secured": {
+        "P1": 16,
+        "P2": 0
+      },
+      "ownQ": {
+        "total": 6.5,
+        "points": 5,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 1.5,
+        "count": 2
+      },
+      "oppQ": {
+        "total": 0,
+        "points": 0,
+        "counterValue": 0,
+        "recipeValue": 0,
+        "flex": 0,
+        "count": 0
+      },
+      "dp": 32,
+      "gy": 14,
+      "postQuality": null,
+      "scores": [
+        {
+          "f": "draw:top",
+          "r": null,
+          "s": 1100
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 1065
+        },
+        {
+          "f": "scuttle:ordinary",
+          "r": "RJ",
+          "s": 953
+        },
+        {
+          "f": "score:points",
+          "r": "RJ",
+          "s": 820
+        },
+        {
+          "f": "score:points",
+          "r": "5",
+          "s": 820
+        },
+        {
+          "f": "effect-red-joker:self-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-private-choice:five-recycle",
+          "r": "5",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:hand-swap",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:opponent-attack",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "effect-red-joker:shuffle-reset",
+          "r": "RJ",
+          "s": 760
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        },
+        {
+          "f": "swap-bar:face-up-draw",
+          "r": null,
+          "s": 736
+        }
+      ],
+      "scoringApproxOnly": true
+    }
+  ],
+  "counterfactuals": [
+    {
+      "case": "rj-selected",
+      "matchId": "M-1b8ddabb2fbe2d2e9766",
+      "ordinal": 6,
+      "decisionIndex": 119,
+      "policyId": "control-tactical",
+      "mode": "hand-swap",
+      "armA": "effect-red-joker:hand-swap",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1195,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 20,
+      "meanMarginB": 16.69
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-d5cf43da2cca5b2f434f",
+      "ordinal": 8,
+      "decisionIndex": 50,
+      "policyId": "random-legal",
+      "mode": "hand-swap",
+      "armA": "effect-red-joker:hand-swap",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1195,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -22,
+      "meanMarginB": -19.88
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-75163a5f7bea7b5b1f54",
+      "ordinal": 14,
+      "decisionIndex": 87,
+      "policyId": "hybrix-support",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1195,
+      "actualOutcome": "win",
+      "winsA": 14,
+      "winsB": 13,
+      "rollouts": 16,
+      "meanMarginA": 17.88,
+      "meanMarginB": 16.75
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-c2d7ac654cf6fa83830b",
+      "ordinal": 15,
+      "decisionIndex": 124,
+      "policyId": "hybrix-tank",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "effect-private-choice:seven-topdeck",
+      "armBRank": "7",
+      "armBScore": 1230,
+      "actualOutcome": "win",
+      "winsA": 12,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": -1.63,
+      "meanMarginB": 10.88
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-105cc67103dbca1477fb",
+      "ordinal": 23,
+      "decisionIndex": 49,
+      "policyId": "control-tactical",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1195,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": 0,
+      "meanMarginB": -14
+    },
+    {
+      "case": "rj-declined-contender",
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "ordinal": 34,
+      "decisionIndex": 67,
+      "policyId": "control",
+      "mode": "hand-swap",
+      "armA": "effect-red-joker:hand-swap",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1050,
+      "actualOutcome": "win",
+      "winsA": 8,
+      "winsB": 6,
+      "rollouts": 16,
+      "meanMarginA": -7.31,
+      "meanMarginB": -3.81
+    },
+    {
+      "case": "rj-declined-contender",
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "ordinal": 34,
+      "decisionIndex": 72,
+      "policyId": "control",
+      "mode": "hand-swap",
+      "armA": "effect-red-joker:hand-swap",
+      "armB": "anchor:king",
+      "armBRank": "K",
+      "armBScore": 1050,
+      "actualOutcome": "win",
+      "winsA": 10,
+      "winsB": 5,
+      "rollouts": 16,
+      "meanMarginA": -2.25,
+      "meanMarginB": -7.5
+    },
+    {
+      "case": "rj-declined-contender",
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "ordinal": 34,
+      "decisionIndex": 77,
+      "policyId": "control",
+      "mode": "hand-swap",
+      "armA": "effect-red-joker:hand-swap",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1050,
+      "actualOutcome": "win",
+      "winsA": 9,
+      "winsB": 5,
+      "rollouts": 16,
+      "meanMarginA": -2.5,
+      "meanMarginB": -7.69
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "ordinal": 34,
+      "decisionIndex": 82,
+      "policyId": "control",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1100,
+      "actualOutcome": "win",
+      "winsA": 6,
+      "winsB": 3,
+      "rollouts": 16,
+      "meanMarginA": -7.31,
+      "meanMarginB": -12.31
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-1011c764e8b424cf09eb",
+      "ordinal": 35,
+      "decisionIndex": 2,
+      "policyId": "control",
+      "mode": "self-reset",
+      "armA": "effect-red-joker:self-reset",
+      "armB": "effect-private-choice:natural-four",
+      "armBRank": "4",
+      "armBScore": 1050,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -21,
+      "meanMarginB": -21
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-ed123e23841332200c85",
+      "ordinal": 43,
+      "decisionIndex": 7,
+      "policyId": "control-conversion-tactical",
+      "mode": "face-down",
+      "armA": "swap-bar:face-down",
+      "armB": "swap-bar:face-down",
+      "armBRank": "5",
+      "armBScore": 72.5,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 29,
+      "meanMarginB": 22
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-c6f2df43037417ae933d",
+      "ordinal": 45,
+      "decisionIndex": 87,
+      "policyId": "hybrix-defender",
+      "mode": "shuffle-reset",
+      "armA": "effect-red-joker:shuffle-reset",
+      "armB": "score:points",
+      "armBRank": "6",
+      "armBScore": 10192,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 17.13,
+      "meanMarginB": 17
+    },
+    {
+      "case": "rj-declined-contender",
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 9,
+      "policyId": "control",
+      "mode": "opponent-attack",
+      "armA": "effect-red-joker:opponent-attack",
+      "armB": "rank10:heart-tempo",
+      "armBRank": "10",
+      "armBScore": 1050,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -19.75,
+      "meanMarginB": -26.81
+    },
+    {
+      "case": "rj-declined-contender",
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 15,
+      "policyId": "control",
+      "mode": "shuffle-reset",
+      "armA": "effect-red-joker:shuffle-reset",
+      "armB": "effect-three:bounce-top",
+      "armBRank": "3",
+      "armBScore": 1050,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -18.69,
+      "meanMarginB": -27
+    },
+    {
+      "case": "rj-declined-contender",
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 21,
+      "policyId": "control",
+      "mode": "self-reset",
+      "armA": "effect-red-joker:self-reset",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1050,
+      "actualOutcome": "loss",
+      "winsA": 1,
+      "winsB": 1,
+      "rollouts": 16,
+      "meanMarginA": -23.69,
+      "meanMarginB": -25.13
+    },
+    {
+      "case": "rj-declined-contender",
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 25,
+      "policyId": "control",
+      "mode": "opponent-attack",
+      "armA": "effect-red-joker:opponent-attack",
+      "armB": "effect-ace:purge-anchor-bounce",
+      "armBRank": "A",
+      "armBScore": 1050,
+      "actualOutcome": "loss",
+      "winsA": 1,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -18.19,
+      "meanMarginB": -26.63
+    },
+    {
+      "case": "rj-declined-contender",
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 29,
+      "policyId": "control",
+      "mode": "opponent-attack",
+      "armA": "effect-red-joker:opponent-attack",
+      "armB": "anchor:king",
+      "armBRank": "K",
+      "armBScore": 1050,
+      "actualOutcome": "loss",
+      "winsA": 13,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": 6.19,
+      "meanMarginB": -26.63
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "ordinal": 46,
+      "decisionIndex": 34,
+      "policyId": "control",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1100,
+      "actualOutcome": "loss",
+      "winsA": 1,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -23.88,
+      "meanMarginB": -26.13
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-bbc346d896606590e3e6",
+      "ordinal": 48,
+      "decisionIndex": 29,
+      "policyId": "hybrix-support",
+      "mode": "hand-swap",
+      "armA": "effect-red-joker:hand-swap",
+      "armB": "score:points",
+      "armBRank": "3",
+      "armBScore": 1302,
+      "actualOutcome": "win",
+      "winsA": 13,
+      "winsB": 15,
+      "rollouts": 16,
+      "meanMarginA": 12.94,
+      "meanMarginB": 15.63
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-0ed06d7836b1e9f31a1b",
+      "ordinal": 49,
+      "decisionIndex": 7,
+      "policyId": "hybrix-tank",
+      "mode": "face-down",
+      "armA": "swap-bar:face-down",
+      "armB": "swap-bar:face-down",
+      "armBRank": "2",
+      "armBScore": 147.5,
+      "actualOutcome": "loss",
+      "winsA": 5,
+      "winsB": 6,
+      "rollouts": 16,
+      "meanMarginA": -11.75,
+      "meanMarginB": 2.06
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-21f76fbae3a2850d8b89",
+      "ordinal": 54,
+      "decisionIndex": 25,
+      "policyId": "tempo",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1100,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -8,
+      "meanMarginB": -13
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-a7032ff5f7e18ca6706f",
+      "ordinal": 55,
+      "decisionIndex": 11,
+      "policyId": "tempo",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1100,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 9,
+      "meanMarginB": 5
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-62fdff6544b65b495076",
+      "ordinal": 58,
+      "decisionIndex": 17,
+      "policyId": "tempo-tactical",
+      "mode": "opponent-attack",
+      "armA": "effect-red-joker:opponent-attack",
+      "armB": "score:points",
+      "armBRank": "5",
+      "armBScore": 1210,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 11,
+      "meanMarginB": 18
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-c0b6a96902862a0be848",
+      "ordinal": 60,
+      "decisionIndex": 10,
+      "policyId": "tempo",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1100,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": -3,
+      "meanMarginB": 3
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-896cd21d0090f74b8ff3",
+      "ordinal": 62,
+      "decisionIndex": 26,
+      "policyId": "tempo",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1100,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 24,
+      "meanMarginB": 21
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-085bb75a598193bb3415",
+      "ordinal": 64,
+      "decisionIndex": 12,
+      "policyId": "hybrix-sniper",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "scuttle:ordinary",
+      "armBRank": "BJ",
+      "armBScore": 1600,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 2,
+      "rollouts": 16,
+      "meanMarginA": 5,
+      "meanMarginB": -9.75
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-ab005c31fb9e696b935a",
+      "ordinal": 66,
+      "decisionIndex": 12,
+      "policyId": "hybrix-tank",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "scuttle:ordinary",
+      "armBRank": "9",
+      "armBScore": 2431,
+      "actualOutcome": "win",
+      "winsA": 15,
+      "winsB": 3,
+      "rollouts": 16,
+      "meanMarginA": 9.44,
+      "meanMarginB": -6.63
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-42f4facd94b10989657e",
+      "ordinal": 74,
+      "decisionIndex": 3,
+      "policyId": "value",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "score:points",
+      "armBRank": "3",
+      "armBScore": 1302,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 14,
+      "meanMarginB": 14
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-9a3926a666ef22118da0",
+      "ordinal": 75,
+      "decisionIndex": 2,
+      "policyId": "tempo-tactical",
+      "mode": "face-down",
+      "armA": "swap-bar:face-down",
+      "armB": "swap-bar:face-down",
+      "armBRank": "Q",
+      "armBScore": 185,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 12,
+      "meanMarginB": 12
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-402def555b3b527c4938",
+      "ordinal": 77,
+      "decisionIndex": 4,
+      "policyId": "value",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "score:points",
+      "armBRank": "Q",
+      "armBScore": 1268,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -20,
+      "meanMarginB": -12
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-fb151a512f79ad9d26cf",
+      "ordinal": 84,
+      "decisionIndex": 4,
+      "policyId": "value",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "score:points",
+      "armBRank": "2",
+      "armBScore": 1268,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 9,
+      "rollouts": 16,
+      "meanMarginA": -22,
+      "meanMarginB": -2.19
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-3de8965082511d7fe42f",
+      "ordinal": 86,
+      "decisionIndex": 29,
+      "policyId": "score-rush",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1100,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -6,
+      "meanMarginB": -11
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-4fd97b7d981279b857c4",
+      "ordinal": 87,
+      "decisionIndex": 21,
+      "policyId": "control",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "effect-private-choice:seven-topdeck",
+      "armBRank": "7",
+      "armBScore": 1050,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 0,
+      "rollouts": 16,
+      "meanMarginA": -20,
+      "meanMarginB": -15
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-7a682d224e41c60f69a5",
+      "ordinal": 88,
+      "decisionIndex": 14,
+      "policyId": "score-rush-tactical",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1195,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 11,
+      "meanMarginB": 14
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-5b85d0f6a30826ddc9eb",
+      "ordinal": 91,
+      "decisionIndex": 46,
+      "policyId": "score-rush-tactical",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "draw:top",
+      "armBRank": null,
+      "armBScore": 1195,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 23,
+      "meanMarginB": 21
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-7f0fb54a0a4c7a02d5be",
+      "ordinal": 92,
+      "decisionIndex": 7,
+      "policyId": "score-rush-tactical",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "scuttle:ordinary",
+      "armBRank": "K",
+      "armBScore": 2286,
+      "actualOutcome": "win",
+      "winsA": 16,
+      "winsB": 16,
+      "rollouts": 16,
+      "meanMarginA": 27,
+      "meanMarginB": 27
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-ecb9b494d74db6f2d2da",
+      "ordinal": 97,
+      "decisionIndex": 14,
+      "policyId": "score-rush-tactical",
+      "mode": "points",
+      "armA": "score:points",
+      "armB": "score:points",
+      "armBRank": "Q",
+      "armBScore": 1368,
+      "actualOutcome": "loss",
+      "winsA": 2,
+      "winsB": 2,
+      "rollouts": 16,
+      "meanMarginA": -14.13,
+      "meanMarginB": -1.25
+    },
+    {
+      "case": "rj-selected",
+      "matchId": "M-bfb4911cab03e0e69503",
+      "ordinal": 99,
+      "decisionIndex": 49,
+      "policyId": "hybrix-support",
+      "mode": "ordinary",
+      "armA": "scuttle:ordinary",
+      "armB": "score:points",
+      "armBRank": "5",
+      "armBScore": 1370,
+      "actualOutcome": "loss",
+      "winsA": 0,
+      "winsB": 1,
+      "rollouts": 16,
+      "meanMarginA": -17.69,
+      "meanMarginB": -18.81
+    }
+  ]
+}

@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import './engine/ranks.js?v=943d1ec6c237';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=943d1ec6c237';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=943d1ec6c237';
+import './engine/ranks.js?v=46b6024f32eb';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=46b6024f32eb';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=46b6024f32eb';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js?v=943d1ec6c237';
+} from './rank-attribution-browser.js?v=46b6024f32eb';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,7 +26,7 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js?v=943d1ec6c237';
+} from './rank-power-model.js?v=46b6024f32eb';
 import {
   ANALYTICS_SCHEMA_VERSION,
   buildMechanicsAtlas,
@@ -35,16 +35,16 @@ import {
   buildPolicyFingerprints,
   detectAnomalies,
   buildPairedABBAAnalysis,
-} from './observatory-analytics-browser.js?v=943d1ec6c237';
+} from './observatory-analytics-browser.js?v=46b6024f32eb';
 import {
   mechanicRegistryHash,
   quarantineUnknownTags,
-} from './mechanic-registry-browser.js?v=943d1ec6c237';
-import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=943d1ec6c237';
-import { winRateRecord } from './shared-analytics/estimators.mjs?v=943d1ec6c237';
-import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=943d1ec6c237';
-import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=943d1ec6c237';
-import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=943d1ec6c237';
+} from './mechanic-registry-browser.js?v=46b6024f32eb';
+import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=46b6024f32eb';
+import { winRateRecord } from './shared-analytics/estimators.mjs?v=46b6024f32eb';
+import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=46b6024f32eb';
+import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=46b6024f32eb';
+import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=46b6024f32eb';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {
@@ -547,6 +547,12 @@ export function classifyVariantEntity(attribution, action = {}) {
   const playForm = attribution.playForm ?? 'other';
   const suit = primarySourceSuit(attribution);
   const creditKeys = [rank];
+  // Secondary-rank participation (wild-catalyst supers, royal marriage): every
+  // distinct source rank is credited at rank-overall tier only — never to the
+  // primary rank's specific variant tier.
+  for (const secondaryRank of attribution.sourceRanks ?? []) {
+    if (secondaryRank !== rank && !creditKeys.includes(secondaryRank)) creditKeys.push(secondaryRank);
+  }
 
   if (playForm === 'super') {
     const se = resolveSuperEffect(action);

@@ -1,4 +1,4 @@
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=943d1ec6c237';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=46b6024f32eb';
 import {
   IntrilexEngine,
   createMatchState,
@@ -9,16 +9,19 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=943d1ec6c237';
+} from './engine/browser-entry.js?v=46b6024f32eb';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
 import { actionSemantics } from './engine-adapter/action-semantics.mjs';
-import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=943d1ec6c237';
-import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=943d1ec6c237';
-import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=943d1ec6c237';
-import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=943d1ec6c237';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=943d1ec6c237';
-import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=943d1ec6c237';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=943d1ec6c237';
+import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=46b6024f32eb';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=46b6024f32eb';
+import { createAdaptiveController, normalizeAdaptiveConfig, effectiveAdaptiveMode, adaptiveSeatSummary, compactAdaptiveFrame, ADAPTIVE_TELEMETRY_VERSION } from './evolution/adaptive-strategy.mjs?v=46b6024f32eb';
+import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=46b6024f32eb';
+import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=46b6024f32eb';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=46b6024f32eb';
+import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=46b6024f32eb';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=46b6024f32eb';
+
+export { createAdaptiveController, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=46b6024f32eb';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
@@ -79,7 +82,7 @@ export function strictView(state,actorId){
   return result;
 }
 export function choosePolicy(policyId,context){
-  if(policyId===WEIGHTED_POLICY_ID)return chooseWeightedAction(context.policyState,context);
+  if(policyId===WEIGHTED_POLICY_ID){const frame=context.adaptiveController?context.adaptiveController.decide(context):null;context.adaptiveFrame=frame;return chooseWeightedAction(frame?.policyState??context.policyState,context);}
   if(!policyId||policyId==='random-legal'){const actions=lexical(context.legalActions);return actions[context.rng.nextIndex(actions.length)];}
   if(policyId.startsWith('hybrix-')){
     const envelope=chooseHybrixPolicy(policyId,context);
@@ -116,12 +119,17 @@ function buildRuleCompliance({decisions,events,state}){
   return{status:violationCount===0?'PASS':'FAIL',violationCount,...checks,authorizedFullTurnSkips,consumedFullTurnSkips,pendingFullTurnSkips};
 }
 
-export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[],strategicTelemetryEnabled=false,strategicTrace=false,strategyIdentities=null,ruleOverrides=null}){
+export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[],adaptiveConfigs=[],strategicTelemetryEnabled=false,strategicTrace=false,strategyIdentities=null,ruleOverrides=null}){
   if(policyIds.length!==2||policyIds.some((id,i)=>!POLICY_IDS.includes(id) && !(id===WEIGHTED_POLICY_ID && validatePolicyState(policyStates[i]))))throw new Error('INVALID_POLICY_PAIR');
   const seats=seatOrder??['P1','P2'];const setup={profileId,playerIds:seats,enabledModules:[],eventApprovedModules:[],seed:(seed>>>0)||1,seatOrder:seats,...(ruleOverrides?{ruleOverrides}:{})};
   let state=initialState?structuredClone(initialState):createState(setup);const engine=new IntrilexEngine();
   const replayCommands=recordReplay?[]:null;const replayInitialState=recordReplay?structuredClone(state):null;
   const rngByPlayer=Object.fromEntries(seats.map((playerId,index)=>[playerId,new PolicyRng(uint32FromHash({seed:setup.seed,playerId,policyId:policyIds[index],stream:'POLICY_V4'}))]));
+  // Adaptive Strategy layer: per-seat deterministic controllers over the
+  // baseline genome. Absent/OFF config builds no controller; LEARNED executes
+  // as OFF and is reported unavailable.
+  const adaptiveCfgs=seats.map((_,i)=>normalizeAdaptiveConfig(adaptiveConfigs[i]));
+  const adaptiveControllers=seats.map((_,i)=>{const cfg=adaptiveCfgs[i];return cfg&&effectiveAdaptiveMode(cfg)==='RULED'&&policyIds[i]===WEIGHTED_POLICY_ID&&policyStates[i]?createAdaptiveController(cfg,policyStates[i]):null;});
   const actionCounts={},actionModeCounts={},decisionFamilyCounts={},decisionModeCounts={},responseActionCounts={},timingClassCounts={},eventTypeCounts={},mechanicCounts={},primaryMechanicCounts={},mechanicOpportunityCounts={},primaryMechanicOpportunityCounts={};const semantic={miniTurnActionCount:0,exhaustedPassActionCount:0,responseOpportunityCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,automaticPriorityAdvanceCount:0,responseWindowClosedCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,automaticOrchestrationCommandCount:0};
   const perSeat=[{miniTurnActionCount:0,exhaustedPassActionCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,responseOpportunityCount:0,advancedDecisionCount:0,voltageDecisionCount:0,ultraDecisionCount:0,privateChoiceDecisionCount:0,mechanicCounts:{},primaryMechanicCounts:{},mechanicOpportunityCounts:{},primaryMechanicOpportunityCounts:{},decisionFamilyCounts:{}},{miniTurnActionCount:0,exhaustedPassActionCount:0,responsePlayedCount:0,responseDeclinedWithOptionsCount:0,counterDeclarationCount:0,quickDeclarationCount:0,instantDeclarationCount:0,interruptDeclarationCount:0,policyDecisionCount:0,policyActionCount:0,actionCount:0,passActionCount:0,miniTurnCount:0,meaningfulResponseDecisionCount:0,responseOpportunityCount:0,advancedDecisionCount:0,voltageDecisionCount:0,ultraDecisionCount:0,privateChoiceDecisionCount:0,mechanicCounts:{},primaryMechanicCounts:{},mechanicOpportunityCounts:{},primaryMechanicOpportunityCounts:{},decisionFamilyCounts:{}}];
   const auditDecisions=[],capturedEvents=[],rankDecisions=[],matchDecisions=[];
@@ -149,7 +157,8 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
     {const frameTags=new Set(),framePrimaryTags=new Set();for(const la of engineActions){for(const tag of mechanicTags(la))frameTags.add(tag);const pt=primaryMechanicTag(la);if(pt)framePrimaryTags.add(pt);}for(const tag of frameTags){increment(perSeat[seat].mechanicOpportunityCounts,tag);increment(mechanicOpportunityCounts,tag);}for(const tag of framePrimaryTags){increment(perSeat[seat].primaryMechanicOpportunityCounts,tag);increment(primaryMechanicOpportunityCounts,tag);}}
     comboTracker.frame({legalActions:engineActions,actorId,state});
     // BL-05 fix: pass complete deterministic context including matchId, runInstanceId, decisionIndex
-    const authorizedView=strictView(state,actorId),selected=choosePolicy(policyIds[seat],{policyState:policyStates[seat],actorId,authorizedView,legalActions:policyActions,rng:rngByPlayer[actorId],matchId,runInstanceId:executionInstanceToken,decisionIndex,profileId,engineVersion:ENGINE_VERSION,rulesVersion:_RULES_VERSION});
+    const authorizedView=strictView(state,actorId),selected=choosePolicy(policyIds[seat],{policyState:policyStates[seat],adaptiveController:adaptiveControllers[seat],actorId,authorizedView,legalActions:policyActions,rng:rngByPlayer[actorId],matchId,runInstanceId:executionInstanceToken,decisionIndex,profileId,engineVersion:ENGINE_VERSION,rulesVersion:_RULES_VERSION});
+    const adaptiveFrame=adaptiveControllers[seat]?.lastFrame??null;
     if(!selected){terminationReason='POLICY_ERROR';errorCode='NO_LEGAL_ACTION';break;}
     const observation=strategy?decisionObservation({actorId,seat:seat+1,decisionIndex,authorizedView,legalActions:policyActions,selected,...(strategicTrace?{policyScores:policyIds[seat]==='random-legal'||policyIds[seat].startsWith('hybrix-')||policyIds[seat]===WEIGHTED_POLICY_ID?undefined:rankPolicyActions(policyIds[seat],policyActions,{actorId,authorizedView,legalActions:policyActions}).slice(0,8).map(r=>({actionId:r.action.actionId,score:r.score}))}: {})}):null;
     const command=vault.get(selected.actionId);if(!command){terminationReason='POLICY_ERROR';errorCode='ACTION_ID_INVALID';break;}
@@ -180,6 +189,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
       legalActionCount:policyActions.length,
       reasonCode:selected._hybrixMetadata?.reasonCode??null,
       candidateScores:observation?.policyScores??null,
+      ...(adaptiveFrame?{adaptive:compactAdaptiveFrame(adaptiveFrame,{deep:strategicTrace})}:{}),
       visibility:'authorized'
     });
     if(strategy)strategy.capture(observation,seats.map(id=>deriveSecuredPoints(result.state,id)));
@@ -218,7 +228,9 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const browserHashInput={...hashCore,mechanicCounts:_stripComboTag(hashCore.mechanicCounts),primaryMechanicCounts:_stripComboTag(hashCore.primaryMechanicCounts),participants:hashCore.participants.map(p=>{const{mechanicOpportunityCounts:_m,primaryMechanicOpportunityCounts:_pm,comboOpportunityCount:_co,comboDeclarationCount:_cd,...rest}=p;return{...rest,mechanicCounts:_stripComboTag(rest.mechanicCounts),primaryMechanicCounts:_stripComboTag(rest.primaryMechanicCounts)};})};
   const strategyData=strategy?.finish(seats.map(id=>finalScores[id]),decisions);
   const terminal=terminalEvidence(capturedEvents,seats.map(id=>state.players[id].goal),publicTerminalAnchorCounts(state,seats));
-  const _matchResult={...core,...(strategyData?{strategicTelemetry:strategyData}:{}),...(terminal?{terminalEvidence:terminal}:{}),comboTelemetry,matchResultHash:hashCanonical(browserHashInput),rankDecisions,decisions:matchDecisions};
+  const adaptiveSeatEntries=seats.map((_,i)=>{const s=adaptiveSeatSummary(adaptiveCfgs[i],adaptiveControllers[i]);return s?{seat:i+1,...s}:null;}).filter(Boolean);
+  const adaptiveTelemetry=adaptiveSeatEntries.length?{schemaVersion:ADAPTIVE_TELEMETRY_VERSION,seats:adaptiveSeatEntries}:null;
+  const _matchResult={...core,...(strategyData?{strategicTelemetry:strategyData}:{}),...(terminal?{terminalEvidence:terminal}:{}),...(adaptiveTelemetry?{adaptiveTelemetry}:{}),comboTelemetry,matchResultHash:hashCanonical(browserHashInput),rankDecisions,decisions:matchDecisions};
   if(recordReplay)_matchResult.replay={initialState:replayInitialState,commands:replayCommands};
   if(fieldManual) {
     if(!recordReplay)throw new Error('STRATEGY_CAPTURE_REQUIRES_TRANSCRIPT');

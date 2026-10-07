@@ -1,12 +1,13 @@
-import { esc } from '../state.js?v=943d1ec6c237';
-import { LAB_IDENTITY } from './identity.mjs?v=943d1ec6c237';
-import { LAB_PROFILES } from './evolution-domain.mjs?v=943d1ec6c237';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=943d1ec6c237';
-import { EvolutionStore } from './evolution-store.mjs?v=943d1ec6c237';
-import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=943d1ec6c237';
-import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=943d1ec6c237';
-import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=943d1ec6c237';
-import { buildDossier } from './profile-journal.mjs?v=943d1ec6c237';
+import { esc } from '../state.js?v=46b6024f32eb';
+import { LAB_IDENTITY } from './identity.mjs?v=46b6024f32eb';
+import { LAB_PROFILES } from './evolution-domain.mjs?v=46b6024f32eb';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=46b6024f32eb';
+import { EvolutionStore } from './evolution-store.mjs?v=46b6024f32eb';
+import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=46b6024f32eb';
+import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=46b6024f32eb';
+import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=46b6024f32eb';
+import { buildDossier } from './profile-journal.mjs?v=46b6024f32eb';
+import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, ADAPTIVE_CONTRACT, DEFAULT_ADAPTIVE_THRESHOLDS } from './adaptive-strategy.mjs?v=46b6024f32eb';
 
 // Profile-centered Lab workflows. Presentation only: every scientific or
 // head-changing action goes through ProfileStore / profile-science.
@@ -84,6 +85,7 @@ export function mountProfileWorkspace(root) {
       <div><dt>Agent Profile</dt><dd>${esc(v.profile.displayName)} <code>${esc(head.agentProfileId)}</code></dd></div>
       <div><dt>Active head</dt><dd>headVersion ${head.headVersion} · ${badge(lastEvent.type)} ${badge(`Evidence: ${lastEvent.evidenceStatus}`, lastEvent.evidenceStatus === 'PROMOTION_CHALLENGE_APPROVED' ? 'evaluation' : 'unavailable')}</dd></div>
       <div><dt>Champion checkpoint</dt><dd><code>${esc(short(head.championCheckpointId, 22))}</code> · derivation ${esc(champion?.mutation?.kind ?? 'V1/ROOT')} · genome ${esc(Object.entries(champion?.policyState.weights ?? {}).map(([k, w]) => `${k} ${w}`).join(', '))}</dd></div>
+      <div><dt>Adaptive Strategy</dt><dd>${champion?.adaptive ? `${badge(champion.adaptive.mode === 'LEARNED' ? 'Learned (experimental — runs as Off)' : champion.adaptive.mode === 'RULED' ? 'Ruled' : 'Off', champion.adaptive.mode === 'RULED' ? 'evaluation' : '')} posture rules on the checkpoint` : 'Off — baseline genome only'}</dd></div>
       <div><dt>Authored identity (revision ${rev.body.revisionNumber}, ${esc(rev.body.origin)})</dt><dd>${esc(rev.body.intendedIdentity.statement || 'No statement.')} · traits ${esc(JSON.stringify(rev.body.intendedIdentity.traits))}</dd></div>
       <div><dt>Capability Objective</dt><dd>${esc(obj.body.definitionId)} v${obj.body.definitionVersion} on ${esc(obj.body.rulesProfileId)} · <code>${esc(short(obj.id, 20))}</code></dd></div>
       <div><dt>Execution capability</dt><dd>${exec.ok ? badge('Executable in this implementation', 'evaluation') : badge(`Not executable: ${exec.reasons.join(', ')}`, 'danger')}</dd></div>
@@ -164,6 +166,23 @@ export function mountProfileWorkspace(root) {
       <section class="evo-workbench"><h4>Compare measurements</h4><div class="toolbar"><label>A<select data-ap-compare="0">${options(ui.compare[0])}</select></label><label>B<select data-ap-compare="1">${options(ui.compare[1])}</select></label></div>${comparison}</section>`;
   }
 
+  function adaptiveHtml(rev) {
+    const ad = rev.body.adaptiveStrategy ?? null, mode = ad?.mode ?? 'OFF', th = { ...DEFAULT_ADAPTIVE_THRESHOLDS, ...(ad?.thresholds ?? {}) };
+    const stateEditors = MODIFIER_STATES.map(state => {
+      const mods = ad?.modifiers?.[state] ?? {};
+      const inputs = GENOME_DEFINITION.parameters.map(p => `<label>${esc(p.name)} <small>−100…+100 weight shift</small><input type="number" data-ap-amod="${state}:${p.name}" min="-100" max="100" step="1" value="${mods[p.name] ?? 0}"></label>`).join('');
+      return `<details><summary>${esc(STRATEGIC_STATE_LABELS[state] ?? state)}</summary><fieldset><legend>Weight modifiers when ${esc(STRATEGIC_STATE_LABELS[state] ?? state)} is active</legend>${inputs}</fieldset></details>`;
+    }).join('');
+    const thresholds = [['aheadEnter', 'Ahead enters at advantage ≥', '0…1'], ['dominantEnter', 'Dominant enters at advantage ≥', '0…1'], ['hysteresis', 'Hysteresis band (exit needs re-cross)', '0…0.5'], ['mustDefendAt', 'Opponent secured points fraction that raises DEFENSIVE_EMERGENCY', '0.5…1']]
+      .map(([key, label, hint]) => `<label>${esc(label)} <small>${hint}</small><input type="number" data-ap-at="${key}" step="0.01" value="${th[key]}"></label>`).join('');
+    return `<fieldset><legend>Adaptive Strategy <small>temporary posture shifts during a match — the base genome stays the identity</small></legend>
+      <label>Mode <select id="ap-d-admode">${[['OFF', 'Off — baseline genome only'], ['RULED', 'Ruled — deterministic states + modifiers'], ['LEARNED', 'Learned (experimental — runs as Off this version)']].map(([m, l]) => `<option value="${m}" ${m === mode ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+      <details ${mode !== 'OFF' ? 'open' : ''}><summary>Strategic posture configuration</summary>
+        <fieldset><legend>State thresholds</legend>${thresholds}</fieldset>
+        ${stateEditors}</details>
+      <p>States: roughly even → Ahead/Dominant when winning, Behind/Desperate when losing; Win Opportunity and Defensive Emergency are immediate overrides. Effective weights are clamped to each parameter's valid range.</p></fieldset>`;
+  }
+
   function tuneHtml() {
     const rev = revision(), head = ui.view.head, champion = cp(head.championCheckpointId);
     const traits = TRAIT_CATALOG.map(t => `<label>${esc(t.label)} <small>${t.min}…${t.max} → ${esc(t.parameter)} (×20)</small><input type="number" data-ap-trait="${t.traitId}" min="${t.min}" max="${t.max}" step="1" value="${rev.body.intendedIdentity.traits[t.traitId] ?? Math.round((champion?.policyState.weights[t.parameter] ?? 0) / 20)}"></label>`).join('');
@@ -181,6 +200,7 @@ export function mountProfileWorkspace(root) {
         <label>Metric<select id="ap-d-metric"><option value="">None</option><option>ACTION_FAMILY_RATE</option><option>MECHANIC_RATE</option></select></label><label>Family / tag<input id="ap-d-key" maxlength="80" placeholder="counter"></label>
         <label>Min rate<input type="number" id="ap-d-cmin" min="0" max="1" step="0.01" placeholder="none"></label><label>Max rate<input type="number" id="ap-d-cmax" min="0" max="1" step="0.01" placeholder="none"></label><label>Minimum decisions<input type="number" id="ap-d-cden" min="1" value="200"></label></div>
         <p>Existing: ${esc(JSON.stringify(rev.body.identityConstraints))}</p></fieldset>
+      ${adaptiveHtml(rev)}
       <button type="submit" ${busy() ? 'disabled' : ''}>Save draft and preview</button></form>${preview}</section>
       <section class="evo-workbench"><h4>Draft revisions</h4>${drafts.map(r => `<div class="evo-replay-row"><span>Revision ${r.body.revisionNumber} · ${r.body.executableChange ? 'executable change' : 'configuration only'} · <code>${esc(short(r.id))}</code> · parent <code>${esc(short(r.body.parentRevisionId))}</code></span>
         <button data-ap-activate="${esc(r.id)}" ${busy() || r.body.parentRevisionId !== head.activeRevisionId ? 'disabled' : ''}>Activate authored revision</button></div>`).join('') || '<p>No drafts.</p>'}
@@ -251,7 +271,13 @@ export function mountProfileWorkspace(root) {
       const mutationConstraints = Object.fromEntries([...root.querySelectorAll('[data-ap-constraint]')].map(s => { const n = s.dataset.apConstraint; return [n, s.value === 'BOUNDED' ? { mode: 'BOUNDED', min: number(`[data-ap-min="${n}"]`), max: number(`[data-ap-max="${n}"]`) } : { mode: s.value }]; }).filter(([, c]) => c.mode !== 'FREE'));
       const metric = root.querySelector('#ap-d-metric').value, optional = sel => root.querySelector(sel).value === '' ? null : number(sel);
       const identityConstraints = [...revision().body.identityConstraints, ...(metric ? [{ metricId: metric, metricVersion: 1, key: root.querySelector('#ap-d-key').value, min: optional('#ap-d-cmin'), max: optional('#ap-d-cmax'), minDenominator: number('#ap-d-cden') }] : [])];
-      ui.preview = await store.saveDraftRevision({ agentProfileId: id(), baseRevisionId: head().activeRevisionId, traits, statement: root.querySelector('#ap-d-statement').value, mutationConstraints, identityConstraints, rulesProfileId: root.querySelector('#ap-d-rules').value, sourceCheckpointId: head().championCheckpointId });
+      const adMode = root.querySelector('#ap-d-admode').value;
+      const adaptiveStrategy = adMode === 'OFF' ? null : {
+        contract: ADAPTIVE_CONTRACT.id, mode: adMode,
+        thresholds: Object.fromEntries([...root.querySelectorAll('[data-ap-at]')].map(i => [i.dataset.apAt, Number(i.value)])),
+        modifiers: Object.fromEntries(MODIFIER_STATES.map(s => [s, Object.fromEntries([...root.querySelectorAll(`[data-ap-amod^="${s}:"]`)].map(i => [i.dataset.apAmod.split(':')[1], Number(i.value)]).filter(([, v]) => v !== 0))]).filter(([, t]) => Object.keys(t).length)),
+      };
+      ui.preview = await store.saveDraftRevision({ agentProfileId: id(), baseRevisionId: head().activeRevisionId, traits, statement: root.querySelector('#ap-d-statement').value, mutationConstraints, identityConstraints, rulesProfileId: root.querySelector('#ap-d-rules').value, adaptiveStrategy, sourceCheckpointId: head().championCheckpointId });
     }, 'Draft saved. The active head has not moved; review the delta and activate explicitly.');
   };
   const change = async event => {

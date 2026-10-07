@@ -59,6 +59,9 @@ When adding a new `test/*.test.mjs` file, it MUST be added to:
 2. The CI stages in `scripts/ci.mjs` (ci.sh delegates to ci.mjs)
 Otherwise `test/test-coverage-meta.test.mjs` will fail.
 
+## Diagnostic Policy Modifiers (RJ forensic tooling)
+`runPolicyMatch` accepts pipe-suffixed policy ids: `"value-tactical|drop:effect-red-joker:hand-swap"` filters matching `family`/`mode` from the legal-action list handed to `policy.choose` (fail-open if a filter would leave nothing legal; engine legality unchanged). RNG seeds from the BASE policy id, so ablation arms share tiebreak streams with the unmodified policy. Used by `scripts/rj-forensic-ablation.mjs` for mode-ablation / score-only control experiments on identical seeds. Forensic harnesses: `scripts/rj-forensic-analysis.mjs` (mode decomposition from `summaries.ndjson`), `scripts/rj-forensic-deep.mjs` (replay-fork paired counterfactuals + omniscient hand-quality), `scripts/rj-forensic-ablation.mjs` (same-seed ablation cohorts). Findings: `runtime/forensic-rj/FORENSIC-REPORT.md`. Gotcha: `apps/lab-web/dist/autonomy-runtime.js` must be rebuilt (`pnpm run build`) after policy changes or `policy-action-coverage`/`tactical-policies` browser-parity assertions fail.
+
 ## VNext-RC0 Milestone Additions (v0.24.2+)
 - **SEC-01 Secret Containment:** `scripts/secret-containment-scan.mjs` scans tracked files, build artifacts, and reports for leaked secrets. Fail-closed. Test: `test/sec-01-secret-containment.test.mjs`. Pre-pack gate in `scripts/package-release.mjs`.
 - **Release Identity Manifest:** `scripts/generate-release-identity.mjs` generates `config/release-identity.json` from actual codebase state (package.json, engine-adapter, version.mjs). Cross-checks version surfaces. Test: `test/release-identity.test.mjs`.

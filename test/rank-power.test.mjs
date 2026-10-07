@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RANK_POWER_SCHEMA_VERSION, RPI_AXIS_WEIGHTS, normalizeMinimax, computePowerAxes, computeObservedRPI, computeDecisionPower, confidenceStatus, buildBalanceWatchlist, buildRankPowerModel } from '@intrilex/simulation-runtime/rank-power';
+import { RANK_POWER_SCHEMA_VERSION, RPI_AXIS_WEIGHTS, normalizeMinimax, computePowerAxes, computeObservedRPI, computeDecisionPower, confidenceStatus, buildBalanceWatchlist, buildRankPowerModel, resolveLadderSelection } from '@intrilex/simulation-runtime/rank-power';
 
 const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K","RJ","BJ"];
 
@@ -247,4 +247,31 @@ test('degenerate causal axes cannot support a HIGH-confidence balance flag', () 
   const watchlist = buildBalanceWatchlist(rpi, metrics, profiles);
   assert.equal(watchlist.overpowered.some(item => item.rank === 'A'), false);
   assert.equal(watchlist.suppressed, true);
+});
+
+// ── Ladder identity stability (Rank dossier position fix) ────────────────
+
+test('resolveLadderSelection keeps dossier identity stable under ladder sorting', () => {
+  // Simulate a ladder where Rank 2's RPI sorts it to a non-trivial position.
+  const ranks = { 'A': {}, '2': {}, 'K': {}, '10:club': {}, '10:spade': {} };
+  const ladder = [
+    { rank: 'K', rpi: 0.9 },
+    { rank: 'A', rpi: 0.7 },
+    { rank: '2', rpi: 0.4 },
+    { rank: '10:spade', rpi: 0.3 },
+    { rank: '10:club', rpi: 0.2 }
+  ];
+  // Canonical id survives any sort position — position is derived, never stored.
+  assert.equal(resolveLadderSelection(ranks, ladder, '2'), '2');
+  assert.equal(ladder.findIndex((e) => e.rank === resolveLadderSelection(ranks, ladder, '2')) + 1, 3);
+  // Re-sorting cannot move the dossier selection.
+  const resorted = [...ladder].reverse();
+  assert.equal(resolveLadderSelection(ranks, resorted, '2'), '2');
+  assert.equal(resorted.findIndex((e) => e.rank === '2') + 1, 3);
+  // A canonical '10' request resolves to a concrete per-suit ladder entry.
+  assert.equal(resolveLadderSelection(ranks, ladder, '10'), '10:spade');
+  // Unknown/absent selection falls back to the visible ladder head.
+  assert.equal(resolveLadderSelection(ranks, ladder, 'Q'), 'K');
+  assert.equal(resolveLadderSelection(ranks, ladder, null), 'K');
+  assert.equal(resolveLadderSelection(ranks, ladder, undefined), 'K');
 });

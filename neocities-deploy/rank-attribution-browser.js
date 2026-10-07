@@ -6,7 +6,7 @@
 // Imports parseIdentity and RANK_REGISTRY directly from the browser engine.
 // ═══════════════════════════════════════════════════════════════
 
-import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=943d1ec6c237';
+import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=46b6024f32eb';
 
 export const CANONICAL_RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K","RJ","BJ"];
 
@@ -39,7 +39,7 @@ export function isNoAttributionAction(action) {
   ]);
   const noAttributionFamilies = new Set([
     'response-decline', 'pass', 'exhausted-pass',
-    'phase', 'private-choice', 'draw'
+    'phase', 'draw'
   ]);
   if (noAttributionKinds.has(kind)) return true;
   if (noAttributionFamilies.has(family)) return true;
@@ -87,6 +87,11 @@ export function attributeRankAction({ sourceCards, playForm, originRank = null, 
   if (playForm === 'generated' && originRank) {
     return { sourceCards, sourceRanks: [originRank], primaryRank: originRank, rankWeights: { [originRank]: 1.0 }, playForm, originRank, generatedRank, attributionStatus: 'generated-origin', attributionReason: `generated effect with origin ${originRank}` };
   }
+
+  // Solo Wild Copy: a single 2 copying a rank 3-7 Base effect
+  if (playForm === 'solo-wild-copy' && originRank === '2' && generatedRank) {
+    return { sourceCards, sourceRanks: ['2'], primaryRank: '2', rankWeights: { '2': 1.0 }, playForm, originRank: '2', generatedRank, attributionStatus: 'generated-origin', attributionReason: `solo wild copy of rank ${generatedRank} base effect` };
+  }
   const uniqueRanks = [...new Set(ranks)];
   if (uniqueRanks.length === 1) {
     return { sourceCards, sourceRanks: uniqueRanks, primaryRank: uniqueRanks[0], rankWeights: { [uniqueRanks[0]]: 1.0 }, playForm, originRank, generatedRank, attributionStatus: 'exact', attributionReason: 'single-rank source' };
@@ -102,9 +107,46 @@ export function attributeRankAction({ sourceCards, playForm, originRank = null, 
   return { sourceCards, sourceRanks: uniqueRanks, primaryRank: sorted[0], rankWeights, playForm, originRank, generatedRank, attributionStatus: 'fractional', attributionReason: `cross-rank source: ${uniqueRanks.join('+')}` };
 }
 
+export function classifyPlayFamily(action, attribution = null) {
+  const family = action?.family ?? '';
+  const form = attribution?.playForm ?? '';
+  if (attribution?.attributionStatus === 'continuation') return 'continuation';
+  if (form === 'solo-wild-copy' || family === 'solo-wild') return 'solo-wild-copy';
+  if (form === 'super' || family === 'super') return 'super';
+  if (form === 'ultra' || family === 'ultra') return 'ultra';
+  if (form === 'royal-marriage' || family === 'royal-marriage') return 'royal-marriage';
+  if (form === 'generated' || family === 'generated') return 'generated';
+  if (family === 'quick') return 'quick';
+  if (family === 'score') return 'scoring';
+  if (family === 'counter' || family === 'disrupt' || family === 'interrupt' || family === 'instant') return 'response';
+  if (family === 'voltage') return 'voltage';
+  if (family === 'wild-sovereignty') return 'wild-sovereignty';
+  if (family?.startsWith('effect-') || family === 'anchor' || family === 'anchor-private-choice' || family === 'effect-private-choice') return 'printed-effect';
+  if (family === 'scuttle') return 'scuttle';
+  if (family === 'swap-bar') return 'swap';
+  if (family === 'private-choice') return 'continuation';
+  return 'other';
+}
+
 export function attributeAction(state, action, viewerMode = 'private') {
+  // Private-choice decisions are sealed continuations of an earlier
+  // declaration; the choice's recorded sourceCardId identifies the originating
+  // source card (the 6 for a dig, the wild 2 for a solo-wild copy, the scored
+  // 2 for a 2 Quick discard rider) — that rank receives continuation credit.
+  if (action.family === 'private-choice') {
+    const choice = state?.metadata?.coreAuthority?.privateChoice ?? null;
+    const originId = choice?.sourceCardId ?? null;
+    const originCard = originId ? state?.cards?.[originId] : null;
+    if (originId && originCard?.identity) {
+      const parsed = parseIdentity(originCard.identity);
+      if (parsed?.rank) {
+        return { sourceCards: [{ entityId: originId, identity: originCard.identity, rank: parsed.rank, suit: parsed.suit ?? null, zoneBefore: originCard.zone, role: 'source' }], sourceRanks: [parsed.rank], primaryRank: parsed.rank, rankWeights: { [parsed.rank]: 1.0 }, playForm: 'continuation', playFamily: 'continuation', originRank: parsed.rank, generatedRank: null, attributionStatus: 'continuation', attributionReason: `private-choice continuation of ${choice.kind ?? 'declared effect'}` };
+      }
+    }
+    return { sourceCards: [], sourceRanks: [], primaryRank: null, rankWeights: {}, playForm: 'continuation', playFamily: 'continuation', originRank: null, generatedRank: null, attributionStatus: 'not-observable', attributionReason: 'private-choice continuation origin not observable' };
+  }
   if (isNoAttributionAction(action)) {
-    return { sourceCards: [], sourceRanks: [], primaryRank: null, rankWeights: {}, playForm: classifyPlayForm(action), originRank: null, generatedRank: null, attributionStatus: 'not-observable', attributionReason: `no-attribution action: ${action.kind}` };
+    return { sourceCards: [], sourceRanks: [], primaryRank: null, rankWeights: {}, playForm: classifyPlayForm(action), playFamily: classifyPlayFamily(action), originRank: null, generatedRank: null, attributionStatus: 'not-observable', attributionReason: `no-attribution action: ${action.kind}` };
   }
   const sourceCards = buildSourceCards(state, action, viewerMode);
   const playForm = classifyPlayForm(action);
@@ -116,5 +158,6 @@ export function attributeAction(state, action, viewerMode = 'private') {
     originRank = '2';
     generatedRank = action.featureVector?.targetRank ?? null;
   }
-  return attributeRankAction({ sourceCards, playForm, originRank, generatedRank, viewerMode });
+  const attribution = attributeRankAction({ sourceCards, playForm, originRank, generatedRank, viewerMode });
+  return { ...attribution, playFamily: classifyPlayFamily(action, attribution) };
 }

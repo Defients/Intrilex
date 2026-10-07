@@ -9,8 +9,8 @@
       "status": "excluded",
       "urlTemplate": "data/autonomy/lab-replays/public/<fixtureId>.json",
       "bundledFixtureIds": [
-        "M-cdbb93aac376239f7748",
-        "M-6eb96a20b1344ba12321"
+        "M-c2d7ac654cf6fa83830b",
+        "M-bd9fa9f2b1a86c24f812"
       ]
     }
   }

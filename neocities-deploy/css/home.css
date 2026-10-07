@@ -38,6 +38,11 @@
    violet and gold can coexist without the whole canvas reading blue.
    Shared landing layers are re-scoped here; rules/legal pages keep
    the legacy treatment. ── */
+.home-app .landing-image-bg{
+  background:
+    linear-gradient(180deg,rgba(5,8,14,.38) 0%,rgba(5,8,14,.18) 45%,rgba(5,8,14,.55) 100%),
+    url("/assets/intrilex-bg.png") center/cover no-repeat;
+}
 .home-app .landing-video-bg{opacity:.14; filter:saturate(.9) contrast(1.05)}
 .home-app .landing-video-overlay{
   background:linear-gradient(180deg,

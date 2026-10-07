@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { attributeRankAction, classifyPlayForm, isNoAttributionAction, attributeAction, buildSourceCards } from '@intrilex/simulation-runtime/rank-attribution';
+import { attributeRankAction, classifyPlayForm, classifyPlayFamily, classifyVariantEntity, isNoAttributionAction, attributeAction, buildSourceCards } from '@intrilex/simulation-runtime/rank-attribution';
+import { emptyParticipantRankCounters, applyDecisionToRankCounters } from '@intrilex/telemetry/rank-telemetry';
 import { canonicalRankAuthority, allRankDefinitions, RANK_REGISTRY, CANONICAL_RANKS, parseIdentity } from '@intrilex/engine-adapter';
 
 test('canonical rank authority has all 15 ranks', () => {
@@ -258,3 +259,91 @@ test('buildSourceCards shows all in private mode', () => {
   assert.equal(cards[1].identity, 'Q♠');
 });
 
+
+// === Rank 2 polymorphism: continuation, wild-catalyst, family decomposition ===
+
+test('private-choice continuation attributes to the choice source rank', () => {
+  // A 2 Quick discard rider: the private choice records the scored 2 as source.
+  const state = {
+    cards: { C2H: { identity: '2♥', controllerId: 'P1', zone: 'P1_PR' } },
+    metadata: { coreAuthority: { privateChoice: { kind: 'core-two-quick-discard', chooserId: 'P2', sourceCardId: 'C2H' } } },
+    viewerId: 'P1'
+  };
+  const result = attributeAction(state, { family: 'private-choice', kind: 'core-two-quick-discard' });
+  assert.equal(result.attributionStatus, 'continuation');
+  assert.equal(result.primaryRank, '2');
+  assert.equal(result.rankWeights['2'], 1.0);
+  assert.equal(result.playFamily, 'continuation');
+});
+
+test('private-choice continuation is not-observable when the origin cannot be read', () => {
+  const state = {
+    cards: {},
+    metadata: { coreAuthority: { privateChoice: { kind: 'core-two-quick-discard', chooserId: 'P2' } } },
+    viewerId: 'P1'
+  };
+  const result = attributeAction(state, { family: 'private-choice' });
+  assert.equal(result.attributionStatus, 'not-observable');
+  assert.equal(result.primaryRank, null);
+});
+
+test('wild-catalyst Super (2♥ + 5♥) gets fractional attribution covering both ranks', () => {
+  const result = attributeRankAction({
+    sourceCards: [
+      { entityId: 'C1', identity: '5♥', rank: '5', suit: '♥', zoneBefore: 'P1_HAND', role: 'source' },
+      { entityId: 'C2', identity: '2♥', rank: '2', suit: '♥', zoneBefore: 'P1_HAND', role: 'source' }
+    ],
+    playForm: 'super',
+    viewerMode: 'private'
+  });
+  assert.equal(result.attributionStatus, 'fractional');
+  assert.ok(result.sourceRanks.includes('2'));
+  assert.ok(result.sourceRanks.includes('5'));
+  assert.equal(result.rankWeights['2'], 0.5);
+  assert.equal(result.rankWeights['5'], 0.5);
+  // The payload rank owns the resolved variant (effect identity), not the 2.
+  assert.equal(result.primaryRank, '5');
+});
+
+test('wild-catalyst Super credits Rank 2 participation at rank level, not variant level', () => {
+  const attribution = attributeAction(
+    {
+      cards: {
+        C5: { identity: '5♥', controllerId: 'P1', zone: 'P1_HAND' },
+        C2: { identity: '2♥', controllerId: 'P1', zone: 'P1_HAND' }
+      },
+      viewerId: 'P1'
+    },
+    { family: 'super', mode: 'five-recycle', kind: 'core-resolve-advanced', sourceCardIds: ['C5', 'C2'], advanced: { kind: 'advanced-super-five-recycle' } }
+  );
+  const variant = classifyVariantEntity(attribution, { family: 'super', mode: 'five-recycle', advanced: { kind: 'advanced-super-five-recycle' } });
+  assert.ok(variant.creditKeys.includes('5'), 'payload rank must receive rank-overall credit');
+  assert.ok(variant.creditKeys.includes('2'), 'wild catalyst 2 must receive rank-overall participation credit');
+  // Rank 2 must NOT absorb the ⭐5 variant identity.
+  assert.ok(!variant.creditKeys.some((k) => k.startsWith('2:super')), 'catalyst must not claim the payload variant tier');
+});
+
+test('classifyPlayFamily decomposes Rank 2 usage into distinct families', () => {
+  assert.equal(classifyPlayFamily({ family: 'quick', mode: 'two-score-discard' }), 'quick');
+  assert.equal(classifyPlayFamily({ family: 'solo-wild', mode: 'six-dig-♥' }), 'solo-wild-copy');
+  assert.equal(classifyPlayFamily({ family: 'super', mode: 'five-recycle' }), 'super');
+  assert.equal(classifyPlayFamily({ family: 'ultra' }), 'ultra');
+  assert.equal(classifyPlayFamily({ family: 'voltage' }), 'voltage');
+  assert.equal(classifyPlayFamily({ family: 'score' }), 'scoring');
+  assert.equal(classifyPlayFamily({ family: 'private-choice' }), 'continuation');
+  assert.equal(classifyPlayFamily({ family: 'solo-wild' }, { attributionStatus: 'continuation' }), 'continuation');
+});
+
+test('rank counters record playFamilyCounts for every participating source rank', () => {
+  const counters = emptyParticipantRankCounters(['P1'], CANONICAL_RANKS);
+  const attribution = {
+    attributionStatus: 'fractional', primaryRank: '5', sourceRanks: ['5', '2'],
+    rankWeights: { 5: 0.5, 2: 0.5 }, playFamily: 'super',
+    sourceCards: []
+  };
+  applyDecisionToRankCounters(counters, 'P1', attribution, { family: 'super' }, [], {});
+  assert.equal(counters.P1['5'].playFamilyCounts.super, 1);
+  assert.equal(counters.P1['2'].playFamilyCounts.super, 1, 'the catalyst 2 records super-family participation');
+  // The 2 is not a solo-wild copy here — its family bucket reflects the actual play.
+  assert.equal(counters.P1['2'].playFamilyCounts['solo-wild-copy'] ?? 0, 0);
+});

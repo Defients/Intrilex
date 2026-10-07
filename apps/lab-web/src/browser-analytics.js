@@ -547,6 +547,12 @@ export function classifyVariantEntity(attribution, action = {}) {
   const playForm = attribution.playForm ?? 'other';
   const suit = primarySourceSuit(attribution);
   const creditKeys = [rank];
+  // Secondary-rank participation (wild-catalyst supers, royal marriage): every
+  // distinct source rank is credited at rank-overall tier only — never to the
+  // primary rank's specific variant tier.
+  for (const secondaryRank of attribution.sourceRanks ?? []) {
+    if (secondaryRank !== rank && !creditKeys.includes(secondaryRank)) creditKeys.push(secondaryRank);
+  }
 
   if (playForm === 'super') {
     const se = resolveSuperEffect(action);

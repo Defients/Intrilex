@@ -504,6 +504,17 @@ function evaluateConserveResourcesGoal(cog) {
 }
 
 /**
+ * Cards drawn promised by an action's feature vector. Resource acquisition is a
+ * property of the action's effect, not its family name — filtered draws emitted
+ * as effects (e.g. private-choice dig actions) carry drawCount and must be
+ * recognized wherever a plain draw would be.
+ */
+function resourceDrawCount(action) {
+  const fv = action?.featureVector ?? {};
+  return Number(fv.drawCount ?? fv.cardsDrawn ?? fv.draw ?? 0);
+}
+
+/**
  * Apply GOAP goal bonuses to action scores.
  * Each active goal boosts action families that align with its steps.
  */
@@ -533,7 +544,7 @@ function applyGoalBonusToAction(score, action, goals, intensity) {
         if (family === 'effect-nine') adjusted += 200 * goalIntensity;
         break;
       case 'CONSERVE_RESOURCES':
-        if (family === 'draw') adjusted += 300 * goalIntensity;
+        if (family === 'draw' || resourceDrawCount(action) > 0) adjusted += 300 * goalIntensity;
         if (family === 'swap-bar' && mode === 'face-down') adjusted += 150 * goalIntensity;
         if (family === 'exhausted-pass') adjusted += 50 * goalIntensity;
         break;
@@ -638,7 +649,7 @@ function applyCognitionToLegalAction(baseScore, action, cognition, intensity, _c
       adjusted += 200 * cognition.threatLevel * intensity;
     }
     // Penalize slow actions when under threat
-    if (family === 'draw' || family === 'exhausted-pass') {
+    if (family === 'draw' || family === 'exhausted-pass' || resourceDrawCount(action) > 0) {
       adjusted -= 100 * intensity;
     }
   }
@@ -665,9 +676,9 @@ function applyCognitionToLegalAction(baseScore, action, cognition, intensity, _c
     }
   }
 
-  // IDLE_ROAM: boost resource acquisition (draw)
+  // IDLE_ROAM: boost resource acquisition (draw or any effect that draws cards)
   if (cognition.btNode === 'IDLE_ROAM') {
-    if (family === 'draw') {
+    if (family === 'draw' || resourceDrawCount(action) > 0) {
       adjusted += 320 * intensity;
     }
   }
@@ -680,8 +691,8 @@ function applyCognitionToLegalAction(baseScore, action, cognition, intensity, _c
     adjusted += 50 * intensity;
   }
 
-  // Resource pressure: low hand count boosts draw actions
-  if (cognition.ownHandCount <= 2 && family === 'draw') {
+  // Resource pressure: low hand count boosts draw actions and draw-producing effects
+  if (cognition.ownHandCount <= 2 && (family === 'draw' || resourceDrawCount(action) > 0)) {
     adjusted += 100 * intensity;
   }
 

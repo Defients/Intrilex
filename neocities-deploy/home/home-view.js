@@ -68,6 +68,7 @@ const EXPLORE_DESTINATIONS = [
  */
 export function renderHomePage({ labVersion = '', rulesVersion = '' } = {}) {
   return `<div class="landing-app home-app">
+    <div class="landing-image-bg" aria-hidden="true"></div>
     <video class="landing-video-bg" autoplay muted loop playsinline preload="metadata" aria-hidden="true" data-mobile-skip>
       <source src="assets/landing1.mp4" type="video/mp4" />
     </video>

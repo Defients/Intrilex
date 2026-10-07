@@ -9,7 +9,7 @@ import { assertValidState } from "./validation.js";
 import { CORE_FOUNDATION_AUTHORITY_PROFILE } from "./core-authority.js";
 import { CORE_EFFECT_DECLARATION_PROFILE, enumerateCoreEffectCandidates } from "./core-effects.js";
 import { CORE_RESPONSE_AUTHORITY_PROFILE, currentCoreStackTarget, currentPriorityActor, primaryDescriptor } from "./core-response.js";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates, generatedAdvancedLegalCandidates } from "./core-private-choice.js";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, generatedCoreEffectCandidates, generatedAdvancedLegalCandidates, isCorePrivateChoiceProfile } from "./core-private-choice.js";
 import { CORE_ADVANCED_AUTHORITY_PROFILE, CORE_UNRESTRICTED_AUTHORITY_PROFILE, enumerateAdvancedCoreCandidates } from "./core-advanced.js";
 function readCoreRuntime(state) {
     const value = state.metadata.coreAuthority;
@@ -126,6 +126,10 @@ export function enumerateCorePrivateChoiceActions(state, actorId) {
     if (choice.kind === "core-nine-anchor-discard")
         for (const id of choice.optionCardIds)
             candidates.push(privateChoiceAction(state, choice, "nine-anchor-discard", [id], { kind: "core-nine-anchor-discard", selectedCardIds: [id] }, { discard: true }));
+    // 2 Quick rider: the chosen opponent picks which of their own cards to discard.
+    if (choice.kind === "core-two-quick-discard")
+        for (const id of choice.optionCardIds)
+            candidates.push(privateChoiceAction(state, choice, "two-quick-discard", [id], { kind: "core-two-quick-discard", selectedCardIds: [id] }, { discard: true, quickRider: true }));
     // Natural 4: reorder top 4 DP cards, optionally draw 1 from the top.
     if (choice.kind === "core-natural-four-reorder") {
         const topIds = choice.optionCardIds;
@@ -217,6 +221,12 @@ function enumerateSoloWildCopyCandidates(state, actorId) {
             const copiedAction = { kind: "recycle-five" };
             const rankAction = { kind: "solo-wild-copy", sourceCardId, targetRank: "5", copiedAction };
             out.push(action(state, actorId, "solo-wild", `recycle-five-${twoSuit}`, "ACTION", [sourceCardId], [], { kind: "core-resolve-rank-action", action: rankAction }, { wild: true, targetRank: "5", copiedFamily: "recycle" }));
+        }
+        // Rank 6: six-dig (Base dig — sealed private choice; legal for every suited 2)
+        {
+            const copiedAction = { kind: "six-dig" };
+            const rankAction = { kind: "solo-wild-copy", sourceCardId, targetRank: "6", copiedAction };
+            out.push(action(state, actorId, "solo-wild", `six-dig-${twoSuit}`, "ACTION", [sourceCardId], [], { kind: "core-resolve-rank-action", action: rankAction }, { wild: true, targetRank: "6", copiedFamily: "dig" }));
         }
         // Rank 6♠: deep-draw-six-spade (only for 2♠, requires other hand cards to discard)
         if (twoSuit === "♠") {
@@ -356,6 +366,11 @@ export function enumerateCoreLegalActions(state, actorId) {
         if ([CORE_RESPONSE_AUTHORITY_PROFILE.id, CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE.id, CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(core.profileId)) {
             for (const sourceId of state.players[actorId].hand) {
                 const rank = parseIdentity(state.cards[sourceId].identity)?.rank;
+                // 2 Quick — Score + Discard (rulebook §2): score the 2 into PR for 2
+                // points; the chosen opponent discards 1 card of their choice.
+                if (rank === "2" && isCorePrivateChoiceProfile(state))
+                    for (const opponentId of state.turnOrder.filter((id) => id !== actorId))
+                        candidates.push(action(state, actorId, "quick", "two-score-discard", "QUICK", [sourceId], [], { kind: "core-declare-two-quick", sourceCardId: sourceId, targetPlayerId: opponentId }, { quick: true, scoreDiscard: true, noMiniTurn: true }));
                 if (rank === "8")
                     candidates.push(action(state, actorId, "quick", "eight-aegis-field", "QUICK", [sourceId], [], { kind: "core-declare-eight-aegis-field", sourceCardId: sourceId }, { quick: true, aegis: true }));
                 if (rank === "Q")
@@ -434,6 +449,10 @@ export function enumerateCoreResponseActions(state, actorId) {
             if (parsed?.rank === "Q" && state.activePlayerId === actorId)
                 for (const targetCardId of [...state.players[actorId].pr, ...state.players[actorId].er])
                     candidates.push(action(state, actorId, "quick", "queen-aegis", "QUICK", [sourceId], [targetCardId], { kind: "core-declare-queen-aegis-quick", sourceCardId: sourceId, targetCardId }, { quick: true, aegis: true }));
+            // 2 Quick may also be declared during the controller's own-FT response window.
+            if (parsed?.rank === "2" && state.activePlayerId === actorId && isCorePrivateChoiceProfile(state))
+                for (const opponentId of state.turnOrder.filter((id) => id !== actorId))
+                    candidates.push(action(state, actorId, "quick", "two-score-discard", "QUICK", [sourceId], [], { kind: "core-declare-two-quick", sourceCardId: sourceId, targetPlayerId: opponentId }, { quick: true, scoreDiscard: true, noMiniTurn: true }));
         }
         if ([CORE_ADVANCED_AUTHORITY_PROFILE.id, CORE_UNRESTRICTED_AUTHORITY_PROFILE.id].includes(runtime?.profileId)) {
             const hand = [...state.players[actorId].hand].sort();

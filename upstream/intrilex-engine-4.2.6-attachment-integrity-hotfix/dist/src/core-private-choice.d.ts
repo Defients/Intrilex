@@ -6,9 +6,9 @@ export declare const CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE: Readonly<{
     engineVersion: "4.2.3";
     playerCount: 2;
     enabledModules: readonly [];
-    supportedChoices: readonly ["3-present-take", "3-force-discard", "5-recycle-rummage", "6-deep-dig", "7-topdeck-casting", "9-anchor-discard"];
-    excludedSystems: readonly ["two-quick", "four-natural-quick", "six-swap-peek-quick", "three-spade-enhancement", "five-suit-exile-access", "six-spade-deep-draw", "seven-spade-enhancement", "supers", "rank10", "voltage", "ultras", "royal-marriage", "optional-modules", "multiplayer"];
-    rationale: "Engine-owned sealed continuation layer for ordinary Core hidden-choice effects. Quick/private suit enhancements and advanced Core families fail closed.";
+    supportedChoices: readonly ["2-quick-discard", "3-present-take", "3-force-discard", "5-recycle-rummage", "6-deep-dig", "7-topdeck-casting", "9-anchor-discard"];
+    excludedSystems: readonly ["four-natural-quick", "six-swap-peek-quick", "three-spade-enhancement", "five-suit-exile-access", "six-spade-deep-draw", "seven-spade-enhancement", "supers", "rank10", "voltage", "ultras", "royal-marriage", "optional-modules", "multiplayer"];
+    rationale: "Engine-owned sealed continuation layer for ordinary Core hidden-choice effects plus the 2 Quick opponent-discard rider. Quick/private suit enhancements and advanced Core families fail closed.";
 }>;
 export interface CorePrivateChoiceTransition {
     ok: true;
@@ -30,7 +30,7 @@ export declare function isCorePrivateChoiceProfile(state: Readonly<EngineState>)
 export declare function activeCorePrivateChoice(state: Readonly<EngineState>): CorePrivateChoiceState | null;
 export declare function beginChoice(state: EngineState, input: Omit<CorePrivateChoiceState, "schemaVersion" | "choiceId" | "token" | "createdRevision" | "optionsHash">, events: CorePrivateChoiceTransition["events"]): CorePrivateChoiceState;
 export declare function isCorePrivateChoiceEffect(effect: CoreEffectAction): boolean;
-export declare function resolveCorePrivateChoiceRoot(input: EngineState, actorId: PlayerId, effect: CoreEffectAction): CorePrivateChoiceTransition | CorePrivateChoiceFailure;
+export declare function resolveCorePrivateChoiceRoot(input: EngineState, actorId: PlayerId, effect: CoreEffectAction, sourceRankOverride?: string): CorePrivateChoiceTransition | CorePrivateChoiceFailure;
 export declare function generatedCoreEffectCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreEffectAction[];
 export declare function generatedAdvancedLegalCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): import("./core-advanced.js").AdvancedCoreCandidate[];
 export declare function generatedAdvancedCandidates(state: Readonly<EngineState>, actorId: PlayerId, cardId: CardId): CoreAdvancedAction[];

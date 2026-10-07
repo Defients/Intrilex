@@ -141,6 +141,7 @@ export function buildRankAnalytics({ summaries, aggregate = null }) {
         rankWeights: decision.rankWeights ?? {},
         attributionStatus: decision.attributionStatus ?? 'not-observable',
         playForm: decision.playForm ?? 'other',
+        playFamily: decision.playFamily ?? null,
         originRank: decision.originRank ?? null,
         generatedRank: decision.generatedRank ?? null
       };
@@ -349,7 +350,10 @@ function computeRankMetricsFromCounters(counters, ranks) {
       rankUltraPlayCount: c.ultraPlayCount,
       rankRoyalMarriageCount: c.royalMarriageCount,
       rankResponsePlayedCount: c.responsePlayedCount,
-      rankResponseDeclinedCount: c.responseDeclinedCount
+      rankResponseDeclinedCount: c.responseDeclinedCount,
+      rankResourceContribution: c.resourceContribution ?? 0,
+      rankTempoImpact: c.tempoImpact ?? 0,
+      rankPlayFamilyCounts: { ...(c.playFamilyCounts ?? {}) }
     };
   }
   return metrics;

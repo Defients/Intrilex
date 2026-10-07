@@ -3,7 +3,7 @@ import { applyAegis, applyTap, markExileBound, processFoundationActionRestrictio
 import { CORE_EFFECT_DECLARATION_PROFILE, resolveCoreEffect } from "./core-effects.js";
 import { evaluateProtection, revalidateAttachments } from "./interactions.js";
 import { CORE_RESPONSE_AUTHORITY_PROFILE, primaryDescriptor, targetAcceptsCounter } from "./core-response.js";
-import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, beginChoice, isCorePrivateChoiceEffect, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js";
+import { CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE, activeCorePrivateChoice, beginChoice, isCorePrivateChoiceEffect, isCorePrivateChoiceProfile, resolveCorePrivateChoiceRoot, resolveCorePrivateChoiceSubmission } from "./core-private-choice.js";
 import { compareScuttle, hasOrdinaryScuttleImmunity, parseIdentity, resolvePointValue, resolveRankAction } from "./ranks.js";
 import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js";
 import { nextIndex } from "./rng.js";
@@ -112,6 +112,7 @@ function setupCoreState(state, playerIds, seed, profileId, predeterminedIdentiti
         exhausted: null,
         disruptedActionTypesByPlayer: Object.fromEntries(playerIds.map((id) => [id, []])),
         qQuickResolvedFullTurnByPlayer: Object.fromEntries(playerIds.map((id) => [id, 0])),
+        twoQuickResolvedFullTurnByPlayer: Object.fromEntries(playerIds.map((id) => [id, 0])),
         privateChoice: null
     };
 }
@@ -617,6 +618,17 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
             // Board Lock is now a Quick Effect — it cannot be declared as a Mini-Turn rank action.
             if (action.action.kind === "black-joker-board-lock")
                 return fail("CORE_BOARD_LOCK", "Board Lock must be declared as a Quick Effect, not as a Mini-Turn rank action");
+            // Solo Wild Copy of the rank-6 Base dig (rulebook §2 Solo Wild): the 2
+            // stands in as the effect source and the sealed dig choice is opened for
+            // the controller. Routed through the private-choice root because the
+            // rank-6 Base effect is intrinsically a hidden-choice effect.
+            if (action.action.kind === "solo-wild-copy" && action.action.targetRank === "6" && action.action.copiedAction.kind === "six-dig") {
+                const resolved = resolveCorePrivateChoiceRoot(state, actorId, { kind: "six-dig", sourceCardId: action.action.sourceCardId }, "2");
+                if (!resolved.ok)
+                    return resolved;
+                consumeMiniTurn(resolved.state, actorId);
+                return { ok: true, state: resolved.state, events: resolved.events };
+            }
             const resolved = resolveRankAction(state, actorId, action.action);
             if (!resolved.ok)
                 return { ok: false, code: resolved.code, message: resolved.message, details: resolved.details };
@@ -855,6 +867,38 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
             events.push({ type: "CORE_BOARD_LOCK_QUICK_DECLARED", payload: { stackItemId: item.id, sourceCardId: action.sourceCardId, playerId: actorId } });
             break;
         }
+        case "core-declare-two-quick": {
+            // 2 Quick — Score + Discard (rulebook §2): score the 2 into PR for 2
+            // points, then the chosen opponent discards 1 card of their choice.
+            // Quick timing: the controller's own FT at a legal timing window.
+            // The opponent-discard rider requires the sealed private-choice layer, so
+            // the play is only offered where that subsystem exists (fail-closed).
+            if (!isCorePrivateChoiceProfile(state))
+                return fail("CORE_PRIVATE_CHOICE_PROFILE", "2 Quick requires the Core Private Choice Authority layer");
+            if (state.activePlayerId !== actorId || !["Start", "Action", "End"].includes(state.phase))
+                return fail("CORE_QUICK_WINDOW", "2 Quick requires the controller's own Full Turn");
+            if (state.priority?.open === true && state.priority.order[state.priority.index] !== actorId)
+                return fail("CORE_PRIORITY", `${actorId} does not hold priority`);
+            if (state.priority?.open !== true && state.stack.length > 0)
+                return fail("CORE_QUICK_WINDOW", "A Quick cannot enter a closed stack window");
+            const core = requireRuntime(state);
+            if (typeof core === "string")
+                return fail("CORE_PROFILE", core);
+            // Once-per-FT is consumed at resolution only — a countered 2 Quick does not use it.
+            if (core.twoQuickResolvedFullTurnByPlayer?.[actorId] === state.fullTurnSequence)
+                return fail("CORE_QUICK_LIMIT", "2 Quick already resolved this FT");
+            if (state.stack.some((entry) => entry.coreAuthority?.kind === "response" && entry.coreAuthority.responseKind === "two-quick" && entry.controllerId === actorId))
+                return fail("CORE_QUICK_LIMIT", "A 2 Quick is already pending");
+            const sourceProblem = responseSourceProblem(state, actorId, action.sourceCardId, "2");
+            if (sourceProblem)
+                return fail("CORE_QUICK_SOURCE", sourceProblem);
+            const target = state.players[action.targetPlayerId];
+            if (!target || action.targetPlayerId === actorId)
+                return fail("CORE_QUICK_TARGET", "2 Quick requires an opponent target player");
+            const item = declareCoreStackItem(state, actorId, "TWO-QUICK", [action.sourceCardId], [], { kind: "response", responseKind: "two-quick", targetPlayerId: action.targetPlayerId });
+            events.push({ type: "CORE_TWO_QUICK_DECLARED", payload: { stackItemId: item.id, sourceCardId: action.sourceCardId, targetPlayerId: action.targetPlayerId } });
+            break;
+        }
         case "core-declare-super-ace-counter": {
             const problem = validatePriorityHolder(state, actorId);
             if (problem)
@@ -993,6 +1037,45 @@ export function resolveCoreAuthorityAction(input, actorId, action) {
                     }
                 events.push({ type: "CORE_RANK10_STACK_THEFT_RESOLVED", payload: { stackItemId: item.id, targetStackItemId: target.id, sourceCardIds: responseSources, originalControllerId, controllerId: item.controllerId, controllerSkipAdded: 1, originalCasterSkipAdded: 1, interruptTax: false } });
                 reopenCorePriority(state, item.controllerId);
+                break;
+            }
+            if (payload.responseKind === "two-quick") {
+                // 2 Quick resolves: score the source 2 into the controller's PR for 2
+                // points (it is NOT sent to the stack-source destination), then the
+                // chosen opponent discards one card of their choice. The once-per-FT
+                // limit is consumed here, at resolution only — a countered 2 Quick
+                // leaves the stack through the counter path and never reaches this.
+                const sourceId = item.sourceCardIds[0];
+                if (state.cards[sourceId]?.zone === "ON_STACK") {
+                    moveCard(state, sourceId, `${item.controllerId}_PR`, item.controllerId);
+                    state.cards[sourceId].state.pointValue = resolvePointValue(state, state.cards[sourceId]);
+                }
+                responseSources = [sourceId];
+                const core = requireRuntime(state);
+                if (typeof core !== "string") {
+                    core.twoQuickResolvedFullTurnByPlayer ??= {};
+                    core.twoQuickResolvedFullTurnByPlayer[item.controllerId] = state.fullTurnSequence;
+                }
+                const discardTarget = payload.targetPlayerId;
+                const discardable = discardTarget ? state.players[discardTarget]?.hand ?? [] : [];
+                let discardChoiceOpened = false;
+                if (discardTarget && discardable.length > 0 && isCorePrivateChoiceProfile(state)) {
+                    beginChoice(state, {
+                        kind: "core-two-quick-discard",
+                        chooserId: discardTarget,
+                        controllerId: item.controllerId,
+                        sourceCardId: sourceId,
+                        optionCardIds: [...discardable].sort(),
+                        minSelections: 1,
+                        maxSelections: 1,
+                        stage: 1,
+                        context: { targetPlayerId: discardTarget }
+                    }, events);
+                    discardChoiceOpened = true;
+                }
+                events.push({ type: "CORE_TWO_QUICK_RESOLVED", payload: { stackItemId: item.id, sourceCardId: sourceId, targetPlayerId: discardTarget ?? null, scoredPointValue: state.cards[sourceId]?.state.pointValue ?? 2, discardChoiceOpened } });
+                if (!discardChoiceOpened)
+                    reopenCorePriority(state, item.controllerId);
                 break;
             }
             responseSources = sendCoreStackSources(state, item);

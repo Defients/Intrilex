@@ -8,6 +8,9 @@ import {createLabRun, createCheckpoint, validateCheckpoint, FROZEN_POLICIES, art
 import {hashCanonical} from '@intrilex/shared';
 import {TACTICAL_POLICY_IDS, tacticalBase} from '../packages/policies/src/tactics.mjs';
 import {buildOpponentModel, policyTraitsFromId, resolveOpponent} from '../apps/lab-web/src/play/opponent-catalog.mjs';
+import {evaluateAction} from '../packages/policies/src/action-evaluation.mjs';
+import {evaluateRankStrategy} from '../packages/game-ai/src/rank-strategy.mjs';
+import {runPolicyMatch} from '../packages/simulation-runtime/src/runtime.mjs';
 
 const ids=TACTICAL_POLICY_IDS;
 const card=(id,pointValue,controllerId='P2',zone='P2_PR',extra={})=>({id,identity:`${pointValue}♥`,pointValue,controllerId,zone,...extra});
@@ -118,6 +121,66 @@ test('Core Nine responses tap the larger untapped scoring threat instead of foll
   for(const id of ids)assert.equal(choose(id,moves,c).actionId,'z-ten');
   c.authorizedView.knownCards.ten.tapped=true;
   for(const id of ids)assert.equal(choose(id,moves,c).actionId,'a-five');
+});
+test('Red Joker shuffle-reset is valued only when the draw pile cannot supply the draws',()=>{
+  const rj={id:'rj1',identity:'RJ',pointValue:5,controllerId:'P1',zone:'P1_HAND'};
+  const ctx=dp=>({actorId:'P1',authorizedView:{own:{securedPoints:0,goal:21,hand:[rj],pr:[],er:[]},opponents:[{playerId:'P2',securedPoints:0,goal:21,handCount:3,pr:[],er:[]}],knownCards:{rj1:rj},stack:[],dpCount:dp,gyCount:14}});
+  const shuf=action('shuf','effect-red-joker',['rj1'],[],{},'shuffle-reset');
+  // Healthy DP: reshuffling the shared deck for the same 2 draws earns ~nothing.
+  assert.ok(evaluateAction(shuf,ctx(30)).utility<60,`healthy-DP utility ${evaluateAction(shuf,ctx(30)).utility}`);
+  // Exhausted DP + populated GY: the recycle now carries real draw value.
+  assert.ok(evaluateAction(shuf,ctx(0)).utility>150,`empty-DP utility ${evaluateAction(shuf,ctx(0)).utility}`);
+});
+test('Red Joker opponent-attack discounts large uninspectable hands instead of scaling with them',()=>{
+  const rj={id:'rj1',identity:'RJ',pointValue:5,controllerId:'P1',zone:'P1_HAND'};
+  const ctx=handCount=>({actorId:'P1',authorizedView:{own:{securedPoints:0,goal:21,hand:[rj],pr:[],er:[]},opponents:[{playerId:'P2',securedPoints:0,goal:21,handCount,pr:[],er:[]}],knownCards:{rj1:rj},stack:[],dpCount:30,gyCount:4}});
+  const atk=action('atk','effect-red-joker',['rj1'],[],{},'opponent-attack');
+  const small=evaluateAction(atk,ctx(2)).utility,big=evaluateAction(atk,ctx(7)).utility;
+  assert.ok(small>0&&big>0,'attack utility stays positive');
+  // A forced full-hand mulligan can repair a weak large hand: value must not grow with N.
+  assert.ok(big<small,`expected discount for large hands, got small=${small} big=${big}`);
+});
+test('Red Joker hand-swap and self-reset compare hand quality, not just card count',()=>{
+  const rj={id:'rj1',identity:'RJ',pointValue:5,controllerId:'P1',zone:'P1_HAND'};
+  const junk={id:'j1',identity:'3♣',pointValue:3,controllerId:'P1',zone:'P1_HAND'};
+  const ace={id:'a1',identity:'A♠',pointValue:4,controllerId:'P1',zone:'P1_HAND'};
+  const king={id:'k1',identity:'K♥',pointValue:8,controllerId:'P1',zone:'P1_HAND'};
+  const ctx=(hand,opp)=>({actorId:'P1',authorizedView:{own:{securedPoints:0,goal:21,hand,pr:[],er:[]},opponents:[{playerId:'P2',securedPoints:0,goal:21,handCount:opp,pr:[],er:[]}],knownCards:Object.fromEntries([rj,junk,ace,king].map(c=>[c.id,c])),stack:[],dpCount:30,gyCount:4}});
+  const swap=action('swap','effect-red-joker',['rj1'],[],{},'hand-swap');
+  const reset=action('reset','effect-red-joker',['rj1'],[],{},'self-reset');
+  // Same opponent count: surrendering a premium hand must score worse than surrendering junk.
+  assert.ok(evaluateAction(swap,ctx([rj,junk],3)).utility>evaluateAction(swap,ctx([rj,ace,king],3)).utility);
+  assert.ok(evaluateAction(reset,ctx([rj,junk],3)).utility>evaluateAction(reset,ctx([rj,ace,king],3)).utility);
+});
+test('rank-strategy hand advantage weighs strategic quality so junk-heavy hands are not misread as ahead',()=>{
+  const rj={id:'rj1',identity:'RJ',pointValue:5};
+  const junk=['3♣','3♦','3♥','4♣'].map((identity,i)=>({id:`j${i}`,identity,pointValue:Number(identity[0])}));
+  const knownCards=Object.fromEntries([rj,...junk].map(c=>[c.id,c]));
+  // 5 low-quality cards vs a hidden 2-card hand: count advantage +0.6, but
+  // strategic quality is roughly even — the attack must not read as favorable.
+  // 5 low-quality cards vs a hidden 3-card hand: raw count reads +0.4 ahead,
+  // but strategic quality is dead even — the attack must not read favorable.
+  const ctx={actorId:'P1',authorizedView:{own:{hand:[rj,...junk],securedPoints:0},opponents:[{playerId:'P2',handCount:3,securedPoints:0}],knownCards}};
+  const atk={family:'effect-red-joker',mode:'opponent-attack',sourceHandles:['rj1']};
+  const res=evaluateRankStrategy(atk,ctx,{});
+  assert.ok(res.reasonCodes.includes('RED_JOKER_OPPONENT_ATTACK_NEUTRAL'),JSON.stringify(res));
+  assert.ok(res.adjustment<0);
+  // A genuinely superior hand still qualifies: premium cards vs a thin enemy.
+  const premium={actorId:'P1',authorizedView:{own:{hand:[rj,{id:'a1',identity:'A♠',pointValue:4},{id:'k1',identity:'K♥',pointValue:8}],securedPoints:0},opponents:[{playerId:'P2',handCount:1,securedPoints:0}],knownCards}};
+  const strong=evaluateRankStrategy(atk,premium,{});
+  assert.ok(strong.reasonCodes.includes('RED_JOKER_OPPONENT_ATTACK_FAVORABLE'),JSON.stringify(strong));
+});
+test('diagnostic policy modifiers filter legal actions without changing match structure',()=>{
+  const seed='diag-mod-smoke';
+  const base=runPolicyMatch({profileId:'core-advanced-authority',seed,seatOrder:['P1','P2'],policyIds:['value-tactical','tempo-tactical'],decisionLimit:200,telemetryEnabled:true});
+  const filtered=runPolicyMatch({profileId:'core-advanced-authority',seed,seatOrder:['P1','P2'],policyIds:['value-tactical|drop:score','tempo-tactical'],decisionLimit:200,telemetryEnabled:true});
+  const p1Scores=filtered.decisions.filter(d=>d.actorId==='P1'&&d.family==='score').length;
+  assert.equal(p1Scores,0,'drop:score removed every scoring decision for the filtered seat');
+  assert.ok(filtered.decisions.some(d=>d.actorId==='P2'&&d.family==='score'),'unfiltered seat still scores');
+  assert.ok(base.decisions.some(d=>d.actorId==='P1'&&d.family==='score'),'baseline scored normally');
+  // Unknown modifiers degrade to the base policy rather than erroring.
+  const same=runPolicyMatch({profileId:'core-advanced-authority',seed,seatOrder:['P1','P2'],policyIds:['value-tactical','tempo-tactical'],decisionLimit:200,telemetryEnabled:false});
+  assert.equal(same.summary.matchResultHash,base.summary.matchResultHash);
 });
 test('local history admits older frozen implementations for inspection only and preserves their envelope',async()=>{
   const identity=await evolutionIdentity(),oldIdentity={...identity,policyImplementationHash:'b'.repeat(64),runtimeHash:'c'.repeat(64)};

@@ -1,12 +1,12 @@
-import { canonicalClone } from "./canonical-json.js?v=943d1ec6c237";
-import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=943d1ec6c237";
-import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=943d1ec6c237";
-import { cardPointValue, parseIdentity, rankDefinition, resolvePointValue, resolveRankAction } from "./ranks.js?v=943d1ec6c237";
-import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=943d1ec6c237";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=943d1ec6c237";
-import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=943d1ec6c237";
-import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=943d1ec6c237";
-import { phase8Runtime } from "./phase8.js?v=943d1ec6c237";
+import { canonicalClone } from "./canonical-json.js?v=46b6024f32eb";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=46b6024f32eb";
+import { evaluateProtection, guardProviderIds, revalidateAttachments } from "./interactions.js?v=46b6024f32eb";
+import { cardPointValue, parseIdentity, rankDefinition, resolvePointValue, resolveRankAction } from "./ranks.js?v=46b6024f32eb";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=46b6024f32eb";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=46b6024f32eb";
+import { enumerateCoreEffectCandidates, resolveCoreEffect } from "./core-effects.js?v=46b6024f32eb";
+import { beginChoice, isCorePrivateChoiceEffect } from "./core-private-choice.js?v=46b6024f32eb";
+import { phase8Runtime } from "./phase8.js?v=46b6024f32eb";
 export const CORE_ADVANCED_AUTHORITY_PROFILE = Object.freeze({
     id: "core-advanced-authority",
     displayName: "Advanced Core Authority — Audited Public Supers, Rank 10, Ultras, Voltage & Royal Marriage",
@@ -60,6 +60,19 @@ const sourceSet = (ids) => new Set(ids).size === ids.length;
 const futureStart = (s, p) => ({ playerId: p, startSequence: (s.startPhaseSequenceByPlayer[p] ?? 0) + 1 });
 function color(s, id) { const x = suit(s, id); return x === "♣" || x === "♠" ? "black" : x === "♦" || x === "♥" ? "red" : null; }
 function allRank(s, ids, r, p) { return sourceSet(ids) && ids.every(id => inHand(s, id, p) && rank(s, id) === r); }
+// 2 Wild Rule (rulebook §2): a 2 may act as the second card for the Super of a
+// rank 3-7 card only when both cards share the same suit. Never creates ⭐2.
+const WILD_SUPER_RANKS = new Set(["3", "4", "5", "6", "7"]);
+function superSourcesOk(s, ids, r, p) {
+    if (allRank(s, ids, r, p))
+        return true;
+    if (!WILD_SUPER_RANKS.has(r) || ids.length !== 2 || !sourceSet(ids))
+        return false;
+    if (!ids.every(id => inHand(s, id, p)))
+        return false;
+    const rs = ids.filter(id => rank(s, id) === r), twos = ids.filter(id => rank(s, id) === "2");
+    return rs.length === 1 && twos.length === 1 && suit(s, rs[0]) === suit(s, twos[0]);
+}
 function exileBoundDestination(s, id) { return s.cards[id]?.state.exileBound === true ? "EXILE" : "GY"; }
 function consumeRank10(s, p, id) { if (!inHand(s, id, p) || rank(s, id) !== "10")
     return "Rank-10 source must be controlled in hand"; if (s.players[p].limits.rank10PlayedThisFT)
@@ -189,8 +202,8 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
             break;
         }
         case "advanced-super-four-exchange": {
-            if (!allRank(s, a.sourceCardIds, "4", actorId))
-                return fail("SUPER_FOUR_SOURCE", "⭐4 requires two Fours in hand");
+            if (!superSourcesOk(s, a.sourceCardIds, "4", actorId))
+                return fail("SUPER_FOUR_SOURCE", "⭐4 requires two Fours, or a Four plus a same-suit Two, in hand");
             const opp = s.players[a.targetPlayerId];
             if (!opp || a.targetPlayerId === actorId)
                 return fail("SUPER_FOUR_TARGET", "⭐4 requires opponent row");
@@ -234,8 +247,8 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
         case "advanced-super-three-raid": {
             if (!isUnrestricted(input))
                 return fail("UNRESTRICTED_REQUIRED", "⭐3 Raid requires the unrestricted Core authority profile");
-            if (!allRank(s, a.sourceCardIds, "3", actorId))
-                return fail("SUPER_THREE_SOURCE", "⭐3 requires two Threes in hand");
+            if (!superSourcesOk(s, a.sourceCardIds, "3", actorId))
+                return fail("SUPER_THREE_SOURCE", "⭐3 requires two Threes, or a Three plus a same-suit Two, in hand");
             const opp = s.players[a.targetPlayerId];
             if (!opp || a.targetPlayerId === actorId)
                 return fail("SUPER_THREE_TARGET", "⭐3 requires an opponent");
@@ -253,8 +266,8 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
         case "advanced-super-five-recycle": {
             if (!isUnrestricted(input))
                 return fail("UNRESTRICTED_REQUIRED", "⭐5 Recycle requires the unrestricted Core authority profile");
-            if (!allRank(s, a.sourceCardIds, "5", actorId))
-                return fail("SUPER_FIVE_SOURCE", "⭐5 requires two Fives in hand");
+            if (!superSourcesOk(s, a.sourceCardIds, "5", actorId))
+                return fail("SUPER_FIVE_SOURCE", "⭐5 requires two Fives, or a Five plus a same-suit Two, in hand");
             for (const id of a.sourceCardIds)
                 moveCard(s, id, "GY");
             const milled = s.zones.dp.splice(0, Math.min(4, s.zones.dp.length));
@@ -282,8 +295,8 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
         case "advanced-super-six-dig": {
             if (!isUnrestricted(input))
                 return fail("UNRESTRICTED_REQUIRED", "⭐6 Dig requires the unrestricted Core authority profile");
-            if (!allRank(s, a.sourceCardIds, "6", actorId))
-                return fail("SUPER_SIX_SOURCE", "⭐6 requires two Sixes in hand");
+            if (!superSourcesOk(s, a.sourceCardIds, "6", actorId))
+                return fail("SUPER_SIX_SOURCE", "⭐6 requires two Sixes, or a Six plus a same-suit Two, in hand");
             if (a.discardCardIds.length < 1 || a.discardCardIds.length > 2 || a.discardCardIds.some(id => a.sourceCardIds.includes(id) || !inHand(s, id, actorId)))
                 return fail("SUPER_SIX_COST", "⭐6 requires one or two other hand cards to discard");
             const maxKeep = a.discardCardIds.length === 1 ? 5 : 6;
@@ -311,8 +324,8 @@ export function resolveAdvancedCoreAction(input, actorId, a) {
         case "advanced-super-seven-topdeck": {
             if (!isUnrestricted(input))
                 return fail("UNRESTRICTED_REQUIRED", "⭐7 Topdeck requires the unrestricted Core authority profile");
-            if (!allRank(s, a.sourceCardIds, "7", actorId))
-                return fail("SUPER_SEVEN_SOURCE", "⭐7 requires two Sevens in hand");
+            if (!superSourcesOk(s, a.sourceCardIds, "7", actorId))
+                return fail("SUPER_SEVEN_SOURCE", "⭐7 requires two Sevens, or a Seven plus a same-suit Two, in hand");
             for (const id of a.sourceCardIds)
                 moveCard(s, id, "GY");
             const revealed = s.zones.dp.splice(0, Math.min(2, s.zones.dp.length));
@@ -648,6 +661,19 @@ function combos(v, n) { const out = []; const walk = (i, c) => { if (c.length ==
     walk(x + 1, c);
     c.pop();
 } }; walk(0, []); return out; }
+// 2 Wild Rule (rulebook §2): for Super ranks 3-7, legal source pairs are
+// [R,R] and [R, same-suit 2]. The Two participates as the wild second card —
+// the resolved Super is ⭐R, never ⭐2 (which requires two actual Twos).
+function wildSuperPairs(s, p, r) {
+    const rankIds = p.hand.filter(id => rank(s, id) === r).sort();
+    const out = combos(rankIds, 2);
+    if (WILD_SUPER_RANKS.has(r))
+        for (const twoId of p.hand.filter(id => rank(s, id) === "2").sort())
+            for (const rId of rankIds)
+                if (suit(s, twoId) === suit(s, rId))
+                    out.push([rId, twoId]);
+    return out;
+}
 export function enumerateAdvancedCoreCandidates(state, actorId) {
     if (!isAdvancedProfile(state))
         return [];
@@ -708,7 +734,7 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
             }
         }
     }
-    for (const pair of combos(byRank("4"), 2))
+    for (const pair of wildSuperPairs(s, p, "4"))
         for (const oid of opponents)
             for (const row of ["pr", "er"])
                 out.push({ family: "super", mode: `four-exchange-${row}`, timingClass: "ACTION", sourceCardIds: [...pair], targetCardIds: [], advanced: { kind: "advanced-super-four-exchange", sourceCardIds: pair, targetPlayerId: oid, row }, featureVector: { structural: true, row } });
@@ -807,20 +833,20 @@ export function enumerateAdvancedCoreCandidates(state, actorId) {
             out.push({ family: "voltage", mode: "five-refine", timingClass: "INSTANT", sourceCardIds: [discardId], targetCardIds: [], advanced: { kind: "advanced-voltage-five", branch: "refine", discardCardId: discardId }, featureVector: { rank: 5, refine: true, draw: 1 } });
     // Hidden Super branches (unrestricted only)
     if (isUnrestricted(s)) {
-        for (const pair of combos(byRank("3"), 2))
+        for (const pair of wildSuperPairs(s, p, "3"))
             for (const oid of opponents) {
                 const opp = s.players[oid];
                 for (const takeId of opp.hand.slice(0, 6))
                     out.push({ family: "super", mode: "three-raid", timingClass: "ACTION", sourceCardIds: [...pair], targetCardIds: [takeId], advanced: { kind: "advanced-super-three-raid", sourceCardIds: pair, targetPlayerId: oid, takeCardIds: [takeId] }, featureVector: { raid: true, handTheft: true } });
             }
-        for (const pair of combos(byRank("5"), 2))
+        for (const pair of wildSuperPairs(s, p, "5"))
             out.push({ family: "super", mode: "five-recycle", timingClass: "ACTION", sourceCardIds: [...pair], targetCardIds: [], advanced: { kind: "advanced-super-five-recycle", sourceCardIds: pair, rummageCardIds: [] }, featureVector: { recycle: true, mill: 4 } });
-        for (const pair of combos(byRank("6"), 2)) {
+        for (const pair of wildSuperPairs(s, p, "6")) {
             const otherHand = [...p.hand].filter(id => !pair.includes(id));
             for (const d1 of otherHand)
                 out.push({ family: "super", mode: "six-dig", timingClass: "ACTION", sourceCardIds: [...pair], targetCardIds: [d1], advanced: { kind: "advanced-super-six-dig", sourceCardIds: pair, discardCardIds: [d1], keepCardIds: [] }, featureVector: { dig: true, draw: 8 } });
         }
-        for (const pair of combos(byRank("7"), 2))
+        for (const pair of wildSuperPairs(s, p, "7"))
             out.push({ family: "super", mode: "seven-topdeck", timingClass: "ACTION", sourceCardIds: [...pair], targetCardIds: [], advanced: { kind: "advanced-super-seven-topdeck", sourceCardIds: pair, handCardIds: [], effectCardIds: [], scoreCardIds: [] }, featureVector: { topdeck: true, reveal: 2 } });
         // 10♦ Mimic — per rulebook v4.3.1 §10♦:
         //   Solo: mimic one ⭐ effect from ranks 3-7

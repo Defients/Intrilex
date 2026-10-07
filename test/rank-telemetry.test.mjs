@@ -22,8 +22,8 @@ test('telemetry v5 schema version is 5.0.0', () => {
   assert.equal(TELEMETRY_SCHEMA_VERSION_V5, '5.0.0');
 });
 
-test('rank metric registry has 17 metrics', () => {
-  assert.equal(RANK_METRIC_REGISTRY.length, 17);
+test('rank metric registry has 20 metrics', () => {
+  assert.equal(RANK_METRIC_REGISTRY.length, 20);
   const ids = RANK_METRIC_REGISTRY.map(m => m.metricId);
   assert.ok(ids.includes('rankSelectionCount'));
   assert.ok(ids.includes('rankOpportunityCount'));
@@ -352,5 +352,5 @@ test('buildRankAnalyticsOutput produces complete output contract', () => {
   assert.ok(output.aggregate);
   assert.equal(output.aggregate['A'].rankSelectionCount, 8);
   assert.equal(output.aggregateHash, 'abc123');
-  assert.equal(output.metricRegistry.length, 17);
+  assert.equal(output.metricRegistry.length, 20);
 });

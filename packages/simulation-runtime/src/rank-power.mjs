@@ -441,7 +441,8 @@ export function buildRankPowerModel({ rankMetrics, rankORV = {}, rankCDV = {}, a
         securedPointContribution: m.rankSecuredPointContribution,
         boardPresenceContribution: m.rankBoardPresenceContribution,
         stateDeltaObservationCount: m.rankStateDeltaObservationCount ?? 0,
-        causalCoverage: m.rankSelectionCount > 0 ? Number(m.rankStateDeltaObservationCount ?? 0) / m.rankSelectionCount : 0
+        causalCoverage: m.rankSelectionCount > 0 ? Number(m.rankStateDeltaObservationCount ?? 0) / m.rankSelectionCount : 0,
+        playFamilyCounts: m.rankPlayFamilyCounts ?? null
       },
       orv: orvInput[rank] ?? null
     };
@@ -461,4 +462,25 @@ export function buildRankPowerModel({ rankMetrics, rankORV = {}, rankCDV = {}, a
     watchlist,
     aggregateHash
   };
+}
+
+/**
+ * Resolve a dossier/selection request to a canonical ladder key.
+ * Selection state may arrive from cross-workspace links holding a canonical
+ * rank id that is not a ladder key (e.g. '10' when the ladder carries
+ * per-suit '10:club' entries). Identity resolution — never stored position —
+ * keeps the dossier pinned to the same ladder entry regardless of sort order.
+ * @param {object} ranks - rank profile map keyed by ladder rank id
+ * @param {Array} ladder - ladder entries ({rank, ...}) in display order
+ * @param {string|null|undefined} requested - requested selection id
+ * @returns {string} the canonical ladder rank id
+ */
+export function resolveLadderSelection(ranks, ladder, requested) {
+  if (requested && ranks?.[requested]) return requested;
+  if (requested) {
+    const expanded = (ladder ?? []).find((e) => e.rank === requested)
+      ?? (ladder ?? []).find((e) => e.rank.startsWith(`${requested}:`));
+    if (expanded) return expanded.rank;
+  }
+  return ladder?.[0]?.rank ?? requested ?? 'A';
 }

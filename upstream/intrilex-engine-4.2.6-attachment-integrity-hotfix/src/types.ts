@@ -309,11 +309,12 @@ export type CoreResponseKind =
   | "king-spade-counter"
   | "rank10-stack-theft"
   | "ultra-three-red"
-  | "board-lock-quick";
+  | "board-lock-quick"
+  | "two-quick";
 
 export type CoreStackPayload =
   | { kind: "primary"; action: CorePrimaryAction; declaringPlayerId: PlayerId; actionType: CoreFoundationActionType; stackClass: "draw" | "swap" | "points" | "ordinary-effect" | "anchor" | "scuttle" | "pass" | "super" | "ultra" | "royal-marriage" | "queens-court" | "rank10" | "voltage" }
-  | { kind: "response"; responseKind: CoreResponseKind; targetStackItemId?: StackItemId; disruptedActionType?: CoreFoundationActionType; counterDestination?: "GY" | "EXILE"; targetCardId?: CardId };
+  | { kind: "response"; responseKind: CoreResponseKind; targetStackItemId?: StackItemId; disruptedActionType?: CoreFoundationActionType; counterDestination?: "GY" | "EXILE"; targetCardId?: CardId; targetPlayerId?: PlayerId };
 
 export type CoreEffectAction =
   | { kind: "ace-purge"; sourceCardId: CardId; targetCardId: CardId; mode: "scrap-aegis" | "bounce-anchor" }
@@ -344,7 +345,8 @@ export type CorePrivateChoiceKind =
   | "core-nine-anchor-discard"
   | "core-natural-four-reorder"
   | "core-bj-exile-recycle"
-  | "core-seven-scoring-trigger";
+  | "core-seven-scoring-trigger"
+  | "core-two-quick-discard";
 
 export interface CorePrivateChoiceState {
   schemaVersion: 1;
@@ -374,7 +376,8 @@ export type CorePrivateChoiceSubmission =
   | { kind: "core-nine-anchor-discard"; selectedCardIds: CardId[] }
   | { kind: "core-natural-four-reorder"; reorderCardIds: CardId[]; drawTop: boolean }
   | { kind: "core-bj-exile-recycle"; selectedCardIds: CardId[]; placements: ("top" | "bottom")[] }
-  | { kind: "core-seven-scoring-trigger"; takeCardId: CardId; returnOrderCardIds: CardId[] };
+  | { kind: "core-seven-scoring-trigger"; takeCardId: CardId; returnOrderCardIds: CardId[] }
+  | { kind: "core-two-quick-discard"; selectedCardIds: CardId[] };
 
 export type CoreAuthorityAction =
   | { kind: "core-apply-setup"; playerIds: [PlayerId, PlayerId]; profileId?: CoreAuthorityProfileId; predeterminedIdentities?: string[] }
@@ -406,6 +409,7 @@ export type CoreAuthorityAction =
   | { kind: "core-declare-rank10-stack-theft"; sourceCardId: CardId; targetStackItemId: StackItemId }
   | { kind: "core-declare-ultra-three-red"; sourceCardIds: [CardId, CardId, CardId]; targetStackItemId: StackItemId }
   | { kind: "core-declare-board-lock-quick"; sourceCardId: CardId }
+  | { kind: "core-declare-two-quick"; sourceCardId: CardId; targetPlayerId: PlayerId }
   | { kind: "core-resolve-response-top" }
   | { kind: "core-submit-private-choice"; token: string; submission: CorePrivateChoiceSubmission }
   | { kind: "core-complete-turn" };
@@ -447,6 +451,7 @@ export type SoloWildCopiedAction =
   | { kind: "four-row-clear"; targetPlayerId: PlayerId; row: "pr" | "er" }
   | { kind: "total-clear" }
   | { kind: "recycle-five"; rummageCardId?: CardId }
+  | { kind: "six-dig" }
   | { kind: "deep-draw-six-spade"; discardCardIds: CardId[]; keepCardIds: CardId[] }
   | { kind: "topdeck-seven"; handCardId?: CardId; effectCardId?: CardId; scoreCardId?: CardId };
 

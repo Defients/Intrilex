@@ -1,0 +1,1772 @@
+{
+  "generatedAt": "2026-10-07T14:07:06.652Z",
+  "source": "H:\\myProjects\\Intrilex-MASTER\\Intrilex_dev-current\\runtime\\forensic-rj\\baseline-v3",
+  "matchCount": 100,
+  "rjSelectionRows": 30,
+  "frameOutcomes": {
+    "selectedEffect": {
+      "frames": 6,
+      "winRate": 0.6667,
+      "avgSecuredDelta": 0
+    },
+    "selectedScoreRJ": {
+      "frames": 11,
+      "winRate": 0.4545,
+      "avgSecuredDelta": null
+    },
+    "selectedOther": {
+      "frames": 73,
+      "winRate": 0.6986,
+      "avgSecuredDelta": null
+    }
+  },
+  "modeTable": {
+    "effect:hand-swap": {
+      "opportunities": 58,
+      "selections": 3,
+      "selectionRate": 0.0517,
+      "winRate": 0.6667,
+      "avgSecuredDelta": 0,
+      "avgHandDelta": -1,
+      "avgBoardDelta": 0,
+      "meanMargin": 6,
+      "marginStd": 24.249,
+      "medianMargin": 20,
+      "worstDecileMargin": -22,
+      "bestDecileMargin": 20
+    },
+    "effect:opponent-attack": {
+      "opportunities": 58,
+      "selections": 1,
+      "selectionRate": 0.0172,
+      "winRate": 1,
+      "avgSecuredDelta": 0,
+      "avgHandDelta": -1,
+      "avgBoardDelta": 0,
+      "meanMargin": 11,
+      "marginStd": null,
+      "medianMargin": 11,
+      "worstDecileMargin": 11,
+      "bestDecileMargin": 11
+    },
+    "effect:self-reset": {
+      "opportunities": 58,
+      "selections": 1,
+      "selectionRate": 0.0172,
+      "winRate": 0,
+      "avgSecuredDelta": 0,
+      "avgHandDelta": -1,
+      "avgBoardDelta": 0,
+      "meanMargin": -21,
+      "marginStd": null,
+      "medianMargin": -21,
+      "worstDecileMargin": -21,
+      "bestDecileMargin": -21
+    },
+    "effect:shuffle-reset": {
+      "opportunities": 58,
+      "selections": 1,
+      "selectionRate": 0.0172,
+      "winRate": 1,
+      "avgSecuredDelta": 0,
+      "avgHandDelta": -1,
+      "avgBoardDelta": 0,
+      "meanMargin": 17,
+      "marginStd": null,
+      "medianMargin": 17,
+      "worstDecileMargin": 17,
+      "bestDecileMargin": 17
+    },
+    "score": {
+      "opportunities": 66,
+      "selections": 11,
+      "selectionRate": 0.1667,
+      "winRate": 0.4545,
+      "avgSecuredDelta": 4.182,
+      "avgHandDelta": -1,
+      "avgBoardDelta": 0.727,
+      "meanMargin": 0.545,
+      "marginStd": 16.579,
+      "medianMargin": -3,
+      "worstDecileMargin": -20,
+      "bestDecileMargin": 23
+    },
+    "scuttle": {
+      "opportunities": 27,
+      "selections": 10,
+      "selectionRate": 0.3704,
+      "winRate": 0.7,
+      "avgSecuredDelta": 0,
+      "avgHandDelta": -1,
+      "avgBoardDelta": 0,
+      "meanMargin": 1.6,
+      "marginStd": 18.434,
+      "medianMargin": 5,
+      "worstDecileMargin": -20,
+      "bestDecileMargin": 28
+    },
+    "swap-bar:face-down": {
+      "opportunities": 22,
+      "selections": 3,
+      "selectionRate": 0.1364,
+      "winRate": 0.6667,
+      "avgSecuredDelta": 0,
+      "avgHandDelta": 0,
+      "avgBoardDelta": 0,
+      "meanMargin": 3.667,
+      "marginStd": 30.37,
+      "medianMargin": 12,
+      "worstDecileMargin": -30,
+      "bestDecileMargin": 29
+    },
+    "voltage:five-refine": {
+      "opportunities": 2,
+      "selections": 0,
+      "selectionRate": 0,
+      "winRate": null,
+      "avgSecuredDelta": null,
+      "avgHandDelta": null,
+      "avgBoardDelta": null,
+      "meanMargin": null,
+      "marginStd": null,
+      "medianMargin": null,
+      "worstDecileMargin": null,
+      "bestDecileMargin": null
+    }
+  },
+  "opportunityMix": {
+    "swap-bar:face-down": 22,
+    "effect:hand-swap+effect:opponent-attack+effect:self-reset+effect:shuffle-reset+score+scuttle": 27,
+    "effect:hand-swap+effect:opponent-attack+effect:self-reset+effect:shuffle-reset+score": 31,
+    "score": 8,
+    "voltage:five-refine": 2
+  },
+  "contextBuckets": {
+    "effect:hand-swap": {
+      "late|hand:1|diff:ahead": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      },
+      "late|hand:1|diff:behind": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      },
+      "mid|hand:2|diff:close": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "scuttle": {
+      "late|hand:1|diff:close": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      },
+      "late|hand:3|diff:close": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      },
+      "mid|hand:2|diff:behind": {
+        "selections": 3,
+        "wins": 2,
+        "completed": 3
+      },
+      "late|hand:1|diff:behind": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      },
+      "mid|hand:3|diff:behind": {
+        "selections": 3,
+        "wins": 2,
+        "completed": 3
+      },
+      "early|hand:4|diff:behind": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "effect:self-reset": {
+      "early|hand:3|diff:close": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      }
+    },
+    "swap-bar:face-down": {
+      "mid|hand:4|diff:ahead": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      },
+      "early|hand:5|diff:close": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      },
+      "early|hand:6|diff:behind": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "effect:shuffle-reset": {
+      "late|hand:2|diff:ahead": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "score": {
+      "late|hand:1|diff:behind": {
+        "selections": 2,
+        "wins": 0,
+        "completed": 2
+      },
+      "late|hand:1|diff:close": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      },
+      "early|hand:1|diff:ahead": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      },
+      "mid|hand:1|diff:ahead": {
+        "selections": 2,
+        "wins": 2,
+        "completed": 2
+      },
+      "early|hand:2|diff:ahead": {
+        "selections": 3,
+        "wins": 1,
+        "completed": 3
+      },
+      "late|hand:1|diff:ahead": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      },
+      "early|hand:2|diff:close": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      }
+    },
+    "effect:opponent-attack": {
+      "mid|hand:4|diff:close": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    }
+  },
+  "perPolicyMode": {
+    "control-tactical": {
+      "effect:hand-swap": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      },
+      "scuttle": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "random-legal": {
+      "effect:hand-swap": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      }
+    },
+    "hybrix-support": {
+      "scuttle": {
+        "selections": 2,
+        "wins": 1,
+        "completed": 2
+      },
+      "effect:hand-swap": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "hybrix-tank": {
+      "scuttle": {
+        "selections": 2,
+        "wins": 2,
+        "completed": 2
+      },
+      "swap-bar:face-down": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      }
+    },
+    "control": {
+      "scuttle": {
+        "selections": 3,
+        "wins": 1,
+        "completed": 3
+      },
+      "effect:self-reset": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      }
+    },
+    "control-conversion-tactical": {
+      "swap-bar:face-down": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "hybrix-defender": {
+      "effect:shuffle-reset": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "tempo": {
+      "score": {
+        "selections": 4,
+        "wins": 2,
+        "completed": 4
+      }
+    },
+    "tempo-tactical": {
+      "effect:opponent-attack": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      },
+      "swap-bar:face-down": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "hybrix-sniper": {
+      "scuttle": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    },
+    "value": {
+      "score": {
+        "selections": 3,
+        "wins": 1,
+        "completed": 3
+      }
+    },
+    "score-rush": {
+      "score": {
+        "selections": 1,
+        "wins": 0,
+        "completed": 1
+      }
+    },
+    "score-rush-tactical": {
+      "score": {
+        "selections": 3,
+        "wins": 2,
+        "completed": 3
+      },
+      "scuttle": {
+        "selections": 1,
+        "wins": 1,
+        "completed": 1
+      }
+    }
+  },
+  "selections": [
+    {
+      "matchId": "M-1b8ddabb2fbe2d2e9766",
+      "decisionIndex": 119,
+      "actor": "P2",
+      "policyId": "control-tactical",
+      "kind": "effect:hand-swap",
+      "outcome": "win",
+      "scoreDiff": 10,
+      "ownHand": 1,
+      "oppHand": 2,
+      "phase": "late",
+      "fullTurn": 38,
+      "totalTurns": 39,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "754e0ec3684145d4b74658f309de24afb84318ff90ff6f33a1b8b7f2a3e668b9",
+          "score": 1710
+        },
+        {
+          "actionId": "27a990e37009d8024964efc4dddc86dddf32e9aaa7df213e62c13e21e67549c0",
+          "score": 1410
+        },
+        {
+          "actionId": "18777b532f5acd8fed0e9c8d129e3c5f8c8d5129a47ae5b3690d3c7355b68055",
+          "score": 1380
+        },
+        {
+          "actionId": "5b8bda6f5a1ab7b0ddda6f5b4714182dd2ca22263da4ab2bd46e41d8ac8f5eac",
+          "score": 1290
+        },
+        {
+          "actionId": "e8fd2f6311bdaebc5b03f0d2113aed304b26fcfc005b37a8a00fcc2fca0990c1",
+          "score": 1211
+        },
+        {
+          "actionId": "a178e468e83577ae79120baf63920f5cab6007eea257515bc5d34f1b034a56a8",
+          "score": 1195
+        },
+        {
+          "actionId": "6ce737f23a0a2cb892083254872af8d85d766f2a608ad0d1e631f46bb64b0f82",
+          "score": 710
+        }
+      ]
+    },
+    {
+      "matchId": "M-d5cf43da2cca5b2f434f",
+      "decisionIndex": 50,
+      "actor": "P1",
+      "policyId": "random-legal",
+      "kind": "effect:hand-swap",
+      "outcome": "loss",
+      "scoreDiff": -5,
+      "ownHand": 1,
+      "oppHand": 0,
+      "phase": "late",
+      "fullTurn": 19,
+      "totalTurns": 21,
+      "scoreDelta": 0,
+      "candidateScores": []
+    },
+    {
+      "matchId": "M-75163a5f7bea7b5b1f54",
+      "decisionIndex": 87,
+      "actor": "P2",
+      "policyId": "hybrix-support",
+      "kind": "scuttle",
+      "outcome": "win",
+      "scoreDiff": 4,
+      "ownHand": 1,
+      "oppHand": 0,
+      "phase": "late",
+      "fullTurn": 32,
+      "totalTurns": 39,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "e24921e6eeca9f798a2ddb80eaa5bacd691bb3a482e47f24ea2f8152f6adac15",
+          "score": 1681.8
+        },
+        {
+          "actionId": "14343fe3471a88357388d721d0d0bd037f29f6d7267f329569a3f04ee9c7f36b",
+          "score": 1417.81
+        },
+        {
+          "actionId": "23f81bc021020d8edce10382f0cda3588870ba667d1c6a0b8e18e27bc952b780",
+          "score": 1331.47
+        },
+        {
+          "actionId": "851ff4442e42795c0d65acf1b84b29336c3f7f5b66171af52f0d1d4544755ea1",
+          "score": 1289.05
+        },
+        {
+          "actionId": "5a885acd6080f8b34c753b188667a24449aa5962593fe66d6d94b0f65d9d7f47",
+          "score": 1157.1
+        },
+        {
+          "actionId": "31efe5f204aaf192ef9a76c312386063b9b9e90795cae4f96ae5c0d737c93ecd",
+          "score": 984.14
+        },
+        {
+          "actionId": "b714e934a8e0b5f8e278760ea151267006d2e9d99ee00598d7eecef58a440439",
+          "score": 862.75
+        },
+        {
+          "actionId": "fc0876cc23dba85b31d831d48229f7192c0a310a52fb7d6292d62f888a574bd0",
+          "score": 213.15
+        }
+      ]
+    },
+    {
+      "matchId": "M-c2d7ac654cf6fa83830b",
+      "decisionIndex": 124,
+      "actor": "P2",
+      "policyId": "hybrix-tank",
+      "kind": "scuttle",
+      "outcome": "win",
+      "scoreDiff": -2,
+      "ownHand": 3,
+      "oppHand": 1,
+      "phase": "late",
+      "fullTurn": 46,
+      "totalTurns": 61,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "02e0d4daf5df60d32a42dfea36b894c3265942b6231df2185f21e3a9f3ed9574",
+          "score": 2520.86
+        },
+        {
+          "actionId": "03c5f7cb24db89348ad296f110347409f547a452f41f52f2a8d177eab7972384",
+          "score": 1441.02
+        },
+        {
+          "actionId": "92df6f39858ef3bf5c5dff46912c31f4f708d9afe1b01b2a1fa490d0210734b6",
+          "score": 1420.58
+        },
+        {
+          "actionId": "25ade7db574317303119e4445827435e4a4f749c7498bfd52a64e819d002f967",
+          "score": 1205.96
+        },
+        {
+          "actionId": "7bb1d6519c76d7fc285d1cde03fd29fc280eabe82c1fc4bc84b502b8c8116f14",
+          "score": 1205.96
+        },
+        {
+          "actionId": "a2d610d7521a563e24d6af8d893e15200fa36158faef34c3ead0aff723e573da",
+          "score": 991.34
+        },
+        {
+          "actionId": "97bfec298b40164d8b1ed5724aaf800b0b420929b8b109ec2ab035b7dbb3da00",
+          "score": 713.99
+        },
+        {
+          "actionId": "614f2e426f99333b6dd4f6e1bcd95ca97265ef2b7fa37c561da8961051e389ef",
+          "score": 704.12
+        }
+      ]
+    },
+    {
+      "matchId": "M-105cc67103dbca1477fb",
+      "decisionIndex": 49,
+      "actor": "P2",
+      "policyId": "control-tactical",
+      "kind": "scuttle",
+      "outcome": "win",
+      "scoreDiff": -13,
+      "ownHand": 2,
+      "oppHand": 0,
+      "phase": "mid",
+      "fullTurn": 20,
+      "totalTurns": 54,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "c4aae6766b0ef9fc1654d8ba1d824688734925578a5611daaf2b71724113cbfe",
+          "score": 1709
+        },
+        {
+          "actionId": "9b31fff41b579b00ec82488b25a88b12c1e19f9674aab0d476ad0a6a04128bd3",
+          "score": 1626
+        },
+        {
+          "actionId": "f3d68bd93e1769e1ee1029ffcdcfda72b9fbd4f13429ab150f8a164b6806aacf",
+          "score": 1290
+        },
+        {
+          "actionId": "6b003989d0b8e5b35a05ea75cb019d22e16862c775773cbb09029ff792bb6638",
+          "score": 1195
+        },
+        {
+          "actionId": "ddfdad930c55f8f272bd40f72ee844f108d2ec31e96aa0b95341f0f4870a7c71",
+          "score": 1190
+        },
+        {
+          "actionId": "6b112a8576379e075aa579417e39a455fc44a939b8bc702f5148c873d8b37e11",
+          "score": 1130
+        },
+        {
+          "actionId": "93462dcafb61900303e6260e3f09bd30ee70323f5421e41dd65f8f8d302afd26",
+          "score": 1050
+        },
+        {
+          "actionId": "446735ebd9e627c2afdfa1e01e3ac80ec231a38dc4582ba923397c87035cecc0",
+          "score": 935
+        }
+      ]
+    },
+    {
+      "matchId": "M-bd9fa9f2b1a86c24f812",
+      "decisionIndex": 82,
+      "actor": "P1",
+      "policyId": "control",
+      "kind": "scuttle",
+      "outcome": "win",
+      "scoreDiff": -8,
+      "ownHand": 2,
+      "oppHand": 0,
+      "phase": "mid",
+      "fullTurn": 29,
+      "totalTurns": 55,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "f376f1e7815b1da9752528c4466ee25ec26d916127b81ab49a4c0faa7620f42d",
+          "score": 1269
+        },
+        {
+          "actionId": "8a869ad9ac81ea9b505f1fa6b4654e8bdc8b933fec0cf8e61d8b90936501ae41",
+          "score": 1100
+        },
+        {
+          "actionId": "5ff54aec9e6879c4d17222f7d936d7bdc83bc569a6b680ef59b066b8970802c0",
+          "score": 1050
+        },
+        {
+          "actionId": "665ce2a31eb347ee42ba3db25bc0d7c9c9409f47b1d460cdbb30a6054af0797e",
+          "score": 1050
+        },
+        {
+          "actionId": "87dfb5e675221c8df68e9a9c8c885f8aa5efb32984934c7f8018102fa387ff64",
+          "score": 1050
+        },
+        {
+          "actionId": "99cdfee82f84f24f806d3768d68af862990572f7eee7aa6c3340539d76712521",
+          "score": 1050
+        },
+        {
+          "actionId": "efa761859ae64689c513d7429cb01e433eb62ff73a22443b5e0bb29a645686d4",
+          "score": 1050
+        },
+        {
+          "actionId": "599039d9abac5136d921e43612fc0699dad5890f6729a408f1d2243127b1fec8",
+          "score": 710
+        }
+      ]
+    },
+    {
+      "matchId": "M-1011c764e8b424cf09eb",
+      "decisionIndex": 2,
+      "actor": "P1",
+      "policyId": "control",
+      "kind": "effect:self-reset",
+      "outcome": "loss",
+      "scoreDiff": 0,
+      "ownHand": 3,
+      "oppHand": 6,
+      "phase": "early",
+      "fullTurn": 1,
+      "totalTurns": 7,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "008c994cce149c294ad883ed7deb9273163be6af1ea79c72264c4aa390c623a8",
+          "score": 1050
+        },
+        {
+          "actionId": "128303a1d6027d5c285b698bf0404c73ab77df30a1d498e102adaba6a2e1c20f",
+          "score": 1050
+        },
+        {
+          "actionId": "5c45f7ca94110cdb7f2729fba7008ea5d9db8b1c0fc09e4ea44f010f597f86d0",
+          "score": 1050
+        },
+        {
+          "actionId": "9f5d96cfa22381ac1ca92578d9b997ef104c9e596f5b6b1e5cf1ca7c1e4aa6d1",
+          "score": 1050
+        },
+        {
+          "actionId": "b2c1c62c60db336057f295adb4f8086368c4ab809b9fbfd6b4145048207b17dd",
+          "score": 1050
+        },
+        {
+          "actionId": "b4dad6174bd0c1f213a60cc793ef42876d9b9b5afb7ca9aeaafc85b2f6397bad",
+          "score": 1050
+        },
+        {
+          "actionId": "bea4e3598d72ca828207d52a8a89b8068fc88d55fa926cddcfdd16244b973f56",
+          "score": 1050
+        },
+        {
+          "actionId": "eb7043bf67ceaae28cb8a25eb4a1ba19c27f139637f62558433a294ba589c40c",
+          "score": 1050
+        }
+      ]
+    },
+    {
+      "matchId": "M-ed123e23841332200c85",
+      "decisionIndex": 7,
+      "actor": "P2",
+      "policyId": "control-conversion-tactical",
+      "kind": "swap-bar:face-down",
+      "outcome": "win",
+      "scoreDiff": 8,
+      "ownHand": 4,
+      "oppHand": 1,
+      "phase": "mid",
+      "fullTurn": 4,
+      "totalTurns": 7,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "33ba565a2b9709a139581d5dae9e4493c7e3f5f9eb986bc9902cbd0cbe79ccd1",
+          "score": 185
+        },
+        {
+          "actionId": "525ef5f01188f72e1ab801abf92c54d2b22ae4fbc4c51de1142f81781cc508c9",
+          "score": 72.5
+        },
+        {
+          "actionId": "ac257879719d13dc230c98f0025179a42bab1c12ba518310c23847fadfbea434",
+          "score": 72.5
+        },
+        {
+          "actionId": "a7fb3a9d6efcb398cf28c5623254a03a68457f0f440c43b9119a1b0397ee24d2",
+          "score": 0
+        },
+        {
+          "actionId": "874f1f3298e9d5b2ee90502c64bdd8882f5c38eea8ef018162ed0685354f4574",
+          "score": -40
+        }
+      ]
+    },
+    {
+      "matchId": "M-c6f2df43037417ae933d",
+      "decisionIndex": 87,
+      "actor": "P2",
+      "policyId": "hybrix-defender",
+      "kind": "effect:shuffle-reset",
+      "outcome": "win",
+      "scoreDiff": 11,
+      "ownHand": 2,
+      "oppHand": 0,
+      "phase": "late",
+      "fullTurn": 32,
+      "totalTurns": 33,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "cec95acbdba60b2e3ce073749b0136379d2dcb5e776d7b1be4167002dc804e63",
+          "score": 20316.44
+        },
+        {
+          "actionId": "9d357e836508264d23af9a3dece801963f1604df5f8792d3f1b78fe680fe05d0",
+          "score": 20275.79
+        },
+        {
+          "actionId": "b755ee44c2330a1518814942dbc18fd7f3fc88224b93c54a8ccf72ca74f9b10f",
+          "score": 1924.58
+        },
+        {
+          "actionId": "1176af09abe2c92d5a3fe51151c46a40eddf55b5ad14f7653760c25e5c0f59bd",
+          "score": 1553.95
+        },
+        {
+          "actionId": "adfc54fd8965a968b9d299e5f96d86445a20d66f08e6aad3def51dd5c89b07c4",
+          "score": 1553.95
+        },
+        {
+          "actionId": "f3e3a06eff15a3400816db193190e70f18fead8c48e920cbfb3cccbbd575c818",
+          "score": 1550.45
+        },
+        {
+          "actionId": "54c10d0e6758b04be3460699e08098f5dd55183c80de402a76ea01f10a7538d4",
+          "score": 1419.19
+        },
+        {
+          "actionId": "be0f23482565facf0ee5efde7f268c5562f41c133e178ad56fa45bf9f7cd79ee",
+          "score": 1378.89
+        }
+      ]
+    },
+    {
+      "matchId": "M-f6d1bce1d5ea2ced9cc0",
+      "decisionIndex": 34,
+      "actor": "P1",
+      "policyId": "control",
+      "kind": "scuttle",
+      "outcome": "loss",
+      "scoreDiff": -18,
+      "ownHand": 1,
+      "oppHand": 2,
+      "phase": "late",
+      "fullTurn": 13,
+      "totalTurns": 15,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "ad94d0550e4d7ce58c523385cb737a91bdcca3997e4dc3717274d67b71db4052",
+          "score": 1241
+        },
+        {
+          "actionId": "53c00c15afee973b8825a85724d2abb3add4c28bd0c2c6fa01b7bb07efdd0890",
+          "score": 1100
+        },
+        {
+          "actionId": "123c22e224ff20a8da59445db5ba5417c59e95326320323f33576f7c2c8358ac",
+          "score": 1050
+        },
+        {
+          "actionId": "5d2ae4b3a36e7a89ca142ec657fe4aaf24589794b79aaf8babdf9622c507d66f",
+          "score": 1050
+        },
+        {
+          "actionId": "7b5472e6d737e2169f26eb5fec73680d40f61707c8b7b7234d2f6a73a58bdc68",
+          "score": 1050
+        },
+        {
+          "actionId": "ead1f90f0ef8a0848128e18856e9f389c66e310563081a06c82b11b3728e97be",
+          "score": 1050
+        },
+        {
+          "actionId": "c04eb062294f8814148495c425a945bacce32924e43ac5cb0fc37f598d9af087",
+          "score": 772
+        },
+        {
+          "actionId": "a9184c209262f75604b7acafb6b624d37067d948db58aecaece1d94c0a24ca48",
+          "score": 748
+        }
+      ]
+    },
+    {
+      "matchId": "M-bbc346d896606590e3e6",
+      "decisionIndex": 29,
+      "actor": "P2",
+      "policyId": "hybrix-support",
+      "kind": "effect:hand-swap",
+      "outcome": "win",
+      "scoreDiff": 0,
+      "ownHand": 2,
+      "oppHand": 3,
+      "phase": "mid",
+      "fullTurn": 10,
+      "totalTurns": 29,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "6c2da536d283d02cbc3669eb0db7309c3c914b7cc79f6f5c9640ed5f6dfe58d7",
+          "score": 1964.77
+        },
+        {
+          "actionId": "feea30a1105949e81904cd2a041ac6add71185705ed3164607883a469e421f3b",
+          "score": 1379.36
+        },
+        {
+          "actionId": "dd0ccc2362d51d0f8fbabeec1f26f65ab82d435923e92e9a2d92c1a440c927cc",
+          "score": 1295.35
+        },
+        {
+          "actionId": "5d9799990f8af24f3a54f3c7f957ce8f18e0e25c76e75ac6404c89c9001780a6",
+          "score": 1276.35
+        },
+        {
+          "actionId": "d151a037f654260739e60ffcb583fdc97691c3bd1dfe6579e4e452d0690ea493",
+          "score": 1262.12
+        },
+        {
+          "actionId": "856ee69b91aef424a623f5c48e0b4a9b857a1a1ebebd71d613d00416f6684c0b",
+          "score": 1236.15
+        },
+        {
+          "actionId": "f90aefe1e70d794c5829205291861ab30df0dee723631a63244370250725b9f5",
+          "score": 1165.8
+        },
+        {
+          "actionId": "28e36162b4d04a0ab1b9620d16b2dd25fb693c2a681add1f47354622c3c27068",
+          "score": 1115.55
+        }
+      ]
+    },
+    {
+      "matchId": "M-0ed06d7836b1e9f31a1b",
+      "decisionIndex": 7,
+      "actor": "P2",
+      "policyId": "hybrix-tank",
+      "kind": "swap-bar:face-down",
+      "outcome": "loss",
+      "scoreDiff": 0,
+      "ownHand": 5,
+      "oppHand": 2,
+      "phase": "early",
+      "fullTurn": 2,
+      "totalTurns": 26,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "274a0e9f633800f1a62f724ebd8549ab4cbee50c6a30d6dddb5d8ca2595c2804",
+          "score": 164.11
+        },
+        {
+          "actionId": "6a7689c3bd1963980060d43f422f9a50494b6a643fd226c24cdceac0ef921490",
+          "score": 164.11
+        },
+        {
+          "actionId": "0ba61e9b71fac1a58fd70ca4bd4e5fa699b1fa34efc8d2eb325663d80dc373f9",
+          "score": 80.85
+        },
+        {
+          "actionId": "1b3682b0c343537ea0162a5da4792974043efa77b156e2f8ef3f42100773f3ee",
+          "score": 80.85
+        },
+        {
+          "actionId": "cb7c3ae51f5fd4645d4c14417b0fc1056cc9d1e18860bb939aa4e889ba8e7300",
+          "score": 80.85
+        },
+        {
+          "actionId": "ea1a0bffdee52dbac5c94094ee7edba349f40ee2264b59751c77402b696370ec",
+          "score": 80.85
+        },
+        {
+          "actionId": "40035aafa9643325417b9e6b813216942132be7b13334480aca2bd4eafd5cf0a",
+          "score": 0
+        },
+        {
+          "actionId": "34a96aaaeb1183cc2c9fa84a1ff70a76c4eee62b1a2caa9bef6d86a5d6fac184",
+          "score": -185.28
+        }
+      ]
+    },
+    {
+      "matchId": "M-21f76fbae3a2850d8b89",
+      "decisionIndex": 25,
+      "actor": "P2",
+      "policyId": "tempo",
+      "kind": "score",
+      "outcome": "loss",
+      "scoreDiff": -7,
+      "ownHand": 1,
+      "oppHand": 0,
+      "phase": "late",
+      "fullTurn": 8,
+      "totalTurns": 10,
+      "scoreDelta": 5,
+      "candidateScores": [
+        {
+          "actionId": "b0448a5c4edc6e7d33b90784f004da7dc9425b2ae5f6ae62173f75a718ad94b5",
+          "score": 1210
+        },
+        {
+          "actionId": "6e48cf8f90eef07db8f32b2c91c688da511a98d8f4ccac115e64b55fe4f09b79",
+          "score": 1100
+        },
+        {
+          "actionId": "73e2139da4a00c7138cb2f77b3cbfc3668f2511fec9de6b9f780ee74f3f9d272",
+          "score": 1065
+        },
+        {
+          "actionId": "64a7121f11273ae81133417f8576d5506022a539b002ff75ec9f1a00a5e21019",
+          "score": 900
+        },
+        {
+          "actionId": "89640dc7e75bcae581f6795200d43c6122b3ff18a2a734c1e959a4043236c3bd",
+          "score": 900
+        },
+        {
+          "actionId": "94a9d5a98b80e017e0965e95768b695544b87ade53393ae2216a30603892eabb",
+          "score": 900
+        },
+        {
+          "actionId": "9d1054e88bc5062ffe4e156308a9f0c4d61fc2c407eb85f9f3a1b05b5605c8d6",
+          "score": 900
+        },
+        {
+          "actionId": "951fac10db084f049e2abf38dfed500829d5e6aea6257a22cbf353f9263da7b3",
+          "score": 869
+        }
+      ]
+    },
+    {
+      "matchId": "M-a7032ff5f7e18ca6706f",
+      "decisionIndex": 11,
+      "actor": "P1",
+      "policyId": "tempo",
+      "kind": "score",
+      "outcome": "win",
+      "scoreDiff": 4,
+      "ownHand": 1,
+      "oppHand": 2,
+      "phase": "late",
+      "fullTurn": 3,
+      "totalTurns": 2,
+      "scoreDelta": 5,
+      "candidateScores": [
+        {
+          "actionId": "d9b5ef75262e2d3e8250cc41e2961e7361068fb8cbb18141c832acc0a956fc87",
+          "score": 6170
+        },
+        {
+          "actionId": "3d3d33ef0062800b0c7c1fc7a50d80d7ffa4ffd588168c96b630ddf14ffcee38",
+          "score": 1100
+        },
+        {
+          "actionId": "7687f11b85f5a749f04660d72f12b05d0f3d314a76d6ef1a3029ee5e415d461b",
+          "score": 1009
+        },
+        {
+          "actionId": "811f13fdd5823f0fd4f4ead44c0d180580d63ffad778cb1adffbdc195108ef56",
+          "score": 1009
+        },
+        {
+          "actionId": "0db478c2ad4817d5c8bf7180a1b93c1d778da09a880e72fe564145f62d2761ed",
+          "score": 900
+        },
+        {
+          "actionId": "78dfabd1ed8bfeafd9fcbd85a27bcbfaa0c8c7b8fb4505a43a9b5e74004541a5",
+          "score": 900
+        },
+        {
+          "actionId": "bf2886156aa4f0caec58be376f9ec08c623b46cb402d6f49e33631955cd21959",
+          "score": 900
+        },
+        {
+          "actionId": "fff23fa29fbe0346e7cea2e1e10933b88de199448a72fec4bd51520a6a9ddd07",
+          "score": 900
+        }
+      ]
+    },
+    {
+      "matchId": "M-62fdff6544b65b495076",
+      "decisionIndex": 17,
+      "actor": "P2",
+      "policyId": "tempo-tactical",
+      "kind": "effect:opponent-attack",
+      "outcome": "win",
+      "scoreDiff": 2,
+      "ownHand": 4,
+      "oppHand": 2,
+      "phase": "mid",
+      "fullTurn": 6,
+      "totalTurns": 11,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "ba160493155e232da14cf708ec8a194f881b74ae4df4958a5f979e9920351474",
+          "score": 1260
+        },
+        {
+          "actionId": "59c451ac8c85e97ee5a6811622969341ab79f7ac2f64dc78e4f85bf3280d600c",
+          "score": 1210
+        },
+        {
+          "actionId": "d39bda7e7273abbb84fe59da4d65e262f631a98cc1679c838f84951dd9b9cef8",
+          "score": 1210
+        },
+        {
+          "actionId": "dd7b01ccc6f8ae29a18fbd6ab25c2975ea8f983c02f4cc2628361de966ec19ed",
+          "score": 1200
+        },
+        {
+          "actionId": "865c96756d5c683cacb9e2b3b19dff9c9d55be9a987a606eea162aec22f35f6b",
+          "score": 1142
+        },
+        {
+          "actionId": "2fa73ab907edf12abba1b7a8695ec1c25c4343851a4448a9c0d657b828447e43",
+          "score": 1140
+        },
+        {
+          "actionId": "3426fcf8b7b33b2c8c56cf3ab3f723629afdf6f816f9477abc8fff32561c606c",
+          "score": 1120
+        },
+        {
+          "actionId": "728fe9da1c94e65f047f2558084df3f381a73989a26c3c0d77b0aa1f96123499",
+          "score": 1108
+        }
+      ]
+    },
+    {
+      "matchId": "M-c0b6a96902862a0be848",
+      "decisionIndex": 10,
+      "actor": "P1",
+      "policyId": "tempo",
+      "kind": "score",
+      "outcome": "loss",
+      "scoreDiff": 8,
+      "ownHand": 1,
+      "oppHand": 5,
+      "phase": "early",
+      "fullTurn": 1,
+      "totalTurns": 5,
+      "scoreDelta": 11,
+      "candidateScores": [
+        {
+          "actionId": "240a3642dd3a26a46fdc09358e7e602c65a8050d7e558a5eebb9388f651844e0",
+          "score": 1210
+        },
+        {
+          "actionId": "e609bfb69192ad57b34dccc964032cee67f8b8afb908c475029f4282436c07de",
+          "score": 1100
+        },
+        {
+          "actionId": "72b125623dcdc1d207facbf2c5657dac5255d4d7a2957daddb91fd0b4464dea6",
+          "score": 736
+        }
+      ]
+    },
+    {
+      "matchId": "M-896cd21d0090f74b8ff3",
+      "decisionIndex": 26,
+      "actor": "P1",
+      "policyId": "tempo",
+      "kind": "score",
+      "outcome": "win",
+      "scoreDiff": 14,
+      "ownHand": 1,
+      "oppHand": 2,
+      "phase": "mid",
+      "fullTurn": 11,
+      "totalTurns": 22,
+      "scoreDelta": 5,
+      "candidateScores": [
+        {
+          "actionId": "f4bd32875717537ac8db56a614f601ed5e6d26b0242668e6d03f3ce5baa095ba",
+          "score": 1210
+        },
+        {
+          "actionId": "247fe112c7ce819a7f62aa3f032af570bb814f15ed896265f76082de4c1962a7",
+          "score": 1100
+        },
+        {
+          "actionId": "9b160bfed9abcf1beff216ecad9632f55c20109dfa9445e0c1d59ff0b9b2f8df",
+          "score": 900
+        },
+        {
+          "actionId": "a989fe79d3975197bc20972b0def49e10ea192530a120a8b513bda4288d2bcd9",
+          "score": 900
+        },
+        {
+          "actionId": "b2246d21e41eb84d8ee5d5346272178d1bcfd12600abe5645ab83dc6d9fdfa4f",
+          "score": 900
+        },
+        {
+          "actionId": "c5e97ece3ce58bad5c315df220d4d296314931a296f963410dc660c0089e5c66",
+          "score": 900
+        },
+        {
+          "actionId": "ba7defb7bd59a8631ade6160b30ced40930ad567d87a558dc16e0116002569af",
+          "score": 784
+        },
+        {
+          "actionId": "3a0ba4e04850a0d4c5188f77d8ded34b1ba1e0971e769d852208e449a57f77a8",
+          "score": 736
+        }
+      ]
+    },
+    {
+      "matchId": "M-085bb75a598193bb3415",
+      "decisionIndex": 12,
+      "actor": "P2",
+      "policyId": "hybrix-sniper",
+      "kind": "scuttle",
+      "outcome": "win",
+      "scoreDiff": -9,
+      "ownHand": 3,
+      "oppHand": 2,
+      "phase": "mid",
+      "fullTurn": 4,
+      "totalTurns": 9,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "9b84a4b2ac5ded7a5c99a9f5245f000c70bda361728fd3929068746208a63f7c",
+          "score": 1729.28
+        },
+        {
+          "actionId": "bb1a09629b0fac850bf4906cd5b210f1884cf8699bc62618bcbcb83608c37142",
+          "score": 1672.17
+        },
+        {
+          "actionId": "1fff1ebf9e456b0b57cdbed916264a3221102aa9dcdf0a47eddff8dbd6d2a17d",
+          "score": 1639.71
+        },
+        {
+          "actionId": "81ca562c7916d8a7d324e2b5c00c812b0e2a5f51a2b1d79cf97e29f3faf8baf5",
+          "score": 1470
+        },
+        {
+          "actionId": "fdd687b46cb47072c2341cbaddd9311e792c34c4ef844fd2f655d7ee298c8115",
+          "score": 1469.01
+        },
+        {
+          "actionId": "78693896bfdc895db9b5328b4fcc125cfaebfc60d5480c5c33d74f2a6db18e23",
+          "score": 1447.25
+        },
+        {
+          "actionId": "3be968c595ad43d3cde8e3a58d37c55a09e3a353973c5c0f4a8a39a9acd29890",
+          "score": 1270
+        },
+        {
+          "actionId": "1023d4b96a9972d31795fc73d24e035010d38a31debd9300c7163f480d9ba98a",
+          "score": 980
+        }
+      ]
+    },
+    {
+      "matchId": "M-ab005c31fb9e696b935a",
+      "decisionIndex": 12,
+      "actor": "P2",
+      "policyId": "hybrix-tank",
+      "kind": "scuttle",
+      "outcome": "win",
+      "scoreDiff": -6,
+      "ownHand": 3,
+      "oppHand": 4,
+      "phase": "mid",
+      "fullTurn": 4,
+      "totalTurns": 9,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "ee0a33632b14fe1b21a60aff8ecef85df9751f9a5d30d4ac3718bfd1168707b9",
+          "score": 2470.22
+        },
+        {
+          "actionId": "63850e048a184d7c483ce3c00ce7bba1c3d0354d52f9c4a864f4bf4c9dfb98b2",
+          "score": 2457.73
+        },
+        {
+          "actionId": "472b0ed8e3461d947c0fcafceb8bab341f0a2cf1c0c57c0d7c77048f50b29cc1",
+          "score": 2361.04
+        },
+        {
+          "actionId": "07a22da615c808e20d19523e41a4ddf8fbf048762e6de1cc17b5b378312d3b44",
+          "score": 2348.54
+        },
+        {
+          "actionId": "c490a8f0a922d129ccbe4043785a61216d0269e0a755024e08c60a7c4e659360",
+          "score": 2110.9
+        },
+        {
+          "actionId": "76dda8b00936f30b3d2d8ea8e8b8123822b58f8b202cc4fec9dce11f932db50b",
+          "score": 1850
+        },
+        {
+          "actionId": "a5fd52bcdb57cf062c3a4753db568a3e849b3e978596e0d4326116a2db9af804",
+          "score": 1690
+        },
+        {
+          "actionId": "eaabb6897bd5a2b4135fbd14524825aa413e0db4a9463b3c10b2d68f9b53d020",
+          "score": 1630
+        }
+      ]
+    },
+    {
+      "matchId": "M-42f4facd94b10989657e",
+      "decisionIndex": 3,
+      "actor": "P1",
+      "policyId": "value",
+      "kind": "score",
+      "outcome": "win",
+      "scoreDiff": 6,
+      "ownHand": 2,
+      "oppHand": 6,
+      "phase": "early",
+      "fullTurn": 1,
+      "totalTurns": 12,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "fc959476120196ce3950fbee60f6e6af6fe8f6c391891b557f66dac136dcaeff",
+          "score": 1370
+        },
+        {
+          "actionId": "c1ebf882c4a04257e7f308890f604098c2f63744754df4acfb94db40bca48897",
+          "score": 1302
+        },
+        {
+          "actionId": "3e1ad07987f6197c0fda6b8738b6a7e0ce51976717718c2603f448b111b3e43a",
+          "score": 1100
+        },
+        {
+          "actionId": "62b48bb25fb192e51e0f8b9cff350fd0cc9ff75cfb854e8741996aee6c8557e3",
+          "score": 1062
+        },
+        {
+          "actionId": "3839310797a71a43db6b9b71862b175d9e0713fa4d4832bf1c0e2f936b85c60a",
+          "score": 930
+        },
+        {
+          "actionId": "4eb00bb5fb6448f7fc4e6310f01687f7911e6fcf17fe553e3173dd5700904edc",
+          "score": 930
+        },
+        {
+          "actionId": "83ba9aea0b673b5c1581f643b76ccd6135c0845e9a4b944cc836645d6cda767b",
+          "score": 930
+        },
+        {
+          "actionId": "b9fb8a2c476b1195fefe0acaeb6f898e352d6341e95f2389e9f798d166cb7ebd",
+          "score": 930
+        }
+      ]
+    },
+    {
+      "matchId": "M-9a3926a666ef22118da0",
+      "decisionIndex": 2,
+      "actor": "P2",
+      "policyId": "tempo-tactical",
+      "kind": "swap-bar:face-down",
+      "outcome": "win",
+      "scoreDiff": -11,
+      "ownHand": 6,
+      "oppHand": 4,
+      "phase": "early",
+      "fullTurn": 2,
+      "totalTurns": 6,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "048f064bc72b75c151411a1206bb8991cbbeeefacd98bdd9adb73ffafe5c27a9",
+          "score": 185
+        },
+        {
+          "actionId": "05b941772484adf1b7c66fb0a76d8403340153b3e2432b312fea19f44ce842bf",
+          "score": 185
+        },
+        {
+          "actionId": "651da65ad0cce8bba91da8ebfd2c0dffce856d8c85f198da66b2859cdcc98d19",
+          "score": 185
+        },
+        {
+          "actionId": "fb658383eb0bdfd5c61aebfdbbf5a0fc56780c0d8ac78db780e65c0bbc294ba9",
+          "score": 185
+        },
+        {
+          "actionId": "474f6a086f14de644376d2f7572d181882000e06c252433cae1dcdb36dcaaf77",
+          "score": 72.5
+        },
+        {
+          "actionId": "7ba37ceeed669e7aa8f106afb367e3a9d4c7c02afddf9e11ef25dc1df627b31e",
+          "score": 72.5
+        },
+        {
+          "actionId": "adeed00f2403aafe0d070ceb1c7c876ef7485afd9486cbfcd8352618c7175943",
+          "score": 72.5
+        },
+        {
+          "actionId": "b44431b57c6bdacc005b8848063cb86f0640a2ce6a62a5a2224bccef2e206485",
+          "score": 72.5
+        }
+      ]
+    },
+    {
+      "matchId": "M-402def555b3b527c4938",
+      "decisionIndex": 4,
+      "actor": "P1",
+      "policyId": "value",
+      "kind": "score",
+      "outcome": "loss",
+      "scoreDiff": 8,
+      "ownHand": 2,
+      "oppHand": 6,
+      "phase": "early",
+      "fullTurn": 1,
+      "totalTurns": 3,
+      "scoreDelta": 5,
+      "candidateScores": [
+        {
+          "actionId": "752d428a235e62f4a8f1b8aa5104da49d8261ae9aa81346c9e25a31c4827685b",
+          "score": 1370
+        },
+        {
+          "actionId": "52eb231c5922ee6ff930492ed9202d19b8322a66bd6ab8486763b7bb664e288b",
+          "score": 1268
+        },
+        {
+          "actionId": "3946f2c3da5b79b1d70303163483c5800555d550de22346e75c71aee3f4bd82f",
+          "score": 1140
+        },
+        {
+          "actionId": "34f4de37b086ac6c3c73b6afe09f9dfcdb6c474148294b773ce3cdc598256088",
+          "score": 1100
+        },
+        {
+          "actionId": "86ebb5e8508eed7d02ab1ad067572ab5238ae7d1756e1e8f2af934b73a596850",
+          "score": 724
+        }
+      ]
+    },
+    {
+      "matchId": "M-fb151a512f79ad9d26cf",
+      "decisionIndex": 4,
+      "actor": "P1",
+      "policyId": "value",
+      "kind": "score",
+      "outcome": "loss",
+      "scoreDiff": 9,
+      "ownHand": 2,
+      "oppHand": 6,
+      "phase": "early",
+      "fullTurn": 1,
+      "totalTurns": 9,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "8a96ee230ebeb8b8d524b918959dbbc0a13089e32f5273d826963d0c8c9e0e65",
+          "score": 1370
+        },
+        {
+          "actionId": "52eb231c5922ee6ff930492ed9202d19b8322a66bd6ab8486763b7bb664e288b",
+          "score": 1268
+        },
+        {
+          "actionId": "34f4de37b086ac6c3c73b6afe09f9dfcdb6c474148294b773ce3cdc598256088",
+          "score": 1100
+        },
+        {
+          "actionId": "4c46a0d84320df1f39bdc42c0b5bc25f74d6ef3d03788db17eaf03c9f1ed91e8",
+          "score": 1060
+        },
+        {
+          "actionId": "86ebb5e8508eed7d02ab1ad067572ab5238ae7d1756e1e8f2af934b73a596850",
+          "score": 808
+        }
+      ]
+    },
+    {
+      "matchId": "M-3de8965082511d7fe42f",
+      "decisionIndex": 29,
+      "actor": "P2",
+      "policyId": "score-rush",
+      "kind": "score",
+      "outcome": "loss",
+      "scoreDiff": -6,
+      "ownHand": 1,
+      "oppHand": 1,
+      "phase": "late",
+      "fullTurn": 12,
+      "totalTurns": 12,
+      "scoreDelta": 5,
+      "candidateScores": [
+        {
+          "actionId": "8a30a6428dcf4e0711a2c03565c97eccb2e5316d202220775231544e304f4ec3",
+          "score": 1470
+        },
+        {
+          "actionId": "e0651d9644ef1da5efb40cb265dd6c43ad3388b10f60dbc9ecc2327532d9396d",
+          "score": 1100
+        },
+        {
+          "actionId": "6e09857f08afab72d613d019e8054a89f17ea329a2a2603e872b947e4020435f",
+          "score": 1065
+        },
+        {
+          "actionId": "a7e305d223c9ff8b90429864a9153b1008c16cdc8c46ac07c4dd819720c0b378",
+          "score": 981
+        },
+        {
+          "actionId": "4472d63c6f7d11848b078a7690719306c429bfb615a1264c2d74bb3dfb84b928",
+          "score": 784
+        },
+        {
+          "actionId": "57b6206373e2e906b7980a8fbd84f78ecebad21b71a9569fadf8d5d34387821f",
+          "score": 760
+        },
+        {
+          "actionId": "89425fbc2195f9a21ed20cef930fcf7d3a96b91296ed3bf3165e9b432b0ce61b",
+          "score": 760
+        },
+        {
+          "actionId": "a7bd2756f7cdc87b53df5eb4e3eeae1caf94946662e2b508bb710e34e8a64d72",
+          "score": 760
+        }
+      ]
+    },
+    {
+      "matchId": "M-4fd97b7d981279b857c4",
+      "decisionIndex": 21,
+      "actor": "P2",
+      "policyId": "control",
+      "kind": "scuttle",
+      "outcome": "loss",
+      "scoreDiff": -15,
+      "ownHand": 3,
+      "oppHand": 2,
+      "phase": "mid",
+      "fullTurn": 6,
+      "totalTurns": 14,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "0bdca5dc68a73b9abd49aa95aead074885fe3e652970270e1ad934d182993f93",
+          "score": 1269
+        },
+        {
+          "actionId": "671339b3d03cb15830b1add462d74080cfe72f8686cacafad4057b0d3b64616d",
+          "score": 1241
+        },
+        {
+          "actionId": "7744f45a4e01137abcbc58a91cbed53226eb7f872165646a60f2cc20f6ddc7a8",
+          "score": 1050
+        },
+        {
+          "actionId": "7d81c9b27c57053942109cb968040ea6e5d5ad8472fc0b86d8085d4962d629cd",
+          "score": 1050
+        },
+        {
+          "actionId": "942acad49e3bdf8d7c7d005197b9a2f490e74bc99b16a9785072e786aa78abf9",
+          "score": 1050
+        },
+        {
+          "actionId": "94404c43d3951002728f3f732d6ca9c06dbe726995d2e8e6831e7bc31eaa3918",
+          "score": 1050
+        },
+        {
+          "actionId": "ab51838e6796c4b67fadb867584e2d7ca43281f5856ff6620fafc2a4227183c1",
+          "score": 1050
+        },
+        {
+          "actionId": "b4623c010035af05706cfb50bffecb17e3472232713082c127cdce73b5f7d2f5",
+          "score": 1050
+        }
+      ]
+    },
+    {
+      "matchId": "M-7a682d224e41c60f69a5",
+      "decisionIndex": 14,
+      "actor": "P1",
+      "policyId": "score-rush-tactical",
+      "kind": "score",
+      "outcome": "win",
+      "scoreDiff": 6,
+      "ownHand": 1,
+      "oppHand": 2,
+      "phase": "mid",
+      "fullTurn": 5,
+      "totalTurns": 12,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "85a906af19b9379eccef54458a99688dfbc3a0dd610e5add0399a9efc01ef46e",
+          "score": 1470
+        },
+        {
+          "actionId": "e530ffb30474d5ed64fe104848334dc40b1023e8bfd5900a1299adb290dccbfd",
+          "score": 1420
+        },
+        {
+          "actionId": "4f109c7d8baf2bb37b0f40841fee1f9393419a1905fc4dad3b06a18017beccd6",
+          "score": 1195
+        },
+        {
+          "actionId": "884974041e9bc34aa9455d2192b95000e494244a0e3e4a5a4ffed9adafd18e38",
+          "score": 1120
+        },
+        {
+          "actionId": "580dcf72be87697df49581678458b4f3553a7e1c6390df67eeb90c5c8bbcb131",
+          "score": 1090
+        },
+        {
+          "actionId": "90ae09bc7503015f0a25e70bbce80d2a907a2cd956bcfa01366c4d9efacf749a",
+          "score": 1000
+        },
+        {
+          "actionId": "c4aef38b4409c3a7448445f48e819b99623ad2d2da80764a6221c1f50147aa8f",
+          "score": 1000
+        },
+        {
+          "actionId": "da95d9a328683a8402fc00b2a0772a4ef4fbb3760ce0c7442d33039fd9d0628f",
+          "score": 1000
+        }
+      ]
+    },
+    {
+      "matchId": "M-5b85d0f6a30826ddc9eb",
+      "decisionIndex": 46,
+      "actor": "P1",
+      "policyId": "score-rush-tactical",
+      "kind": "score",
+      "outcome": "win",
+      "scoreDiff": 18,
+      "ownHand": 1,
+      "oppHand": 1,
+      "phase": "late",
+      "fullTurn": 17,
+      "totalTurns": 16,
+      "scoreDelta": 5,
+      "candidateScores": [
+        {
+          "actionId": "add5223f6eb04cb420957f61b70a3536fd2ac677ec14e8bb2f9f196a73b2816e",
+          "score": 10158
+        },
+        {
+          "actionId": "85a945ee1aa4aabc2ac69489fc376a2ed38cf4565bbb2d3a1fd3c046de9acc26",
+          "score": 1195
+        },
+        {
+          "actionId": "ceac99f2d3d523c69b7eaead46a45e64e7bd16e547547a0f7888fb21f3251213",
+          "score": 1130
+        },
+        {
+          "actionId": "8b2c5c5b85ee9b2e43f565c465c8fe86126036ba8729924ad17ff1255abceef9",
+          "score": 1090
+        },
+        {
+          "actionId": "d0a614963287bc05eaaab3be407647f68d57a6fb54277f62db097b6fd7a78ef7",
+          "score": 1090
+        },
+        {
+          "actionId": "13ae7ff39a441634e40aede239d24ed66c2eb3d29015541c47dba4005b904764",
+          "score": 1000
+        },
+        {
+          "actionId": "e750b35addbe812c1c08e87bbd789d5d801f79e539ab89c4ab9b3f91f829121a",
+          "score": 940
+        },
+        {
+          "actionId": "4cda5254bb785cdf8ea04fbf71f7c5f440f63b836f2c3e1b5f75704a34ae4fd2",
+          "score": 935
+        }
+      ]
+    },
+    {
+      "matchId": "M-7f0fb54a0a4c7a02d5be",
+      "decisionIndex": 7,
+      "actor": "P1",
+      "policyId": "score-rush-tactical",
+      "kind": "scuttle",
+      "outcome": "win",
+      "scoreDiff": -11,
+      "ownHand": 4,
+      "oppHand": 4,
+      "phase": "early",
+      "fullTurn": 3,
+      "totalTurns": 14,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "a817db0ab10d735d95087f53e72377819cf8a09f3c7f73e1c2018fb1ae8a0a85",
+          "score": 2307
+        },
+        {
+          "actionId": "97d48dbc6a9c35cf1cd7655468c5558325c4e5a1f30f285f3bfac7219c3cc833",
+          "score": 2286
+        },
+        {
+          "actionId": "e07f6a5ca44f055586e3730c3b1028fbf0696636a7c8cfe28c3a5727cc79cdba",
+          "score": 2228
+        },
+        {
+          "actionId": "485b4ed3901809e76f126c439f80667e64990b27fd1218776a3b1415ba1f2e21",
+          "score": 1572
+        },
+        {
+          "actionId": "f56d4cd6f6e058c14a5b1248eb71921797c1b9507b7c176f52d57ecfd5220ac1",
+          "score": 1570
+        },
+        {
+          "actionId": "6ed5666d926f64335d2446bd35e22f31ff885ead6892f8265dc4ff7db4fbf829",
+          "score": 1538
+        },
+        {
+          "actionId": "c4a64bcf6e04a2c9dd331ba37a78cec910c45cfdc09ef5a4bfb8a5de44b527e8",
+          "score": 1514
+        },
+        {
+          "actionId": "28436a02affaf2c1f93849140f40d86820198b31e2f4f5fec5374daf2d7fdca8",
+          "score": 1470
+        }
+      ]
+    },
+    {
+      "matchId": "M-ecb9b494d74db6f2d2da",
+      "decisionIndex": 14,
+      "actor": "P1",
+      "policyId": "score-rush-tactical",
+      "kind": "score",
+      "outcome": "loss",
+      "scoreDiff": 0,
+      "ownHand": 2,
+      "oppHand": 2,
+      "phase": "early",
+      "fullTurn": 5,
+      "totalTurns": 25,
+      "scoreDelta": 5,
+      "candidateScores": [
+        {
+          "actionId": "83c3923ae966007823f4f967aff8adae041cb5537ed39ea916d9f0fbbd4256ee",
+          "score": 1470
+        },
+        {
+          "actionId": "2111e92395edb2dd2052bc1fb86f3c668dfd08b4605c3a68af8036e739ef4174",
+          "score": 1368
+        },
+        {
+          "actionId": "7899bf3e29b00a30cedb4b92a23872b57ac6df5cd4f7da367cc47299aad66112",
+          "score": 1195
+        },
+        {
+          "actionId": "4abb6a24fc577ca9f2c01e2ae42a6ed1bd1356714e2292be767a946286b21331",
+          "score": 1145
+        },
+        {
+          "actionId": "248af501ac841a7f84096d644ff9191f6f57b3fab2f51761e59f2210a9c67c1b",
+          "score": 1130
+        },
+        {
+          "actionId": "66457ba793d6cd156020bc3c8b9f5ccefa41a946f950b31b6cce3bce85a9ccc3",
+          "score": 1120
+        },
+        {
+          "actionId": "672795fa2f056d53aee1f3099b898e3922e9bbfe12440b2b64b8565a42cc9438",
+          "score": 1050
+        },
+        {
+          "actionId": "8bcc159141f4de37f4a237cb8eee26e248e8df100b8e7061bf0e072609767066",
+          "score": 1000
+        }
+      ]
+    },
+    {
+      "matchId": "M-bfb4911cab03e0e69503",
+      "decisionIndex": 49,
+      "actor": "P2",
+      "policyId": "hybrix-support",
+      "kind": "scuttle",
+      "outcome": "loss",
+      "scoreDiff": -16,
+      "ownHand": 2,
+      "oppHand": 0,
+      "phase": "mid",
+      "fullTurn": 20,
+      "totalTurns": 30,
+      "scoreDelta": 0,
+      "candidateScores": [
+        {
+          "actionId": "11befa0e89a25b248edcf28f3f0dc82e544670eec5af37beafda0354be7df37f",
+          "score": 1673.05
+        },
+        {
+          "actionId": "3164f68aaa5b43d8da98ed012192a2578c67aea7686a1ec5111e34debc77525c",
+          "score": 1359.62
+        },
+        {
+          "actionId": "ef670bf4b1a7ea24343aa1a53fbab890d055637d4f1fd096f1cc7c04f0c5bfcc",
+          "score": 1353.26
+        },
+        {
+          "actionId": "22a9d9a7b5987c85d5db54b515cb52a93b745567a82bf1cbd6ae01ee14a2acf8",
+          "score": 1293.36
+        },
+        {
+          "actionId": "201bcf0b226f81a7d48b101118165600f5f30b7ed57e81cf705c994dc72d3d3d",
+          "score": 1278.43
+        },
+        {
+          "actionId": "c63650bee85cb898d5f63662ebcbe10cf14c4ed7b6b2a0fe6cc85dc42fbe4601",
+          "score": 1277.62
+        },
+        {
+          "actionId": "306d7b682c61e06b0b2eebf1f69a3ea7f2c734fc69fb86db4600043bebebc54f",
+          "score": 1106.6
+        },
+        {
+          "actionId": "30285ae66d8b2df2007fb0f16153821ab31db79143e0ea5d8b9ccf8082adc92e",
+          "score": 992.25
+        }
+      ]
+    }
+  ]
+}

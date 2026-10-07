@@ -27,7 +27,10 @@ export const RANK_METRIC_REGISTRY = Object.freeze([
   { metricId: 'rankUltraPlayCount', description: 'Number of Ultra plays attributed to this rank', unit: 'count' },
   { metricId: 'rankRoyalMarriageCount', description: 'Number of Royal Marriage plays involving this rank', unit: 'count' },
   { metricId: 'rankResponsePlayedCount', description: 'Number of response plays attributed to this rank', unit: 'count' },
-  { metricId: 'rankResponseDeclinedCount', description: 'Number of response declines in frames where this rank had options', unit: 'count' }
+  { metricId: 'rankResponseDeclinedCount', description: 'Number of response declines in frames where this rank had options', unit: 'count' },
+  { metricId: 'rankResourceContribution', description: 'Sum of net hand-size deltas attributed to this rank (resource acquisition channel)', unit: 'cards' },
+  { metricId: 'rankTempoImpact', description: 'Sum of mini-turn availability deltas attributed to this rank', unit: 'mini-turns' },
+  { metricId: 'rankPlayFamilyCounts', description: 'Per-rank usage-family decomposition (quick, solo-wild-copy, super, printed-effect, scoring, continuation, etc.) counting every participating source rank', unit: 'family→count' }
 ]);
 
 /**
@@ -45,6 +48,8 @@ export function emptyRankCounters(ranks) {
       defeatExposureCount: 0,
       securedPointContribution: 0,
       boardPresenceContribution: 0,
+      resourceContribution: 0,
+      tempoImpact: 0,
       stateDeltaObservationCount: 0,
       counterDeclarationCount: 0,
       scuttleCount: 0,
@@ -54,7 +59,8 @@ export function emptyRankCounters(ranks) {
       ultraPlayCount: 0,
       royalMarriageCount: 0,
       responsePlayedCount: 0,
-      responseDeclinedCount: 0
+      responseDeclinedCount: 0,
+      playFamilyCounts: {}
     };
   }
   return counters;
@@ -145,6 +151,15 @@ export function applyDecisionToRankCounters(counters, participantId, attribution
     }
   }
 
+  // Usage-family decomposition: every participating source rank records the
+  // play's usage family on its own row (e.g. a wild-catalyst 2 in ⭐5 records
+  // 'super' participation under Rank 2 without claiming ⭐5's variant tier).
+  const playFamily = attribution.playFamily ?? 'other';
+  for (const r of (attribution.sourceRanks?.length ? attribution.sourceRanks : [primaryRank])) {
+    const c = participantCounters[r];
+    if (c) c.playFamilyCounts[playFamily] = (c.playFamilyCounts[playFamily] ?? 0) + 1;
+  }
+
   return counters;
 }
 
@@ -171,7 +186,8 @@ export function applyMatchResultToRankCounters(counters, participantId, outcome,
  * @param {object} counters
  * @param {string} participantId
  * @param {object} attribution
- * @param {object} stateDelta - { securedPointDeltaByPlayer, boardPresenceDeltaByPlayer }
+ * @param {object} stateDelta - { securedPointDeltaByPlayer, boardPresenceDeltaByPlayer,
+ *   handDeltaByPlayer, miniTurnDeltaByPlayer }
  */
 export function applyStateDeltaToRankCounters(counters, participantId, attribution, stateDelta) {
   const participantCounters = counters[participantId];
@@ -182,6 +198,8 @@ export function applyStateDeltaToRankCounters(counters, participantId, attributi
 
   const pointDelta = stateDelta?.securedPointDeltaByPlayer?.[participantId] ?? 0;
   const boardDelta = stateDelta?.boardPresenceDeltaByPlayer?.[participantId] ?? 0;
+  const handDelta = stateDelta?.handDeltaByPlayer?.[participantId] ?? 0;
+  const tempoDelta = stateDelta?.miniTurnDeltaByPlayer?.[participantId] ?? 0;
 
   if (attribution.attributionStatus === 'fractional') {
     // Split contribution by weight. Observation count tracks whether a causal
@@ -190,12 +208,16 @@ export function applyStateDeltaToRankCounters(counters, participantId, attributi
       if (participantCounters[rank]) {
         participantCounters[rank].securedPointContribution += pointDelta * weight;
         participantCounters[rank].boardPresenceContribution += boardDelta * weight;
+        participantCounters[rank].resourceContribution += handDelta * weight;
+        participantCounters[rank].tempoImpact += tempoDelta * weight;
         participantCounters[rank].stateDeltaObservationCount += 1;
       }
     }
   } else {
     participantCounters[primaryRank].securedPointContribution += pointDelta;
     participantCounters[primaryRank].boardPresenceContribution += boardDelta;
+    participantCounters[primaryRank].resourceContribution += handDelta;
+    participantCounters[primaryRank].tempoImpact += tempoDelta;
     participantCounters[primaryRank].stateDeltaObservationCount += 1;
   }
 
@@ -215,6 +237,7 @@ export function rankDecisionExtension(attribution) {
       rankWeights: attribution.rankWeights,
       attributionStatus: attribution.attributionStatus,
       playForm: attribution.playForm,
+      playFamily: attribution.playFamily ?? null,
       originRank: attribution.originRank,
       generatedRank: attribution.generatedRank
     }
@@ -274,7 +297,10 @@ export function computeRankMetrics(participantCounters, ranks) {
       rankUltraPlayCount: c.ultraPlayCount,
       rankRoyalMarriageCount: c.royalMarriageCount,
       rankResponsePlayedCount: c.responsePlayedCount,
-      rankResponseDeclinedCount: c.responseDeclinedCount
+      rankResponseDeclinedCount: c.responseDeclinedCount,
+      rankResourceContribution: c.resourceContribution,
+      rankTempoImpact: c.tempoImpact,
+      rankPlayFamilyCounts: { ...(c.playFamilyCounts ?? {}) }
     };
   }
   return metrics;
@@ -294,7 +320,13 @@ export function computeAggregateRankMetrics(participantRankCounters, ranks) {
       const dst = aggregate[rank];
       if (!src || !dst) continue;
       for (const key of Object.keys(dst)) {
-        dst[key] += src[key];
+        if (key === 'playFamilyCounts') {
+          for (const [fam, n] of Object.entries(src.playFamilyCounts ?? {})) {
+            dst.playFamilyCounts[fam] = (dst.playFamilyCounts[fam] ?? 0) + n;
+          }
+        } else {
+          dst[key] += src[key];
+        }
       }
     }
   }
@@ -373,6 +405,8 @@ export const VARIANT_METRIC_REGISTRY = Object.freeze([
   { metricId: 'variantDelayedValue', unit: 'index', description: 'Sum of downstream / delayed value attributed to the variant' },
   { metricId: 'variantTempoImpact', unit: 'mini-turns', description: 'Sum of mini-turn / tempo deltas attributed to the variant' },
   { metricId: 'variantGoalContribution', unit: 'goal-points', description: 'Sum of goal-shift deltas caused by the variant' },
+  { metricId: 'variantResourceContribution', unit: 'cards', description: 'Sum of net hand-size deltas attributed to the variant (resource acquisition channel)' },
+  { metricId: 'variantImpactStatus', unit: 'enum', description: "'observed' when at least one attributed state delta carried immediate/delayed impact fields; 'not-observable' when those channels were never emitted (numeric impact fields are then structural zeros, not measurements)" },
   { metricId: 'variantCounterDeclarationCount', unit: 'count', description: 'Counter declarations attributed to the variant' },
   { metricId: 'variantScuttleCount', unit: 'count', description: 'Scuttle operations attributed to the variant' },
   { metricId: 'variantResponsePlayedCount', unit: 'count', description: 'Response plays attributed to the variant' },
@@ -386,7 +420,7 @@ const VARIANT_COUNTER_FIELDS = Object.freeze([
   'drawCount', 'appearanceCount', 'opportunityCount', 'selectionCount', 'activationCount',
   'successCount', 'failureCount', 'victoryContributionCount', 'defeatExposureCount',
   'securedPointContribution', 'boardPresenceContribution', 'immediateStateImpact',
-  'delayedValue', 'tempoImpact', 'goalContribution',
+  'delayedValue', 'tempoImpact', 'goalContribution', 'resourceContribution', 'impactObservationCount',
   'counterDeclarationCount', 'scuttleCount', 'responsePlayedCount', 'responseDeclinedCount',
   'effectPlayCount', 'generatedEffectCount'
 ]);
@@ -532,7 +566,7 @@ export function applyMatchResultToVariantCounters(counters, participantId, outco
  * @param {string} participantId
  * @param {object} variantEntity
  * @param {object} stateDelta - { securedPointDeltaByPlayer, boardPresenceDeltaByPlayer,
- *   tempoDeltaByPlayer, goalDeltaByPlayer, immediateImpactByPlayer, delayedValueByPlayer }
+ *   miniTurnDeltaByPlayer, handDeltaByPlayer, goalDeltaByPlayer, immediateImpactByPlayer, delayedValueByPlayer }
  */
 export function applyStateDeltaToVariantCounters(counters, participantId, variantEntity, stateDelta) {
   const pc = counters[participantId];
@@ -540,10 +574,17 @@ export function applyStateDeltaToVariantCounters(counters, participantId, varian
 
   const pointDelta = stateDelta?.securedPointDeltaByPlayer?.[participantId] ?? 0;
   const boardDelta = stateDelta?.boardPresenceDeltaByPlayer?.[participantId] ?? 0;
-  const tempoDelta = stateDelta?.tempoDeltaByPlayer?.[participantId] ?? 0;
+  // createStateDeltaFact emits miniTurnDeltaByPlayer; tempoDeltaByPlayer is a
+  // legacy alias kept for forward compatibility with emitters that rename it.
+  const tempoDelta = stateDelta?.miniTurnDeltaByPlayer?.[participantId] ?? stateDelta?.tempoDeltaByPlayer?.[participantId] ?? 0;
   const goalDelta = stateDelta?.goalDeltaByPlayer?.[participantId] ?? 0;
+  const resourceDelta = stateDelta?.handDeltaByPlayer?.[participantId] ?? 0;
   const immediate = stateDelta?.immediateImpactByPlayer?.[participantId] ?? 0;
   const delayed = stateDelta?.delayedValueByPlayer?.[participantId] ?? 0;
+  // Track whether the impact channels were emitted at all. Zero sums are valid
+  // evidence only when the underlying fields were present; absent fields must
+  // surface as not-observable, never as measured zero.
+  const impactObserved = stateDelta?.immediateImpactByPlayer != null || stateDelta?.delayedValueByPlayer != null;
 
   const weight = 1; // variant entity attribution is already specific
   for (const key of variantEntity.creditKeys) {
@@ -553,8 +594,10 @@ export function applyStateDeltaToVariantCounters(counters, participantId, varian
     c.boardPresenceContribution += boardDelta * weight;
     c.tempoImpact += tempoDelta * weight;
     c.goalContribution += goalDelta * weight;
+    c.resourceContribution += resourceDelta * weight;
     c.immediateStateImpact += Math.abs(immediate) * weight;
     c.delayedValue += delayed * weight;
+    if (impactObserved) c.impactObservationCount += 1;
   }
   return counters;
 }
@@ -613,6 +656,9 @@ export function computeVariantMetrics(counters, variantKeys) {
       variantDelayedValue: c.delayedValue,
       variantTempoImpact: c.tempoImpact,
       variantGoalContribution: c.goalContribution,
+      variantResourceContribution: c.resourceContribution,
+      variantImpactObservationCount: c.impactObservationCount,
+      variantImpactStatus: c.impactObservationCount > 0 ? 'observed' : 'not-observable',
       variantCounterDeclarationCount: c.counterDeclarationCount,
       variantScuttleCount: c.scuttleCount,
       variantResponsePlayedCount: c.responsePlayedCount,

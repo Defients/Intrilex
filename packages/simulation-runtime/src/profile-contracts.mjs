@@ -1,6 +1,7 @@
 import { hashCanonical } from '@intrilex/shared';
 import { WEIGHTED_POLICY_ID, WEIGHT_FEATURES, WEIGHT_BOUND, validatePolicyState, baselinePolicyState } from '../../policies/src/weighted-heuristic.mjs';
 import { validateCheckpoint, FROZEN_POLICIES, LAB_PROFILES, LAB_LIMITS } from './evolution-domain.mjs';
+import { validateAdaptiveConfig } from './adaptive-strategy.mjs';
 import { createBaselineSuite } from './evolution-research.mjs';
 
 // Agent Profile contracts. Every version string resolves to exact semantics
@@ -44,6 +45,7 @@ export const CONTRACTS = deepFreeze({
   bundle: { format: 'intrilex-agent-profile-bundle', version: 1 },
   genome: { id: 'WEIGHTED_HEURISTIC_GENOME', version: 1 },
   compiler: { id: 'TRAIT_COMPILER_LINEAR', version: 1 },
+  adaptiveStrategy: { id: 'ADAPTIVE_STRATEGY_RULED', version: 1 },
   objective: { id: 'GENERALIST_PAIRED_SCORE', version: 1 },
   optimizer: { id: 'ONE_PLUS_LAMBDA_V1', version: 1 },
   constraintProjection: { id: 'FIXED_REJECTION_THEN_CLAMP_V1', version: 1 },
@@ -196,7 +198,9 @@ export function validateSeriesDefaults(d) {
 }
 export function validateRevisionBody(body) {
   const keys = 'agentProfileId,authoredCheckpointId,defaults,executableChange,forkedFrom,identityConstraints,intendedIdentity,mutationConstraints,objectiveInstanceId,origin,parentRevisionId,revisionNumber,template';
-  if (!body || Object.keys(body).sort().join() !== keys) fail('INVALID_REVISION', 'fields');
+  const sorted = Object.keys(body ?? {}).sort().join();
+  if (!body || (sorted !== keys && sorted !== `adaptiveStrategy,${keys}`)) fail('INVALID_REVISION', 'fields');
+  if (body.adaptiveStrategy != null) validateAdaptiveConfig(body.adaptiveStrategy);
   if (typeof body.agentProfileId !== 'string' || !Number.isInteger(body.revisionNumber) || body.revisionNumber < 1 || (body.revisionNumber === 1) !== (body.parentRevisionId === null)) fail('INVALID_REVISION', 'sequence');
   if (!['CREATED', 'AUTHORED_EDIT', 'FORKED', 'MIGRATED_FROM_V1', 'IMPORTED_AS_FORK'].includes(body.origin)) fail('INVALID_REVISION', 'origin');
   validateTraits(body.intendedIdentity?.traits);

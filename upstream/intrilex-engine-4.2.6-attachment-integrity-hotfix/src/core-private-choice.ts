@@ -25,6 +25,7 @@ export const CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE = Object.freeze({
   playerCount: 2,
   enabledModules: [] as const,
   supportedChoices: [
+    "2-quick-discard",
     "3-present-take",
     "3-force-discard",
     "5-recycle-rummage",
@@ -33,7 +34,6 @@ export const CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE = Object.freeze({
     "9-anchor-discard"
   ] as const,
   excludedSystems: [
-    "two-quick",
     "four-natural-quick",
     "six-swap-peek-quick",
     "three-spade-enhancement",
@@ -48,7 +48,7 @@ export const CORE_PRIVATE_CHOICE_AUTHORITY_PROFILE = Object.freeze({
     "optional-modules",
     "multiplayer"
   ] as const,
-  rationale: "Engine-owned sealed continuation layer for ordinary Core hidden-choice effects. Quick/private suit enhancements and advanced Core families fail closed."
+  rationale: "Engine-owned sealed continuation layer for ordinary Core hidden-choice effects plus the 2 Quick opponent-discard rider. Quick/private suit enhancements and advanced Core families fail closed."
 });
 
 interface CoreRuntimeWithChoice {
@@ -235,7 +235,8 @@ export function isCorePrivateChoiceEffect(effect: CoreEffectAction): boolean {
 export function resolveCorePrivateChoiceRoot(
   input: EngineState,
   actorId: PlayerId,
-  effect: CoreEffectAction
+  effect: CoreEffectAction,
+  sourceRankOverride?: string
 ): CorePrivateChoiceTransition | CorePrivateChoiceFailure {
   if (!isCorePrivateChoiceProfile(input)) return fail("CORE_PRIVATE_CHOICE_PROFILE", "Core Private Choice Authority profile is not active");
   if (activeCorePrivateChoice(input)) return fail("CORE_PRIVATE_CHOICE_PENDING", "A Core private choice is already pending");
@@ -243,7 +244,7 @@ export function resolveCorePrivateChoiceRoot(
   const events: CorePrivateChoiceTransition["events"] = [];
 
   if (effect.kind === "three-hand-raid") {
-    const problem = requireSource(state, actorId, effect.sourceCardId, "3");
+    const problem = requireSource(state, actorId, effect.sourceCardId, sourceRankOverride ?? "3");
     if (problem) return fail("CORE_PRIVATE_CHOICE_SOURCE", problem);
     const target = state.players[effect.targetPlayerId];
     if (!target || effect.targetPlayerId === actorId) return fail("CORE_PRIVATE_CHOICE_TARGET", "Three Hand Raid requires an opponent");
@@ -269,7 +270,7 @@ export function resolveCorePrivateChoiceRoot(
   }
 
   if (effect.kind === "five-recycle") {
-    const problem = requireSource(state, actorId, effect.sourceCardId, "5");
+    const problem = requireSource(state, actorId, effect.sourceCardId, sourceRankOverride ?? "5");
     if (problem) return fail("CORE_PRIVATE_CHOICE_SOURCE", problem);
     stageSource(state, effect.sourceCardId, actorId);
     const milledCardIds: CardId[] = [];
@@ -299,7 +300,7 @@ export function resolveCorePrivateChoiceRoot(
   }
 
   if (effect.kind === "six-dig") {
-    const problem = requireSource(state, actorId, effect.sourceCardId, "6");
+    const problem = requireSource(state, actorId, effect.sourceCardId, sourceRankOverride ?? "6");
     if (problem) return fail("CORE_PRIVATE_CHOICE_SOURCE", problem);
     stageSource(state, effect.sourceCardId, actorId);
     const drawnCardIds: CardId[] = [];
@@ -329,7 +330,7 @@ export function resolveCorePrivateChoiceRoot(
   }
 
   if (effect.kind === "seven-topdeck") {
-    const problem = requireSource(state, actorId, effect.sourceCardId, "7");
+    const problem = requireSource(state, actorId, effect.sourceCardId, sourceRankOverride ?? "7");
     if (problem) return fail("CORE_PRIVATE_CHOICE_SOURCE", problem);
     stageSource(state, effect.sourceCardId, actorId);
     const revealedCardIds: CardId[] = [];
@@ -359,7 +360,7 @@ export function resolveCorePrivateChoiceRoot(
 
   if (effect.kind === "natural-four") {
     // Rulebook §4 Natural: look at top 4 DP cards, reorder them, then optionally draw 1 from the top.
-    const problem = requireSource(state, actorId, effect.sourceCardId, "4");
+    const problem = requireSource(state, actorId, effect.sourceCardId, sourceRankOverride ?? "4");
     if (problem) return fail("CORE_PRIVATE_CHOICE_SOURCE", problem);
     stageSource(state, effect.sourceCardId, actorId);
     const topCount = Math.min(4, state.zones.dp.length);
@@ -389,7 +390,7 @@ export function resolveCorePrivateChoiceRoot(
   }
 
   if (effect.kind === "nine-anchor") {
-    const problem = requireSource(state, actorId, effect.sourceCardId, "9");
+    const problem = requireSource(state, actorId, effect.sourceCardId, sourceRankOverride ?? "9");
     if (problem) return fail("CORE_PRIVATE_CHOICE_SOURCE", problem);
     const target = state.players[effect.targetPlayerId];
     if (!target || effect.targetPlayerId === actorId) return fail("CORE_PRIVATE_CHOICE_TARGET", "Nine Anchor requires an opponent");
@@ -666,6 +667,28 @@ export function resolveCorePrivateChoiceSubmission(
     moveCard(state, cardId, "GY");
     clearChoice(state);
     events.push({ type: "CORE_NINE_ANCHOR_DISCARD_RESOLVED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, targetPlayerId, sourceCardId: choice.sourceCardId, discardedCardId: cardId }, visibility: "authorized" });
+    return { ok: true, state, events };
+  }
+
+  if (submission.kind === "core-two-quick-discard") {
+    // 2 Quick rider (rulebook §2): the chosen opponent discards 1 card of their
+    // choice. The scored 2 already sits in the controller's PR — only the
+    // discard remains. If the opponent had no card, resolution skipped the
+    // choice entirely, so this branch always has a legal selection.
+    const targetPlayerId = String(context.targetPlayerId);
+    const cardId = selected[0]!;
+    if (state.cards[cardId]?.zone !== `${targetPlayerId}_HAND`) return fail("CORE_PRIVATE_CHOICE_STALE", "2 Quick discard must remain in the opponent hand");
+    moveCard(state, cardId, "GY");
+    clearChoice(state);
+    // If the 2 Quick was declared over a pending root, the response window
+    // must reopen for the remaining stack items (mirrors reopenCorePriority).
+    if (state.stack.length > 0) {
+      const start = (state.turnOrder.indexOf(choice.controllerId) + 1) % state.turnOrder.length;
+      state.priority = { order: [...state.turnOrder], index: start, consecutivePasses: 0, open: true };
+    } else {
+      state.priority = null;
+    }
+    events.push({ type: "CORE_TWO_QUICK_DISCARD_RESOLVED", payload: { choiceId: choice.choiceId, playerId: choice.controllerId, targetPlayerId, sourceCardId: choice.sourceCardId, discardedCardId: cardId }, visibility: "authorized" });
     return { ok: true, state, events };
   }
 

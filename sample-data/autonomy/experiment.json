@@ -49,6 +49,10 @@
     ],
     [
       "random-legal",
+      "control-conversion-tactical"
+    ],
+    [
+      "random-legal",
       "hybrix-rusher"
     ],
     [
@@ -113,6 +117,10 @@
     ],
     [
       "score-rush",
+      "control-conversion-tactical"
+    ],
+    [
+      "score-rush",
       "hybrix-rusher"
     ],
     [
@@ -177,6 +185,10 @@
     ],
     [
       "control",
+      "control-conversion-tactical"
+    ],
+    [
+      "control",
       "hybrix-rusher"
     ],
     [
@@ -241,6 +253,10 @@
     ],
     [
       "tempo",
+      "control-conversion-tactical"
+    ],
+    [
+      "tempo",
       "hybrix-rusher"
     ],
     [
@@ -305,6 +321,10 @@
     ],
     [
       "value",
+      "control-conversion-tactical"
+    ],
+    [
+      "value",
       "hybrix-rusher"
     ],
     [
@@ -369,6 +389,10 @@
     ],
     [
       "score-rush-tactical",
+      "control-conversion-tactical"
+    ],
+    [
+      "score-rush-tactical",
       "hybrix-rusher"
     ],
     [
@@ -433,6 +457,10 @@
     ],
     [
       "control-tactical",
+      "control-conversion-tactical"
+    ],
+    [
+      "control-tactical",
       "hybrix-rusher"
     ],
     [
@@ -497,6 +525,10 @@
     ],
     [
       "tempo-tactical",
+      "control-conversion-tactical"
+    ],
+    [
+      "tempo-tactical",
       "hybrix-rusher"
     ],
     [
@@ -561,6 +593,10 @@
     ],
     [
       "value-tactical",
+      "control-conversion-tactical"
+    ],
+    [
+      "value-tactical",
       "hybrix-rusher"
     ],
     [
@@ -588,6 +624,74 @@
       "hybrix-baseline"
     ],
     [
+      "control-conversion-tactical",
+      "random-legal"
+    ],
+    [
+      "control-conversion-tactical",
+      "score-rush"
+    ],
+    [
+      "control-conversion-tactical",
+      "control"
+    ],
+    [
+      "control-conversion-tactical",
+      "tempo"
+    ],
+    [
+      "control-conversion-tactical",
+      "value"
+    ],
+    [
+      "control-conversion-tactical",
+      "score-rush-tactical"
+    ],
+    [
+      "control-conversion-tactical",
+      "control-tactical"
+    ],
+    [
+      "control-conversion-tactical",
+      "tempo-tactical"
+    ],
+    [
+      "control-conversion-tactical",
+      "value-tactical"
+    ],
+    [
+      "control-conversion-tactical",
+      "control-conversion-tactical"
+    ],
+    [
+      "control-conversion-tactical",
+      "hybrix-rusher"
+    ],
+    [
+      "control-conversion-tactical",
+      "hybrix-defender"
+    ],
+    [
+      "control-conversion-tactical",
+      "hybrix-trickster"
+    ],
+    [
+      "control-conversion-tactical",
+      "hybrix-sniper"
+    ],
+    [
+      "control-conversion-tactical",
+      "hybrix-support"
+    ],
+    [
+      "control-conversion-tactical",
+      "hybrix-tank"
+    ],
+    [
+      "control-conversion-tactical",
+      "hybrix-baseline"
+    ],
+    [
       "hybrix-rusher",
       "random-legal"
     ],
@@ -622,6 +726,10 @@
     [
       "hybrix-rusher",
       "value-tactical"
+    ],
+    [
+      "hybrix-rusher",
+      "control-conversion-tactical"
     ],
     [
       "hybrix-rusher",
@@ -689,6 +797,10 @@
     ],
     [
       "hybrix-defender",
+      "control-conversion-tactical"
+    ],
+    [
+      "hybrix-defender",
       "hybrix-rusher"
     ],
     [
@@ -753,6 +865,10 @@
     ],
     [
       "hybrix-trickster",
+      "control-conversion-tactical"
+    ],
+    [
+      "hybrix-trickster",
       "hybrix-rusher"
     ],
     [
@@ -817,6 +933,10 @@
     ],
     [
       "hybrix-sniper",
+      "control-conversion-tactical"
+    ],
+    [
+      "hybrix-sniper",
       "hybrix-rusher"
     ],
     [
@@ -881,6 +1001,10 @@
     ],
     [
       "hybrix-support",
+      "control-conversion-tactical"
+    ],
+    [
+      "hybrix-support",
       "hybrix-rusher"
     ],
     [
@@ -945,6 +1069,10 @@
     ],
     [
       "hybrix-tank",
+      "control-conversion-tactical"
+    ],
+    [
+      "hybrix-tank",
       "hybrix-rusher"
     ],
     [
@@ -1006,6 +1134,10 @@
     [
       "hybrix-baseline",
       "value-tactical"
+    ],
+    [
+      "hybrix-baseline",
+      "control-conversion-tactical"
     ],
     [
       "hybrix-baseline",
@@ -1122,6 +1254,18 @@
         "handValuePreservation": 0.8,
         "riskTolerance": 0.35,
         "counterConservation": 0.75
+      },
+      "strengthTier": "heuristic"
+    },
+    "control-conversion-tactical": {
+      "version": "5.0.0",
+      "policyHash": "97693293900d25613c510c6d38bfe738a5be297098e44c724f89e6c2002ffa9a",
+      "traits": {
+        "archetype": "control",
+        "researchOnly": true,
+        "disruptionPreference": 1,
+        "conversionAware": true,
+        "counterConservation": 0.65
       },
       "strengthTier": "heuristic"
     },
@@ -1266,6 +1410,6 @@
   "postRulesParityRepair": true,
   "authorityHash": "1b277ba0663a78cb754f00bba65acbbc5432376cba45ea915f290e44e68750f0",
   "releaseIdentityHash": "acbb9d386c748daded29119e3b0db889",
-  "experimentHash": "8c41081f41328880af83c8769bcdaa42771dbba17de851d5714b8814e5fe406d",
-  "manifestContentHash": "7af5b06ff45ccf6305775ed05465345236aa58551d3f0a10986561050e6e06c0"
+  "experimentHash": "8fa7be061956e63f3d930a04ec229fbc9917ed863604df013d49d5b2cdec477e",
+  "manifestContentHash": "d91cfa077992bb197bbd92c2447e7ab5f3e606ee35085e6b0baacdd1651c02cb"
 }

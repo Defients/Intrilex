@@ -308,7 +308,8 @@ export function executeScriptedAction(state, scripted, engine) {
 
     const actions = adv.legalActionFrame.actions;
     const isResponseWindow = actions.length > 0 && actions.every((a) =>
-      a.timingClass === 'INSTANT' && (a.family === 'response-decline' || a.family === 'counter' || a.family === 'ultra')
+      (a.timingClass === 'INSTANT' && (a.family === 'response-decline' || a.family === 'counter' || a.family === 'ultra'))
+      || a.timingClass === 'QUICK'
     );
 
     // Try to match the intent against current legal actions
@@ -528,10 +529,11 @@ export function runGuidedScenarioHeadless(scenario) {
         events.push(...adv.events);
         if (adv.status === 'TERMINAL') break;
         if (adv.status !== 'PLAYER_DECISION_REQUIRED' || !adv.legalActionFrame) break;
-        // Check if this is a response window (all actions are INSTANT response/counter)
+        // Check if this is a response window (all actions are INSTANT response/counter or QUICK)
         const frameActions = adv.legalActionFrame.actions;
         const isResponseWindow = frameActions.length > 0 && frameActions.every((a) =>
-          a.timingClass === 'INSTANT' && (a.family === 'response-decline' || a.family === 'counter' || a.family === 'ultra')
+          (a.timingClass === 'INSTANT' && (a.family === 'response-decline' || a.family === 'counter' || a.family === 'ultra'))
+          || a.timingClass === 'QUICK'
         );
         if (!isResponseWindow) break;
         // Auto-decline the response window

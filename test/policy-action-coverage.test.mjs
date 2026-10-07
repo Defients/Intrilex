@@ -50,7 +50,7 @@ test('private discards preserve good cards; takes and keeps acquire good cards',
 test('Six keep-all compares the complete kept set and the actual discard cost',()=>{
   const context=ctx([c('low','2♣',2),c('high','10♥',10),c('mid','8♦',8)]);
   context.authorizedView.pendingChoice={context:{drawnCardIds:['high','mid']}};
-  const keep=a('keep','private-choice','rank6-keep-return-top',[],['high','mid'],{keepCount:2});
+  const keep=a('keep','private-choice','rank6-keep-return-bottom',[],['high','mid'],{keepCount:2});
   const discard=a('discard','private-choice','rank6-keep-all-discard',[],['low'],{keepAll:true});
   assert.ok(privateChoiceScore(keep,context)>privateChoiceScore(discard,context));
   context.authorizedView.pendingChoice.context.drawnCardIds.push('low');

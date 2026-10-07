@@ -685,3 +685,53 @@ test('10♣ Foundation bonus: a skipped Action Phase defers the restriction inst
   assert.ok(!d.legalActionFrame.actions.some((a) => a.family === 'super'),
     'The deferred restricted Action Phase must still omit Supers');
 });
+
+// ── Deferred-resolution causality + Rank 2 polymorphism (telemetry repair) ──
+// Regression: a single "pending causality" pointer was overwritten by every
+// decision frame, so stack resolutions that landed after response declines
+// were credited to the decline (not-observable) and their deltas dropped.
+// The stack-item-keyed ledger must credit the declaring decision instead.
+
+test('deferred stack resolutions are credited to the declaring decision, not the decline', () => {
+  const result = assertCleanMatch('deferred causality', { seed: 31337 });
+  const rankDecisions = result.summary.rankDecisions;
+  const deferred = rankDecisions.filter((d) => d.stateDelta?.deferredResolution === true);
+  assert.ok(deferred.length > 0, 'expected deferred resolution merges in this fixture');
+  // A response-decline can never originate a deferred resolution — it declares
+  // no stack item. Any deferred merge on a decline proves ledger corruption.
+  assert.equal(
+    deferred.filter((d) => d.action?.family === 'response-decline').length, 0,
+    'deferred resolution deltas must never be attributed to response declines'
+  );
+  // At least one deferred resolution must carry real secured-point delta —
+  // stack resolution scoring (e.g. resolved Score plays) reaches the dossier.
+  const scored = deferred.filter((d) =>
+    Object.values(d.stateDelta?.securedPointDeltaByPlayer ?? {}).some((v) => v > 0));
+  assert.ok(scored.length > 0, 'deferred resolutions must carry secured-point deltas to the origin');
+});
+
+test('private-choice continuations retain rank attribution through sealed choices', () => {
+  const result = assertCleanMatch('private-choice continuation', { seed: 31337 });
+  const continuations = result.summary.rankDecisions.filter(
+    (d) => d.rankAttribution?.attributionStatus === 'continuation');
+  assert.ok(continuations.length > 0, 'expected continuation attributions in this fixture');
+  for (const c of continuations) {
+    assert.ok(c.rankAttribution.primaryRank, 'continuation must resolve a primary rank');
+    assert.ok(!c.rankAttribution.primaryRank || typeof c.rankAttribution.primaryRank === 'string');
+  }
+  // Rank 2 Quick's opponent-discard rider must attribute back to Rank 2.
+  assert.ok(
+    continuations.some((c) => c.rankAttribution.primaryRank === '2'),
+    'a 2 Quick / Rank 2 sealed choice must continue under Rank 2 attribution'
+  );
+});
+
+test('Rank 2 Quick is observable as a declared play family in match telemetry', () => {
+  const result = assertCleanMatch('2 Quick telemetry', { seed: 31337 });
+  const quicks = result.summary.rankDecisions.filter((d) => d.action?.mode === 'two-score-discard');
+  assert.ok(quicks.length > 0, 'expected at least one 2 Quick selection in this fixture');
+  for (const q of quicks) {
+    assert.equal(q.rankAttribution?.primaryRank, '2', '2 Quick must attribute to Rank 2');
+    assert.equal(q.rankAttribution?.playFamily, 'quick', '2 Quick must classify as the quick family');
+  }
+});

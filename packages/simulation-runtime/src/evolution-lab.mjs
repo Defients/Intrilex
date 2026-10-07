@@ -16,7 +16,7 @@ export function runLabGame(run, ordinal) {
   const started = performance.now();
   try {
     const checkpoints=plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints;
-    const result = runPolicyMatch({ ...plan, policyStates:checkpoints.map(cp=>cp.schemaVersion===2 ? cp.policyState : null), profileId: run.config.profileId, includeReplay: true,
+    const result = runPolicyMatch({ ...plan, policyStates:checkpoints.map(cp=>cp.schemaVersion===2 ? cp.policyState : null), adaptiveConfigs:checkpoints.map(cp=>cp.schemaVersion===2 ? (cp.adaptive ?? null) : null), profileId: run.config.profileId, includeReplay: true,
       decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, telemetryEnabled: false, strategicTelemetryEnabled:true, strategicTrace:run.config.strategicTrace===true, ...(run.config.strategicTrace ? {strategyIdentities:[1,2].map(seat=>decisionIdentity(run,plan,seat))}:{}), replayMode: 'commands' });
     const perSeatStats=result.summary.participants.map(p=>{
       const decisionFamilyCounts={};

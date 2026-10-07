@@ -76,7 +76,11 @@ function computeScoreComponents(policyId, action, context, _rawScore) {
   const response = context.response ?? {};
   const terminal = (action.family === 'play-for-points' || action.family === 'score') && (Number(fv.immediateScore ?? fv.immediatePoints ?? 0) + (context.own?.securedPoints ?? 0) >= (context.own?.goal ?? Infinity)) ? 1 : 0;
   const points = Number(fv.immediateScore ?? fv.immediatePoints ?? 0);
-  const resource = (action.family === 'draw' ? 1 : 0) + (action.family === 'swap-bar' ? 1 : 0) + (action.family === 'effect-six' ? 1 : 0);
+  // Resource evidence: explicit resource families plus any action whose feature
+  // vector advertises drawn cards (e.g. effect-private-choice six-dig carries
+  // drawCount). Keep parity with decomposePolicyScore in policies/scoring.
+  const resource = (action.family === 'draw' ? 1 : 0) + (action.family === 'swap-bar' ? 1 : 0) + (action.family === 'effect-six' ? 1 : 0)
+    + Number(fv.drawCount ?? fv.draw ?? fv.cardsDrawn ?? 0) * 0.5;
   const tempo = (action.family === 'tempo' || action.timingClass === 'QUICK') ? 1 : 0;
   const defense = (action.family === 'anchor' || action.family === 'anchor-guard' || action.family === 'effect-nine') ? 1 : 0;
   const synergy = Number(fv.anchorValue ?? 0) > 0 ? 0.25 : 0;

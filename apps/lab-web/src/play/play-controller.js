@@ -124,6 +124,7 @@ export class PlaySession {
     this._isAdvancing = false;
     this._achievementConsumer = null; // (events, snapshot) => void — set by play-app
     this._agent = null;          // pinned Agent Profile snapshot (null for catalog policies)
+    this._adaptiveController = null; // deterministic adaptive-strategy controller for the pinned agent (null when OFF/absent)
     this._policyActions = null;  // Lab-parity authorized action views for the current frame
   }
 
@@ -197,6 +198,9 @@ export class PlaySession {
     this.state = auto.createState(stateSetup);
     this._initialState = structuredClone(this.state);
     this._scriptUsage = new Map();
+    // Adaptive Strategy: the pinned snapshot's adaptive config owns the per-
+    // match controller. OFF/absent keeps the exact baseline genome path.
+    this._adaptiveController = this._agent?.adaptive ? auto.createAdaptiveController(this._agent.adaptive, this._agent.policyState) : null;
 
     // Initialize per-player policy RNG (same as autonomy-runtime)
     const PolicyRng = auto.PolicyRng ?? createPolicyRng;
@@ -530,6 +534,7 @@ export class PlaySession {
       engineVersion: auto.ENGINE_VERSION,
       rulesVersion: RULES_VERSION,
       ...(this._agent ? { policyState: this._agent.policyState } : {}),
+      ...(this._adaptiveController ? { adaptiveController: this._adaptiveController } : {}),
     };
 
     // Select action through the policy (or the scripted-opponent overlay
@@ -564,6 +569,7 @@ export class PlaySession {
       policyVersion: '1.0.0',
       family: aiPresentedAction?.family ?? null,
       isSuper: aiPresentedAction?.isSuper ?? false,
+      ...(context.adaptiveFrame ? { adaptive: { state: context.adaptiveFrame.state, baseState: context.adaptiveFrame.baseState, override: context.adaptiveFrame.override, transitioned: context.adaptiveFrame.transitioned, reason: context.adaptiveFrame.reason } } : {}),
     };
     this.decisionJournal.push(journalEntry);
 
@@ -829,6 +835,7 @@ export class PlaySession {
     const savedSetup = this.setup;
     const savedInitialState = this._initialState;
     const savedAgent = this._agent;
+    const savedAdaptiveController = this._adaptiveController;
 
     // Wire candidate into the session temporarily for replay
     this.status = SessionState.ADVANCING;
@@ -839,6 +846,10 @@ export class PlaySession {
       ...(restoredAgent ? { agentSnapshot: structuredClone(restoredAgent) } : {}) };
     this._scriptUsage = new Map(); // rebuilt deterministically as the replay re-fires scripted selections
     this._agent = restoredAgent;
+    // Adaptive Strategy: rebuilt fresh, then re-derived decision-by-decision as
+    // the journal replay re-fires _selectAIAction — deterministic, so the
+    // post-restore posture matches uninterrupted play exactly.
+    this._adaptiveController = restoredAgent?.adaptive ? auto.createAdaptiveController(restoredAgent.adaptive, restoredAgent.policyState) : null;
     this.engine = candidateEngine;
     this.state = candidateState;
     this._decisionIndex = 0;
@@ -880,7 +891,8 @@ export class PlaySession {
             return { actionId, actorId: entry.actorId, family: presented.family, mode: presented.mode, timingClass: presented.timingClass, sourceCardIds: presented.sourceHandles, targetCardIds: presented.targetHandles, featureVector: presented.featureVector, command: cmd, commandHash: presented.commandHash };
           });
           const context = { matchId: this.sessionId, runInstanceId: this.sessionId, decisionIndex: this._decisionIndex, actorId: entry.actorId, authorizedView: aiView, legalActions, rng: this._rngByPlayer[entry.actorId], profileId: this.setup.profileId, engineVersion: auto.ENGINE_VERSION, rulesVersion: RULES_VERSION,
-            ...(this._agent ? { policyState: this._agent.policyState } : {}) };
+            ...(this._agent ? { policyState: this._agent.policyState } : {}),
+            ...(this._adaptiveController ? { adaptiveController: this._adaptiveController } : {}) };
           const aiSelected = this._selectAIAction(auto, this.setup.aiPolicyId, context);
           if (!aiSelected || aiSelected.actionId !== entry.selectedActionId) {
             throw Object.assign(new Error(`RESTORE_AI_DIVERGENCE at decision ${entry.decisionIndex}`), { reasonCode: 'RESTORE_FRAME_HASH_MISMATCH' });
@@ -944,6 +956,7 @@ export class PlaySession {
       this.setup = savedSetup;
       this._initialState = savedInitialState;
       this._agent = savedAgent;
+      this._adaptiveController = savedAdaptiveController;
       throw error;
     }
   }

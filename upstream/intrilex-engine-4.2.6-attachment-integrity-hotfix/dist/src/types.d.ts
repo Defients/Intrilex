@@ -485,7 +485,7 @@ export type CorePrimaryAction = {
 } | {
     kind: "core-exhausted-pass";
 };
-export type CoreResponseKind = "base-ace-counter" | "anchor-ace-counter" | "spade-ace-counter" | "eight-scuttle-counter" | "king-anchor-counter" | "jack-disrupt" | "nine-tap" | "eight-spade-free-scuttle" | "eight-aegis-field" | "queen-aegis-quick" | "super-ace-counter" | "king-spade-counter" | "rank10-stack-theft" | "ultra-three-red" | "board-lock-quick";
+export type CoreResponseKind = "base-ace-counter" | "anchor-ace-counter" | "spade-ace-counter" | "eight-scuttle-counter" | "king-anchor-counter" | "jack-disrupt" | "nine-tap" | "eight-spade-free-scuttle" | "eight-aegis-field" | "queen-aegis-quick" | "super-ace-counter" | "king-spade-counter" | "rank10-stack-theft" | "ultra-three-red" | "board-lock-quick" | "two-quick";
 export type CoreStackPayload = {
     kind: "primary";
     action: CorePrimaryAction;
@@ -499,6 +499,7 @@ export type CoreStackPayload = {
     disruptedActionType?: CoreFoundationActionType;
     counterDestination?: "GY" | "EXILE";
     targetCardId?: CardId;
+    targetPlayerId?: PlayerId;
 };
 export type CoreEffectAction = {
     kind: "ace-purge";
@@ -561,7 +562,7 @@ export type CoreEffectAction = {
     sourceCardId: CardId;
     targetPlayerId: PlayerId;
 };
-export type CorePrivateChoiceKind = "core-rank3-present" | "core-rank3-take" | "core-rank3-discard" | "core-rank5-rummage" | "core-rank6-dig" | "core-rank7-assign" | "core-rank7-generated-effect" | "core-nine-anchor-discard" | "core-natural-four-reorder" | "core-bj-exile-recycle" | "core-seven-scoring-trigger";
+export type CorePrivateChoiceKind = "core-rank3-present" | "core-rank3-take" | "core-rank3-discard" | "core-rank5-rummage" | "core-rank6-dig" | "core-rank7-assign" | "core-rank7-generated-effect" | "core-nine-anchor-discard" | "core-natural-four-reorder" | "core-bj-exile-recycle" | "core-seven-scoring-trigger" | "core-two-quick-discard";
 export interface CorePrivateChoiceState {
     schemaVersion: 1;
     choiceId: string;
@@ -619,6 +620,9 @@ export type CorePrivateChoiceSubmission = {
     kind: "core-seven-scoring-trigger";
     takeCardId: CardId;
     returnOrderCardIds: CardId[];
+} | {
+    kind: "core-two-quick-discard";
+    selectedCardIds: CardId[];
 };
 export type CoreAuthorityAction = {
     kind: "core-apply-setup";
@@ -722,6 +726,10 @@ export type CoreAuthorityAction = {
 } | {
     kind: "core-declare-board-lock-quick";
     sourceCardId: CardId;
+} | {
+    kind: "core-declare-two-quick";
+    sourceCardId: CardId;
+    targetPlayerId: PlayerId;
 } | {
     kind: "core-resolve-response-top";
 } | {
@@ -901,6 +909,8 @@ export type SoloWildCopiedAction = {
 } | {
     kind: "recycle-five";
     rummageCardId?: CardId;
+} | {
+    kind: "six-dig";
 } | {
     kind: "deep-draw-six-spade";
     discardCardIds: CardId[];

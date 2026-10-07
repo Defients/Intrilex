@@ -1,0 +1,91 @@
+{
+  "variant": "no-self-reset",
+  "matchCount": 100,
+  "durationMs": 54314,
+  "rj": {
+    "rpi": 0.4155855729239803,
+    "confidence": "MEDIUM",
+    "raw": {
+      "selectionRate": 0.30526315789473685,
+      "victoryRate": 0.5862068965517241,
+      "scorePerSelection": 1.5862068965517242,
+      "boardPerSelection": 0.27586206896551724,
+      "responseRate": 0,
+      "observedRankValue": null,
+      "causalCoverage": 1
+    },
+    "sel": 29,
+    "opps": 95,
+    "fams": {
+      "printed-effect": 5,
+      "scuttle": 10,
+      "scoring": 11,
+      "swap": 3
+    }
+  },
+  "bj": {
+    "rpi": 0.8787436178585414
+  },
+  "ladder": [
+    {
+      "r": "BJ",
+      "rpi": 0.879
+    },
+    {
+      "r": "10",
+      "rpi": 0.848
+    },
+    {
+      "r": "8",
+      "rpi": 0.586
+    },
+    {
+      "r": "7",
+      "rpi": 0.566
+    },
+    {
+      "r": "9",
+      "rpi": 0.504
+    },
+    {
+      "r": "5",
+      "rpi": 0.468
+    },
+    {
+      "r": "J",
+      "rpi": 0.428
+    },
+    {
+      "r": "RJ",
+      "rpi": 0.416
+    },
+    {
+      "r": "K",
+      "rpi": 0.415
+    },
+    {
+      "r": "6",
+      "rpi": 0.387
+    },
+    {
+      "r": "A",
+      "rpi": 0.35
+    },
+    {
+      "r": "2",
+      "rpi": 0.345
+    },
+    {
+      "r": "3",
+      "rpi": 0.284
+    },
+    {
+      "r": "Q",
+      "rpi": 0.243
+    },
+    {
+      "r": "4",
+      "rpi": 0.158
+    }
+  ]
+}

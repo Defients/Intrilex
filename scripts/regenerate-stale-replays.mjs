@@ -5,7 +5,7 @@
 // either (a) fail replay verification or (b) have stale matchResultHash.
 //
 // Usage: node scripts/regenerate-stale-replays.mjs
-import { readFile, writeFile, readdir, unlink } from 'node:fs/promises';
+import { readFile, writeFile, readdir, unlink, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runPolicyMatch } from '@intrilex/simulation-runtime';
@@ -19,6 +19,8 @@ const retention = JSON.parse(await readFile(path.join(base, 'retention-index.jso
 const traceDir = path.join(base, 'decision-traces');
 const authDir = path.join(base, 'replays/authorized');
 const pubDir = path.join(base, 'replays/public');
+
+for (const dir of [traceDir, authDir, pubDir]) await mkdir(dir, { recursive: true });
 
 let regenerated = 0;
 let stillValid = 0;

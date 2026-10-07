@@ -22,8 +22,8 @@ const MODE_PATTERNS = Object.freeze({
   counter:/^(ace-base|ace-spade|eight-scuttle|king-anchor|king-spade|super-ace|ace-anchor)$/,
   disrupt:/^jack$/, interrupt:/^rank10-stack-theft$/,
   instant:/^(nine-(spade-)?goal-shift-[35]|eight-spade-free-scuttle|nine-tap)$/,
-  quick:/^(eight-aegis-field|queen-aegis|board-lock)$/,
-  'private-choice':/^(rank3-(present|take|discard)|rank5-rummage|rank6-(keep-return-(top|bottom)|keep-all-discard)|rank7-(hand-only|effect-only|score-only|hand-and-effect|hand-and-score|generated-.+)|nine-anchor-discard|natural-four-reorder-.+|bj-exile-recycle-.+|seven-scoring-trigger-take-.+)$/,
+  quick:/^(eight-aegis-field|queen-aegis|board-lock|two-score-discard)$/,
+  'private-choice':/^(rank3-(present|take|discard)|rank5-rummage|rank6-(keep-return-(top|bottom)|keep-all-discard)|rank7-(hand-only|effect-only|score-only|hand-and-effect|hand-and-score|generated-.+)|nine-anchor-discard|two-quick-discard|natural-four-reorder-.+|bj-exile-recycle-.+|seven-scoring-trigger-take-.+)$/,
   'effect-private-choice':/^(three-present-take|three-force-discard|five-recycle|six-dig|seven-topdeck|natural-four)$/,
   'effect-red-joker':/^(self-reset|shuffle-reset|hand-swap|opponent-attack)$/, 'effect-board-lock':/^black-joker$/,
   'royal-marriage':/^[♣♦♥♠]$/, 'queens-court':/^queens-court$/,
@@ -31,7 +31,7 @@ const MODE_PATTERNS = Object.freeze({
   rank10:/^(club-foundation(-bonus)?|heart-tempo|spade-recovery|diamond-mimic-(paired-)?(row-exchange-(pr|er)|absolute-scuttle|super-j-tempo|topdeck-seven|recycle-five))$/,
   ultra:/^(three-red-counter|three-black-.+|2-black-2-red-(draw|rummage))$/,
   voltage:/^(three-(hand|points)|four-guess-.+-[♣♦♥♠]|five-(gy-bottom|refine))$/,
-  'solo-wild':/^(three-bounce-[♣♦♥♠]|four-row-clear-(pr|er)-[♣♦♥♠]|total-clear-♠|recycle-five-[♣♦♥♠]|deep-draw-♠|topdeck-seven-[♣♦♥♠])$/,
+  'solo-wild':/^(three-bounce-[♣♦♥♠]|four-row-clear-(pr|er)-[♣♦♥♠]|total-clear-♠|recycle-five-[♣♦♥♠]|six-dig-[♣♦♥♠]|deep-draw-♠|topdeck-seven-[♣♦♥♠])$/,
   'wild-sovereignty':/^(three-bounce|four-row-clear-(pr|er)|total-clear|recycle-five|deep-draw|topdeck-seven)$/,
   'sudden-death':/^declare$/,
 });
@@ -87,7 +87,7 @@ export function privateChoiceScore(action, context) {
   const targets = action.targetHandles ?? [], value = sumHand(view, targets);
   // Presenting cards to an opponent and discarding our own cards should lose
   // the least useful cards. Rank3 force-discard selects the opponent's cards.
-  if (mode === 'rank3-present' || mode === 'nine-anchor-discard') return 900 - value * 40;
+  if (mode === 'rank3-present' || mode === 'nine-anchor-discard' || mode === 'two-quick-discard') return 900 - value * 40;
   if (mode === 'rank3-discard') {
     const enemyChoice = choice?.context?.targetPlayerId !== context.actorId;
     return 900 + (enemyChoice ? value : -value) * 40;
@@ -95,6 +95,19 @@ export function privateChoiceScore(action, context) {
   if (fv.keepAll || mode === 'rank6-keep-all-discard') {
     const drawn = choice?.context?.drawnCardIds ?? [];
     return 900 + sumHand(view, drawn) * 40 - value * 40;
+  }
+  if (mode.startsWith('rank6-keep-return')) {
+    // Keep scoring already compares the kept set via `value`. The returned card
+    // lands on the DP top or bottom: consistent with the Natural Four / BJ
+    // recycle convention, when we still hold a mini-turn we typically draw
+    // first, so a valuable returned card belongs on top; when the opponent
+    // draws first, burying it denies them the pickup.
+    const drawn = choice?.context?.drawnCardIds ?? [];
+    const kept = new Set(action.targetHandles ?? []);
+    const returned = cardFrom(view, drawn.find(id => !kept.has(id)));
+    const canDraw = number(own.limits?.miniTurnsRemaining) > 0;
+    const placement = mode.endsWith('-top') ? (canDraw ? 1 : -1) * handValue(returned, view) * 35 : 0;
+    return 900 + value * 40 + placement;
   }
   if (fv.naturalFour) {
     const order = s.topOrderHandles ?? targets, first = cardFrom(view, order[0]);
@@ -255,10 +268,26 @@ export function evaluateAction(action, context) {
   }
   if (family === 'effect-red-joker') {
     const remainingHand = hand.filter(c => !(action.sourceHandles ?? []).includes(c.id));
-    if (mode === 'hand-swap') result.utility += (number(enemy?.handCount) * 6 - remainingHand.reduce((sum, c) => sum + handValue(c, view), 0)) * 55;
-    else if (mode === 'opponent-attack') result.utility += Math.min(2, number(enemy?.handCount)) * 180 - (enemy?.handCount ? 0 : 900);
-    else if (mode === 'self-reset') result.utility += Math.min(number(view.dpCount), remainingHand.length + 3) * 110 - remainingHand.reduce((sum, c) => sum + handValue(c, view), 0) * 30;
-    else result.utility += Math.min(number(view.dpCount) + number(view.gyCount), 2) * 120;
+    const remValue = remainingHand.reduce((sum, c) => sum + handValue(c, view), 0);
+    const oppCount = number(enemy?.handCount);
+    const dpCount = number(view.dpCount), gyCount = number(view.gyCount);
+    if (mode === 'hand-swap') {
+      // We receive the opponent's hand (≈6.5/card absent reveal info) and
+      // surrender everything else we hold — quality, not just count.
+      result.utility += (oppCount * 6.5 - remValue) * 55;
+    } else if (mode === 'opponent-attack') {
+      // Opponent discards their whole hand and redraws N−2. Count damage is
+      // −2 cards, but the forced mulligan can *repair* a weak hand, so the
+      // estimate discounts large opposing hands it cannot inspect.
+      result.utility += Math.min(2, oppCount) * 160 - Math.max(0, oppCount - 4) * 30 - (oppCount ? 0 : 900);
+    } else if (mode === 'self-reset') {
+      result.utility += Math.min(dpCount, remainingHand.length + 3) * 105 - remValue * 30;
+    } else {
+      // shuffle-reset recycles GY into DP and draws 2. It only earns its
+      // keep when the draw pile cannot supply those draws anyway; with a
+      // healthy DP it is a vanilla draw that also spends the Joker.
+      result.utility += Math.max(0, 2 - dpCount) * 110 + (dpCount <= 3 ? Math.min(gyCount, 4) * 25 : 0);
+    }
     reason('JOKER_BRANCH_RESOURCE_COST');
   }
   if (family === 'effect-board-lock' || mode === 'board-lock') {

@@ -58,7 +58,7 @@ export async function executeStrategyBranch({event,replay,identity,checkpoints,p
       if(signal?.aborted){status='CANCELLED';break;}
       const applied=authority.execute(structuredClone(frame.state),frame.resolve(actionId));
       if(!applied.accepted)strategyFail('STRATEGY_BRANCH_ACTION_REJECTED');
-      const result=await continueMatch({initialState:applied.state,seed,policyIds:frozen.map(cp=>cp.policyId),policyStates:frozen.map(cp=>cp.schemaVersion===2?cp.policyState:null),profileId:plan.rulesProfile,
+      const result=await continueMatch({initialState:applied.state,seed,policyIds:frozen.map(cp=>cp.policyId),policyStates:frozen.map(cp=>cp.schemaVersion===2?cp.policyState:null),adaptiveConfigs:frozen.map(cp=>cp.schemaVersion===2?(cp.adaptive??null):null),profileId:plan.rulesProfile,
         decisionLimit:plan.decisionLimit,orchestrationCommandLimit:256,telemetryEnabled:false});
       const summary=result.summary??result;
       const clean=CLEAN_ENDINGS.includes(summary.terminationReason) && ['P1','P2','DRAW'].includes(summary.winner);

@@ -5,7 +5,9 @@
 // Rules:
 // - Single-rank ordinary play → full credit to that rank
 // - Same-rank multi-card Super/Ultra → one declaration for that rank
-// - Cross-rank plays (Royal Marriage) → fractional attribution (equal split)
+// - Cross-rank plays (Royal Marriage, wild-catalyst Supers such as 2+same-suit
+//   rank) → fractional attribution (deterministic equal split); every source
+//   rank receives participation and weighted contribution credit
 // - Wild-catalyst/enabler → role information exposed (enabler vs payload)
 // - Rank 7 generated effects → primary credit to Rank 7 as origin
 // - Generated Black Joker ≠ natural Black Joker
@@ -28,6 +30,8 @@ import {
  * - 'exact': single-rank source, full credit
  * - 'fractional': cross-rank source, split credit
  * - 'generated-origin': rank generated another rank's effect (e.g. Rank 7 → BJ)
+ * - 'continuation': private-choice decision continuing an earlier declaration;
+ *   source rank comes from the choice's recorded sourceCardId, never guessed
  * - 'not-observable': source identity hidden or unavailable
  */
 
@@ -53,6 +57,37 @@ export function classifyPlayForm(action) {
   if (authority === 'base' || /-base$/.test(authority) || /base-/.test(authority)) return 'base';
   if (family === 'solo-wild') return 'solo-wild-copy';
   if (family === 'counter' || family === 'scuttle' || family === 'quick' || family === 'instant' || family === 'disrupt') return 'base';
+  return 'other';
+}
+
+/**
+ * Classify the usage family of an action for per-rank decomposition. This is
+ * the shared semantic used by telemetry, analytics, Strategy and the Ranks
+ * dossier — polymorphic ranks (notably Rank 2) must not collapse their usage
+ * into a single bucket. Every participant in a multi-source play receives the
+ * family credit for its own rank row.
+ * @param {object} action - the selected action (family/mode/kind/timingClass)
+ * @param {object} [attribution] - result of attributeAction (optional)
+ * @returns {string} usage family
+ */
+export function classifyPlayFamily(action, attribution = null) {
+  const family = action?.family ?? '';
+  const form = attribution?.playForm ?? '';
+  if (attribution?.attributionStatus === 'continuation') return 'continuation';
+  if (form === 'solo-wild-copy' || family === 'solo-wild') return 'solo-wild-copy';
+  if (form === 'super' || family === 'super') return 'super';
+  if (form === 'ultra' || family === 'ultra') return 'ultra';
+  if (form === 'royal-marriage' || family === 'royal-marriage') return 'royal-marriage';
+  if (form === 'generated' || family === 'generated') return 'generated';
+  if (family === 'quick') return 'quick';
+  if (family === 'score') return 'scoring';
+  if (family === 'counter' || family === 'disrupt' || family === 'interrupt' || family === 'instant') return 'response';
+  if (family === 'voltage') return 'voltage';
+  if (family === 'wild-sovereignty') return 'wild-sovereignty';
+  if (family?.startsWith('effect-') || family === 'anchor' || family === 'anchor-private-choice' || family === 'effect-private-choice') return 'printed-effect';
+  if (family === 'scuttle') return 'scuttle';
+  if (family === 'swap-bar') return 'swap';
+  if (family === 'private-choice') return 'continuation';
   return 'other';
 }
 
@@ -225,7 +260,7 @@ export function isNoAttributionAction(action) {
   ]);
   const noAttributionFamilies = new Set([
     'response-decline', 'pass', 'exhausted-pass',
-    'phase', 'private-choice', 'draw'
+    'phase', 'draw'
   ]);
   if (noAttributionKinds.has(kind)) return true;
   if (noAttributionFamilies.has(family)) return true;
@@ -242,6 +277,45 @@ export function isNoAttributionAction(action) {
  * @returns {object} complete attribution record
  */
 export function attributeAction(state, action, viewerMode = 'private') {
+  // Private-choice decisions are sealed continuations of an earlier
+  // declaration. The choice's recorded sourceCardId identifies the ORIGINATING
+  // source card (e.g. the 6 for a dig, the wild 2 for a solo-wild copy, the
+  // scored 2 for a 2 Quick discard rider) — that rank receives continuation
+  // credit. Hidden option identities are never inferred.
+  if (action.family === 'private-choice') {
+    const choice = state?.metadata?.coreAuthority?.privateChoice ?? null;
+    const originId = choice?.sourceCardId ?? null;
+    const originCard = originId ? state?.cards?.[originId] : null;
+    if (originId && originCard?.identity) {
+      const parsed = parseIdentity(originCard.identity);
+      if (parsed?.rank) {
+        return {
+          sourceCards: [{ entityId: originId, identity: originCard.identity, rank: parsed.rank, suit: parsed.suit ?? null, zoneBefore: originCard.zone, role: 'source' }],
+          sourceRanks: [parsed.rank],
+          primaryRank: parsed.rank,
+          rankWeights: { [parsed.rank]: 1.0 },
+          playForm: 'continuation',
+          playFamily: 'continuation',
+          originRank: parsed.rank,
+          generatedRank: null,
+          attributionStatus: 'continuation',
+          attributionReason: `private-choice continuation of ${choice.kind ?? 'declared effect'}`
+        };
+      }
+    }
+    return {
+      sourceCards: [],
+      sourceRanks: [],
+      primaryRank: null,
+      rankWeights: {},
+      playForm: 'continuation',
+      playFamily: 'continuation',
+      originRank: null,
+      generatedRank: null,
+      attributionStatus: 'not-observable',
+      attributionReason: 'private-choice continuation origin not observable'
+    };
+  }
   if (isNoAttributionAction(action)) {
     return {
       sourceCards: [],
@@ -249,6 +323,7 @@ export function attributeAction(state, action, viewerMode = 'private') {
       primaryRank: null,
       rankWeights: {},
       playForm: classifyPlayForm(action),
+      playFamily: classifyPlayFamily(action),
       originRank: null,
       generatedRank: null,
       attributionStatus: 'not-observable',
@@ -275,7 +350,8 @@ export function attributeAction(state, action, viewerMode = 'private') {
     generatedRank = action.featureVector?.targetRank ?? null;
   }
 
-  return attributeRankAction({ sourceCards, playForm, originRank, generatedRank, viewerMode });
+  const attribution = attributeRankAction({ sourceCards, playForm, originRank, generatedRank, viewerMode });
+  return { ...attribution, playFamily: classifyPlayFamily(action, attribution) };
 }
 
 /**
@@ -391,6 +467,14 @@ export function classifyVariantEntity(attribution, action = {}) {
   const playForm = attribution.playForm ?? 'other';
   const suit = primarySourceSuit(attribution);
   const creditKeys = [rank]; // always credit the rank-overall aggregate
+  // Secondary-rank participation: multi-card plays (wild-catalyst supers such
+  // as 2+5♥, royal marriage) credit every distinct source rank at rank-overall
+  // tier — the catalyst participated even though the resolved variant is the
+  // payload rank's. Secondary ranks are NOT credited to the primary rank's
+  // specific variant tier, so effect identity stays clean.
+  for (const secondaryRank of attribution.sourceRanks ?? []) {
+    if (secondaryRank !== rank && !creditKeys.includes(secondaryRank)) creditKeys.push(secondaryRank);
+  }
 
   // Super effect — resolve the specific named effect from the action.
   if (playForm === 'super') {

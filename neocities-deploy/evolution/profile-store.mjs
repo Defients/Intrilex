@@ -6,6 +6,7 @@ import {
   resolveTemplate, validateMutationConstraints, validateIdentityConstraints, SERIES_DEFAULTS, ZERO_GENOME, genomeDigest, canExecuteCheckpoint, TEMPLATE_CATALOG,
 } from './profile-contracts.mjs';
 import { buildJournal, parameterProvenance, genomeDelta } from './profile-journal.mjs';
+import { validateAdaptiveConfig } from './adaptive-strategy.mjs';
 
 // ── Storage layout ─────────────────────────────────────────────────────────
 // artifacts/checkpoints/events are immutable (insert-or-verify); heads and
@@ -362,17 +363,17 @@ export class ProfileStore {
   }
 
   /** Custom creation: no archetype classification is requested or stored. */
-  async createProfile({ commandId, displayName, traits = {}, statement = '', rulesProfileId = 'core-advanced-authority', template = null, mutationConstraints = {}, identityConstraints = [], seriesDefaults = SERIES_DEFAULTS, heldOutPairs = 8 }, { templateCatalog = TEMPLATE_CATALOG } = {}) {
+  async createProfile({ commandId, displayName, traits = {}, statement = '', rulesProfileId = 'core-advanced-authority', template = null, mutationConstraints = {}, identityConstraints = [], seriesDefaults = SERIES_DEFAULTS, heldOutPairs = 8, adaptiveStrategy = null }, { templateCatalog = TEMPLATE_CATALOG } = {}) {
     const name = validateName(displayName), agentProfileId = newProfileId(commandId);
     const templateRef = template ? resolveTemplate(template.templateId, template.templateVersion, templateCatalog) : null;
     const resolvedTraits = validateTraits({ ...(templateRef?.resolvedTraits ?? {}), ...traits });
     const objective = resolveObjective({ rulesProfileId }), policy = resolvePromotionPolicy(), era = resolveEra({ identity: this.identity, objective });
     validatePolicyForObjective(policy.body, objective.body);
     const compiled = compileTraits({ traits: resolvedTraits, baseGenome: ZERO_GENOME() });
-    const checkpoint = createTrainableCheckpoint({ identity: this.identity, agentId: `AP:${agentProfileId}`, lineageId: `LINEAGE-${agentProfileId}`, policyState: compiled.policyState,
+    const checkpoint = createTrainableCheckpoint({ identity: this.identity, agentId: `AP:${agentProfileId}`, lineageId: `LINEAGE-${agentProfileId}`, policyState: compiled.policyState, adaptive: adaptiveStrategy,
       mutation: { kind: 'PROFILE_BASELINE_V1', baseGenome: 'ZERO_RESIDUALS_V1', compiler: compiled.compiler, writes: compiled.writes, template: templateRef }, createdAt: this.clock() });
     const revision = makeRevision({ agentProfileId, revisionNumber: 1, parentRevisionId: null, origin: 'CREATED', traits: resolvedTraits, statement, mutationConstraints, identityConstraints, objectiveInstanceId: objective.id,
-      defaults: { series: { ...seriesDefaults }, heldOutPairs, promotionPolicyId: policy.id }, template: templateRef, forkedFrom: null, checkpointId: checkpoint.checkpointId,
+      defaults: { series: { ...seriesDefaults }, heldOutPairs, promotionPolicyId: policy.id }, template: templateRef, forkedFrom: null, checkpointId: checkpoint.checkpointId, adaptiveStrategy,
       executableChange: { compiler: compiled.compiler, writes: compiled.writes, sourceCheckpointId: null } });
     const command = { commandId, type: 'CREATE_PROFILE', agentProfileId, expectedHead: null, payload: { displayName: name, traits, statement, rulesProfileId, template, mutationConstraints, identityConstraints, seriesDefaults, heldOutPairs } };
     const clock = this.clock();
@@ -387,26 +388,31 @@ export class ProfileStore {
   }
 
   /** Drafting never moves the head. Executable edits compile an AUTHORED checkpoint. */
-  async saveDraftRevision({ agentProfileId, baseRevisionId, traits = null, statement = null, mutationConstraints = null, identityConstraints = null, seriesDefaults = null, heldOutPairs = null, rulesProfileId = null, sourceCheckpointId }) {
+  async saveDraftRevision({ agentProfileId, baseRevisionId, traits = null, statement = null, mutationConstraints = null, identityConstraints = null, seriesDefaults = null, heldOutPairs = null, rulesProfileId = null, sourceCheckpointId, adaptiveStrategy }) {
     const view = await this.profileView(agentProfileId);
     const base = view.artifacts.find(a => a.id === baseRevisionId && a.kind === 'PROFILE_REVISION');
     if (!base) fail('ARTIFACT_NOT_FOUND', baseRevisionId);
     const source = view.checkpoints.find(cp => cp.checkpointId === sourceCheckpointId) ?? await this.getCheckpoint(sourceCheckpointId);
     if (!source) fail('CHECKPOINT_NOT_FOUND', sourceCheckpointId);
     const b = base.body, changedTraits = traits ? Object.fromEntries(Object.entries(validateTraits(traits)).filter(([k, v]) => b.intendedIdentity.traits[k] !== v)) : {};
+    // undefined = inherit the base revision's adaptive intent; null = explicitly OFF.
+    const nextAdaptive = adaptiveStrategy === undefined ? (b.adaptiveStrategy ?? null) : adaptiveStrategy;
+    if (nextAdaptive != null) validateAdaptiveConfig(nextAdaptive);
+    const adaptiveChanged = digest(nextAdaptive ?? null) !== digest(source.adaptive ?? null);
     let checkpoint = source, executableChange = null;
-    if (Object.keys(changedTraits).length) {
+    if (Object.keys(changedTraits).length || adaptiveChanged) {
       if (!canExecuteCheckpoint(source, this.identity).ok) fail('AUTHORING_SOURCE_NOT_EXECUTABLE', canExecuteCheckpoint(source, this.identity).reasons);
       const compiled = compileTraits({ traits: changedTraits, baseGenome: source.policyState });
-      checkpoint = createTrainableCheckpoint({ identity: this.identity, agentId: `AP:${agentProfileId}`, lineageId: source.lineageId, parent: source, policyState: compiled.policyState,
+      checkpoint = createTrainableCheckpoint({ identity: this.identity, agentId: `AP:${agentProfileId}`, lineageId: source.lineageId, parent: source, policyState: compiled.policyState, adaptive: nextAdaptive,
         mutation: { kind: 'PROFILE_AUTHORED_EDIT_V1', sourceCheckpointId: source.checkpointId, compiler: compiled.compiler, writes: compiled.writes }, createdAt: this.clock() });
-      executableChange = { compiler: compiled.compiler, writes: compiled.writes, sourceCheckpointId: source.checkpointId };
+      executableChange = { compiler: compiled.compiler, writes: compiled.writes, sourceCheckpointId: source.checkpointId,
+        ...(adaptiveChanged ? { adaptiveChange: { from: source.adaptive ?? null, to: nextAdaptive } } : {}) };
     }
     const objective = rulesProfileId && rulesProfileId !== (await this.getArtifact(b.objectiveInstanceId)).body.rulesProfileId ? resolveObjective({ rulesProfileId }) : null;
     const revision = makeRevision({ agentProfileId, revisionNumber: b.revisionNumber + 1, parentRevisionId: base.id, origin: 'AUTHORED_EDIT', traits: { ...b.intendedIdentity.traits, ...(traits ?? {}) },
       statement: statement ?? b.intendedIdentity.statement, mutationConstraints: mutationConstraints ?? b.mutationConstraints, identityConstraints: identityConstraints ?? b.identityConstraints,
       objectiveInstanceId: objective?.id ?? b.objectiveInstanceId, defaults: { series: seriesDefaults ?? b.defaults.series, heldOutPairs: heldOutPairs ?? b.defaults.heldOutPairs, promotionPolicyId: b.defaults.promotionPolicyId },
-      template: b.template, forkedFrom: b.forkedFrom, checkpointId: checkpoint.checkpointId, executableChange });
+      template: b.template, forkedFrom: b.forkedFrom, checkpointId: checkpoint.checkpointId, executableChange, adaptiveStrategy: nextAdaptive });
     await this.storeArtifacts({ artifacts: [...(objective ? [objective] : []), revision], checkpoints: checkpoint === source ? [] : [checkpoint] });
     return { revision, checkpoint, preview: previewAuthoredEdit({ source, next: checkpoint, checkpointsById: new Map(view.checkpoints.map(cp => [cp.checkpointId, cp])) }) };
   }
@@ -509,6 +515,7 @@ export class ProfileStore {
     const era = resolveEra({ identity: this.identity, objective });
     const revision = makeRevision({ agentProfileId, revisionNumber: 1, parentRevisionId: null, origin: 'FORKED', traits: base.body.intendedIdentity.traits, statement: base.body.intendedIdentity.statement,
       mutationConstraints: base.body.mutationConstraints, identityConstraints: base.body.identityConstraints, objectiveInstanceId: base.body.objectiveInstanceId, defaults: base.body.defaults, template: base.body.template,
+      adaptiveStrategy: base.body.adaptiveStrategy ?? checkpoint.adaptive ?? null,
       forkedFrom: { agentProfileId: sourceAgentProfileId, revisionId, checkpointId }, checkpointId, executableChange: null });
     const ancestry = makeArtifact('EXPOSURE_RECORD', { kind: 'ANCESTRY_LINK', ancestorAgentProfileId: sourceAgentProfileId, ancestorHeadVersion: source.head.headVersion, note: 'All exposures of the ancestor are treated as known exposures of this fork.' }, { scope: agentProfileId });
     const command = { commandId, type: 'FORK', agentProfileId, expectedHead: null, payload: { sourceAgentProfileId, sourceCheckpointId: checkpointId, sourceRevisionId: revisionId, displayName: name } };
@@ -533,7 +540,7 @@ export class ProfileStore {
       v1EvidenceNote: 'V1 TRAINING/EVALUATION results are historical under their original schema; they are not PROMOTION_CHALLENGE evidence.' }, { scope: agentProfileId });
     const exposures = (v1Context.packs ?? []).map(p => makeArtifact('EXPOSURE_RECORD', { kind: 'V1_PACK_EXPOSURE', legacyPurpose: p.purpose, packId: p.packId, seeds: [...p.seeds], use: p.purpose === 'TRAINING' ? 'SELECTION' : 'MEASUREMENT_RELEASED_AND_USED_FOR_REGRESSIONS' }, { scope: agentProfileId }));
     const revision = makeRevision({ agentProfileId, revisionNumber: 1, parentRevisionId: null, origin: 'MIGRATED_FROM_V1', traits: {}, statement: 'Migrated from V1; no authored intent was recorded.', mutationConstraints: {}, identityConstraints: [],
-      objectiveInstanceId: objective.id, defaults: { series: { ...SERIES_DEFAULTS }, heldOutPairs: 8, promotionPolicyId: policy.id }, template: null, forkedFrom: null, checkpointId: original.checkpointId, executableChange: null });
+      objectiveInstanceId: objective.id, defaults: { series: { ...SERIES_DEFAULTS }, heldOutPairs: 8, promotionPolicyId: policy.id }, template: null, forkedFrom: null, checkpointId: original.checkpointId, executableChange: null, adaptiveStrategy: original.adaptive ?? null });
     const command = { commandId, type: 'LINK_V1', agentProfileId, expectedHead: null, payload: { displayName: name, v1CheckpointId: original.checkpointId, rulesProfileId, v1Context } };
     const clock = this.clock();
     // The shared command coroutine yields the writes; this plan only returns their values.
@@ -617,6 +624,7 @@ export class ProfileStore {
     const objective = p.artifacts.find(a => a.id === headRevision.body.objectiveInstanceId), era = resolveEra({ identity: this.identity, objective });
     const revision = makeRevision({ agentProfileId, revisionNumber: 1, parentRevisionId: null, origin: 'IMPORTED_AS_FORK', traits: headRevision.body.intendedIdentity.traits, statement: headRevision.body.intendedIdentity.statement,
       mutationConstraints: headRevision.body.mutationConstraints, identityConstraints: headRevision.body.identityConstraints, objectiveInstanceId: headRevision.body.objectiveInstanceId, defaults: headRevision.body.defaults, template: headRevision.body.template,
+      adaptiveStrategy: headRevision.body.adaptiveStrategy ?? checkpoint.adaptive ?? null,
       forkedFrom: { agentProfileId: sourceId, revisionId: headRevision.id, checkpointId: checkpoint.checkpointId }, checkpointId: checkpoint.checkpointId, executableChange: null });
     const ancestry = makeArtifact('EXPOSURE_RECORD', { kind: 'ANCESTRY_LINK', ancestorAgentProfileId: sourceId, ancestorHeadVersion: p.head.headVersion, note: 'Imported ancestor exposures are known; unknown external exposure is not ruled out.' }, { scope: agentProfileId });
     const command = { commandId, type: 'IMPORT_AS_FORK', agentProfileId, expectedHead: null, payload: { bundleDigest: bundle.bundleDigest, displayName: name } };
@@ -646,9 +654,10 @@ function validateName(displayName) {
   if (!name || name.length > 80 || /[\u0000-\u001f]/.test(name)) fail('INVALID_DISPLAY_NAME');
   return name;
 }
-export function makeRevision({ agentProfileId, revisionNumber, parentRevisionId, origin, traits, statement, mutationConstraints, identityConstraints, objectiveInstanceId, defaults, template, forkedFrom, checkpointId, executableChange }) {
+export function makeRevision({ agentProfileId, revisionNumber, parentRevisionId, origin, traits, statement, mutationConstraints, identityConstraints, objectiveInstanceId, defaults, template, forkedFrom, checkpointId, executableChange, adaptiveStrategy = null }) {
   const body = { agentProfileId, revisionNumber, parentRevisionId, origin, intendedIdentity: { traits: structuredClone(traits), statement: String(statement ?? '') }, mutationConstraints: validateMutationConstraints(structuredClone(mutationConstraints)),
-    identityConstraints: validateIdentityConstraints(structuredClone(identityConstraints)), objectiveInstanceId, defaults: structuredClone(defaults), template, forkedFrom, authoredCheckpointId: checkpointId, executableChange };
+    identityConstraints: validateIdentityConstraints(structuredClone(identityConstraints)), objectiveInstanceId, defaults: structuredClone(defaults), template, forkedFrom, authoredCheckpointId: checkpointId, executableChange,
+    ...(adaptiveStrategy != null ? { adaptiveStrategy: validateAdaptiveConfig(structuredClone(adaptiveStrategy)) } : {}) };
   validateRevisionBody(body);
   return makeArtifact('PROFILE_REVISION', body, { scope: agentProfileId });
 }
@@ -676,6 +685,7 @@ export function buildSnapshot({ checkpoint, identity, profile, rulesProfileId })
   if (!executable.ok) fail('SNAPSHOT_NOT_EXECUTABLE', executable.reasons);
   const body = { contract: `${CONTRACTS.snapshot.id}@${CONTRACTS.snapshot.version}`, kind: profile ? 'PROFILE_HEAD' : 'CHECKPOINT', checkpointId: checkpoint.checkpointId, policyId: checkpoint.policyId, policyVersion: checkpoint.policyVersion,
     policyState: structuredClone(checkpoint.policyState), genomeDigest: genomeDigest(checkpoint), implementation: { fingerprint: identity.fingerprint, engineVersion: identity.engineVersion, rulesVersion: identity.rulesVersion }, rulesProfileId,
+    ...(checkpoint.adaptive != null ? { adaptive: structuredClone(checkpoint.adaptive) } : {}),
     profile: profile ? { agentProfileId: profile.agentProfileId, headVersion: profile.headVersion, headTokenDigest: profile.headTokenDigest, activeRevisionId: profile.activeRevisionId } : null };
   return deepFreeze({ ...strictCanonical(body), displayName: profile?.displayName ?? null, snapshotDigest: digest(body) });
 }

@@ -405,6 +405,25 @@ function rankModeValuation(sources, mode, category, action, context, reasonCodes
     return adj;
   }
 
+  // ── Six Dig filtering ──
+  // A Dig trades the 6 for filtered deck access (draw several, keep the best,
+  // return or discard the rest). Every other mechanised rank has a dedicated
+  // valuation branch; without one the 6's effect competed as a bare generic
+  // effect. Value scales with advertised draw depth and is strongest when the
+  // hand is thin — with a full hand, scoring the 6 for Points is often better.
+  if (primaryRank === '6') {
+    if (mode === 'dig' || mode === 'deep-draw' || mode === 'super-dig') {
+      const handCount = context?.authorizedView?.own?.hand?.length ?? 0;
+      const drawCount = Number(action.featureVector?.drawCount ?? action.featureVector?.cardsDrawn ?? action.featureVector?.draw ?? 0);
+      adj += Math.min(240, 80 + drawCount * 50) + (handCount <= 2 ? 60 : 0) - (handCount >= 5 ? 60 : 0);
+      reasonCodes.push('SIX_DIG_FILTERED_RESOURCE_VALUE');
+    } else if (mode === 'swap-bar-peek') {
+      adj += 40;
+      reasonCodes.push('SIX_SWAP_BAR_PEEK_INFORMATION');
+    }
+    return adj;
+  }
+
   // ── Four clear awareness ──
   if (primaryRank === '4') {
     if (mode === 'total-clear') {
@@ -711,6 +730,10 @@ function conservationPenalty(sources, mode, category, action, context, cognition
     // Tens have multiple modes — preserve for effect use
     adj -= 25 * threatDampen;
     reasonCodes.push('PRESERVE_TEN_EFFECT_OPTION');
+  } else if (primaryRank === '6') {
+    // A 6 spent for Points forgoes its Dig option — modest preservation like 10
+    adj -= 25 * threatDampen;
+    reasonCodes.push('PRESERVE_SIX_FILTER_OPTION');
   } else if (primaryRank === '8') {
     adj -= 20 * threatDampen;
     reasonCodes.push('PRESERVE_EIGHT_SCUTTLE_COUNTER');
@@ -757,10 +780,26 @@ function estimateOpponentPressure(context) {
 function estimateHandAdvantage(context) {
   const own = context?.authorizedView?.own ?? {};
   const opponents = context?.authorizedView?.opponents ?? [];
-  const ownHand = own.hand?.length ?? 0;
-  const oppHand = opponents[0]?.handCount ?? opponents[0]?.hand?.length ?? 0;
-  if (ownHand + oppHand === 0) return 0;
-  return (ownHand - oppHand) / Math.max(ownHand, oppHand, 1);
+  const known = context?.authorizedView?.knownCards ?? {};
+  // Our own hand is fully authorized information: weigh strategic value
+  // (points + counter/recipe potential), not raw card count. The opponent's
+  // hidden hand is estimated at the deck's expected per-card value.
+  const ownCards = (own.hand ?? []).map(ref => typeof ref === 'string' ? known[ref] : ref).filter(Boolean);
+  const ownQ = ownCards.reduce((sum, c) => sum + handStrategicWeight(c), 0);
+  const oppCount = opponents[0]?.handCount ?? opponents[0]?.hand?.length ?? 0;
+  const oppQ = oppCount * 5.5;
+  if (ownQ + oppQ === 0) return 0;
+  return (ownQ - oppQ) / Math.max(ownQ, oppQ, 1);
+}
+
+function handStrategicWeight(card) {
+  const parsed = parseRank(card?.identity);
+  if (!parsed) return 0;
+  let v = Number(card?.pointValue ?? { A: 4, J: 3, Q: 2, K: 8, RJ: 5, BJ: 11 }[parsed.rank] ?? 0);
+  if (parsed.rank === 'A') v += 3;
+  else if (parsed.rank === 'K' || parsed.rank === 'Q' || parsed.rank === '2') v += 1.5;
+  else if (parsed.rank === '8' || parsed.rank === 'J') v += 1;
+  return v;
 }
 
 function estimateExileValue(context) {

@@ -1,0 +1,91 @@
+{
+  "variant": "no-opponent-attack",
+  "matchCount": 100,
+  "durationMs": 52820,
+  "rj": {
+    "rpi": 0.3426622287221754,
+    "confidence": "MEDIUM",
+    "raw": {
+      "selectionRate": 0.3263157894736842,
+      "victoryRate": 0.5333333333333333,
+      "scorePerSelection": 1.6451612903225807,
+      "boardPerSelection": 0.2903225806451613,
+      "responseRate": 0,
+      "observedRankValue": null,
+      "causalCoverage": 1
+    },
+    "sel": 31,
+    "opps": 95,
+    "fams": {
+      "printed-effect": 7,
+      "scuttle": 9,
+      "scoring": 12,
+      "swap": 3
+    }
+  },
+  "bj": {
+    "rpi": 0.734040971840702
+  },
+  "ladder": [
+    {
+      "r": "10",
+      "rpi": 0.883
+    },
+    {
+      "r": "BJ",
+      "rpi": 0.734
+    },
+    {
+      "r": "8",
+      "rpi": 0.555
+    },
+    {
+      "r": "7",
+      "rpi": 0.536
+    },
+    {
+      "r": "9",
+      "rpi": 0.483
+    },
+    {
+      "r": "K",
+      "rpi": 0.469
+    },
+    {
+      "r": "J",
+      "rpi": 0.444
+    },
+    {
+      "r": "5",
+      "rpi": 0.411
+    },
+    {
+      "r": "6",
+      "rpi": 0.41
+    },
+    {
+      "r": "A",
+      "rpi": 0.374
+    },
+    {
+      "r": "RJ",
+      "rpi": 0.343
+    },
+    {
+      "r": "2",
+      "rpi": 0.335
+    },
+    {
+      "r": "3",
+      "rpi": 0.228
+    },
+    {
+      "r": "Q",
+      "rpi": 0.174
+    },
+    {
+      "r": "4",
+      "rpi": 0.14
+    }
+  ]
+}

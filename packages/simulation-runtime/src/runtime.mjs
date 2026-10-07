@@ -36,6 +36,7 @@ import {
 import { createDecisionTrace} from '@intrilex/decision-intelligence/decision-trace';
 import { attributeAction, classifyVariantEntity, isNoAttributionAction } from './rank-attribution.mjs';
 import { createComboTracker, comboClassOf } from './combo-telemetry.mjs';
+import { createAdaptiveController, normalizeAdaptiveConfig, effectiveAdaptiveMode, adaptiveSeatSummary, compactAdaptiveFrame, ADAPTIVE_TELEMETRY_VERSION } from './adaptive-strategy.mjs';
 
 export { LAB_VERSION, REPLAY_DATA_VERSION, ANALYTICS_SCHEMA_VERSION };
 const COMPLETE_REASONS = new Set(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
@@ -61,6 +62,9 @@ function mergeRankStateDelta(existing, incoming) {
     ...incoming,
     securedPointDeltaByPlayer: sumNumericMaps(existing.securedPointDeltaByPlayer, incoming.securedPointDeltaByPlayer),
     boardPresenceDeltaByPlayer: sumNumericMaps(existing.boardPresenceDeltaByPlayer, incoming.boardPresenceDeltaByPlayer),
+    handDeltaByPlayer: sumNumericMaps(existing.handDeltaByPlayer, incoming.handDeltaByPlayer),
+    miniTurnDeltaByPlayer: sumNumericMaps(existing.miniTurnDeltaByPlayer, incoming.miniTurnDeltaByPlayer),
+    goalDeltaByPlayer: sumNumericMaps(existing.goalDeltaByPlayer, incoming.goalDeltaByPlayer),
     attributionStatus: existing.attributionStatus === 'observed' || incoming.attributionStatus === 'observed' ? 'observed' : (incoming.attributionStatus ?? existing.attributionStatus),
     deferredResolution: Boolean(existing.deferredResolution || incoming.deferredResolution)
   };
@@ -90,6 +94,34 @@ function primaryMechanicTag(action) {
 }
 function countUntappedQueens(state, playerId) {
   return (state.players?.[playerId]?.er ?? []).filter((id) => /^Q[♣♦♥♠]$/u.test(String(state.cards?.[id]?.identity ?? '')) && state.cards?.[id]?.state?.tapped !== true).length;
+}
+
+// ── Diagnostic policy modifiers ──
+// Simulation-lab-only action filtering for ablation experiments. A policyId may
+// carry pipe-separated modifiers: "<baseId>|drop:<family>" or
+// "<baseId>|drop:<family>:<mode>". Dropped actions are removed from the legal
+// action list handed to the policy's choose(); the engine's legality frame is
+// unchanged and the modifier cannot manufacture illegal selections. If a filter
+// would leave no legal actions, the unfiltered list is used (fail-open guard so
+// a diagnostic can never crash the match loop). Modifiers are part of the
+// policyId string, so they hash into matchId/provenance like any other id.
+const DIAGNOSTIC_POLICY_CACHE = new Map();
+function resolveDiagnosticPolicy(policyId) {
+  const parts = String(policyId).split('|');
+  const base = POLICY_BY_ID[parts[0]];
+  if (!base || parts.length === 1) return base;
+  const cached = DIAGNOSTIC_POLICY_CACHE.get(policyId);
+  if (cached) return cached;
+  const drops = parts.slice(1).map(m => m.split(':')).filter(d => d[0] === 'drop' && d[1]);
+  const wrapped = {
+    policyId, version: base.version, policyHash: base.policyHash, traits: base.traits ?? {}, strengthTier: base.strengthTier,
+    choose(context) {
+      const filtered = context.legalActions.filter(a => !drops.some(d => a.family === d[1] && (d.length === 2 || a.mode === d[2])));
+      return base.choose({ ...context, legalActions: filtered.length ? filtered : context.legalActions });
+    }
+  };
+  DIAGNOSTIC_POLICY_CACHE.set(policyId, wrapped);
+  return wrapped;
 }
 function buildRuleCompliance({ decisions, events, state }) {
   // Single-pass iteration over decisions to collect targets and count violations.
@@ -176,9 +208,11 @@ export function createMatchId(config) {
 function buildRankOpportunityMaps(policyActions, state) {
   const rankOppMap = {};
   const variantOppMap = {};
+  const actionRankById = {};
   for (const pa of policyActions) {
     if (isNoAttributionAction(pa)) continue;
     const paAttrib = attributeAction(state, pa, 'private');
+    actionRankById[pa.actionId] = paAttrib.primaryRank ?? null;
     if (paAttrib.primaryRank) {
       const opportunityRanks = paAttrib.sourceRanks?.length ? [...new Set(paAttrib.sourceRanks)] : [paAttrib.primaryRank];
       for (const rank of opportunityRanks) {
@@ -204,7 +238,7 @@ function buildRankOpportunityMaps(policyActions, state) {
       else variantOppMap[normalKey].legalOptions += 1;
     }
   }
-  return { rankOppMap, variantOppMap };
+  return { rankOppMap, variantOppMap, actionRankById };
 }
 
 /**
@@ -248,6 +282,9 @@ function attributeDeferredResolution({ pendingCausality, preFrameState, preFrame
       originatingDecision.stateDelta = mergeRankStateDelta(originatingDecision.stateDelta, {
         securedPointDeltaByPlayer: frameDelta.securedPointDeltaByPlayer,
         boardPresenceDeltaByPlayer: frameDelta.boardPresenceDeltaByPlayer,
+        handDeltaByPlayer: frameDelta.handDeltaByPlayer,
+        miniTurnDeltaByPlayer: frameDelta.miniTurnDeltaByPlayer,
+        goalDeltaByPlayer: frameDelta.goalDeltaByPlayer,
         attributionStatus: 'observed',
         causedByDeclarationFactId: pendingCausality.declarationFactId,
         deferredResolution: true
@@ -301,7 +338,19 @@ export function runPolicyMatch(config) {
   const rankDecisions = [];
   const semanticCounters = emptySemanticCounters();
   const perSeat = seatOrder.map(() => ({ miniTurnActionCount:0, exhaustedPassActionCount:0, responsePlayedCount:0, responseDeclinedCount:0, responseOpportunityCount:0, counterDeclarationCount:0, quickDeclarationCount:0, instantDeclarationCount:0, interruptDeclarationCount:0, policyDecisionCount:0, policyActionCount:0, actionCount:0, passActionCount:0, miniTurnCount:0, meaningfulResponseDecisionCount:0, advancedDecisionCount:0, voltageDecisionCount:0, ultraDecisionCount:0, privateChoiceDecisionCount:0, mechanicCounts:{}, primaryMechanicCounts:{}, mechanicOpportunityCounts:{}, primaryMechanicOpportunityCounts:{}, decisionFamilyCounts:{} }));
-  const policyRngByPlayer = Object.fromEntries(seatOrder.map((playerId, index) => [playerId, new DeterministicPolicyRng(uint32FromHash({ seed: setup.seed, playerId, policyId: policyIds[index], stream: 'POLICY_V4' }))]));
+  // Diagnostic modifiers (pipe suffixes like "id|drop:effect-red-joker:mode")
+  // share the BASE policy's rng stream so ablations only differ in the filtered
+  // action set, not in tiebreak noise.
+  const policyRngByPlayer = Object.fromEntries(seatOrder.map((playerId, index) => [playerId, new DeterministicPolicyRng(uint32FromHash({ seed: setup.seed, playerId, policyId: String(policyIds[index]).split('|')[0], stream: 'POLICY_V4' }))]));
+  // Adaptive Strategy layer: per-seat deterministic controllers over the
+  // baseline genome. Absent/OFF config builds no controller (zero overhead);
+  // LEARNED is reported as unavailable and executes as OFF.
+  const adaptiveConfigs = (config.adaptiveConfigs ?? []).map(entry => normalizeAdaptiveConfig(entry));
+  const adaptiveControllers = seatOrder.map((_, index) => {
+    const cfg = adaptiveConfigs[index];
+    if (!cfg || effectiveAdaptiveMode(cfg) !== 'RULED' || policyIds[index] !== WEIGHTED_POLICY_ID || !config.policyStates?.[index]) return null;
+    return createAdaptiveController(cfg, config.policyStates[index]);
+  });
   let terminationReason = 'DECISION_LIMIT', errorCode = null;
   const captureEvents = (items) => {
     events.push(...items);
@@ -324,7 +373,14 @@ export function runPolicyMatch(config) {
   // deferred stack resolution (which happens in the NEXT frame) is attributed to
   // the declaration that caused it, not to whichever player receives the next
   // decision frame.
-  let pendingCausality = null;
+  // Stack-item-keyed causality ledger. A declaration may only resolve in a
+  // LATER frame's orchestration (after response windows close). Crediting "the
+  // last decision" misattributes that delta to response declines or the next
+  // actor's unrelated move. Instead, each stack item's id is registered against
+  // the decision that declared it; deferred deltas are credited to the origin
+  // of the first stack item actually resolved in the frame.
+  const stackCausalityByItemId = new Map();
+  let lastDecisionCausality = null;
 
   // Canonical Combo telemetry (rulebook §8): legal opportunities per recipe,
   // declarations, and authoritative lifecycle from engine events.
@@ -345,15 +401,30 @@ export function runPolicyMatch(config) {
     comboTracker.observe(frame.events, state);
 
     // ── Causal boundary: attribute frame/orchestration transitions (stack
-    // resolution, automatic priority advancement) to the PREVIOUS declaration. ──
-    if (captureFacts && pendingCausality) {
-      attributeDeferredResolution({ pendingCausality, preFrameState, preFrameScores, state, frame, matchId, seatOrder, facts, rankDecisions });
+    // resolution) to the decision that DECLARED the resolved stack item. ──
+    if (captureFacts) {
+      // Engine-generated stack declarations inside orchestration (e.g. ⭐7
+      // generated effects) inherit the causality of the decision whose
+      // resolution spawned them.
+      for (const event of frame.events) {
+        const stackItemId = event?.payload?.stackItemId;
+        if (typeof stackItemId === 'string' && /_DECLARED$/.test(event.type ?? '') && !stackCausalityByItemId.has(stackItemId)) {
+          stackCausalityByItemId.set(stackItemId, lastDecisionCausality);
+        }
+      }
+      for (const event of frame.events) {
+        const stackItemId = event?.payload?.stackItemId;
+        if (typeof stackItemId !== 'string' || !/_RESOLVED$|_FIZZLED$/.test(event.type ?? '')) continue;
+        const origin = stackCausalityByItemId.get(stackItemId);
+        stackCausalityByItemId.delete(stackItemId);
+        if (origin) { attributeDeferredResolution({ pendingCausality: origin, preFrameState, preFrameScores, state, frame, matchId, seatOrder, facts, rankDecisions }); break; }
+      }
     }
 
     if (frame.status === 'TERMINAL') {
       terminationReason = frame.reasonCode === 'CANONICAL_DRAW' ? 'CANONICAL_DRAW' : frame.reasonCode === 'EXHAUSTED_RESOLUTION' ? 'EXHAUSTED_RESOLUTION' : 'NORMAL_VICTORY';
       // Clear pending causality — terminal flush is a non-decision transition.
-      pendingCausality = null;
+      stackCausalityByItemId.clear();
       break;
     }
     if (frame.status !== 'PLAYER_DECISION_REQUIRED') {
@@ -390,7 +461,12 @@ export function runPolicyMatch(config) {
     const postFrameScores = captureFacts ? pointsByPlayer(state, seatOrder) : null;
     const actorId = frame.decisionActorId;
     const seatIndex = seatOrder.indexOf(actorId);
-    const policy = policyIds[seatIndex]===WEIGHTED_POLICY_ID && config.policyStates?.[seatIndex] ? {policyId:WEIGHTED_POLICY_ID,version:'1.0.0',policyHash:hashCanonical(config.policyStates[seatIndex]),traits:{},choose:context=>({actionId:chooseWeightedAction(config.policyStates[seatIndex],context)?.actionId,metadata:{reasonCode:'WEIGHTED_HEURISTIC_V1',candidateScores:[]}})} : POLICY_BY_ID[policyIds[seatIndex]];
+    const adaptiveCtl = adaptiveControllers[seatIndex];
+    let adaptiveFrame = null;
+    const policy = policyIds[seatIndex]===WEIGHTED_POLICY_ID && config.policyStates?.[seatIndex] ? {policyId:WEIGHTED_POLICY_ID,version:'1.0.0',policyHash:hashCanonical(config.policyStates[seatIndex]),traits:{},choose:context=>{
+      adaptiveFrame = adaptiveCtl ? adaptiveCtl.decide(context) : null;
+      return {actionId:chooseWeightedAction(adaptiveFrame?.policyState ?? config.policyStates[seatIndex],context)?.actionId,metadata:{reasonCode:'WEIGHTED_HEURISTIC_V1',candidateScores:[],...(adaptiveFrame?{adaptive:compactAdaptiveFrame(adaptiveFrame,{deep:config.strategicTrace===true})}:{})}};
+    }} : resolveDiagnosticPolicy(policyIds[seatIndex]);
     if (!policy) { terminationReason = 'POLICY_ERROR'; errorCode = `UNKNOWN_POLICY:${policyIds[seatIndex]}`; break; }
     const authorizedView = strictPolicyView(state, actorId);
     const rng = policyRngByPlayer[actorId];
@@ -424,8 +500,8 @@ export function runPolicyMatch(config) {
 
     // Capture rank attribution for this decision (use pre-execution state for card access)
     const rankAttribution = attributeAction(state, selectedAction, 'private');
-    const { rankOppMap, variantOppMap } = buildRankOpportunityMaps(frame.policyActions, state);
-    rankDecisions.push({ checkpointId, participantId: actorId, decisionIndex, rankAttribution, rankOpportunities: Object.values(rankOppMap), variantOpportunities: Object.values(variantOppMap), action: { family: selectedAction.family, mode: selectedAction.mode, kind: selectedAction.kind, authority: selectedAction.authority, timingClass: selectedAction.timingClass }, legalActions: frame.policyActions.map(pa => ({ actionId: pa.actionId, family: pa.family, mode: pa.mode, kind: pa.kind })) });
+    const { rankOppMap, variantOppMap, actionRankById } = buildRankOpportunityMaps(frame.policyActions, state);
+    rankDecisions.push({ checkpointId, participantId: actorId, decisionIndex, fullTurn: state.fullTurnSequence, securedPoints: postFrameScores ?? null, handCounts: Object.fromEntries(seatOrder.map((id) => [id, state.players?.[id]?.hand?.length ?? null])), candidateScores: selected.metadata?.candidateScores ?? [], rankAttribution, rankOpportunities: Object.values(rankOppMap), variantOpportunities: Object.values(variantOppMap), action: { family: selectedAction.family, mode: selectedAction.mode, kind: selectedAction.kind, authority: selectedAction.authority, timingClass: selectedAction.timingClass }, legalActions: frame.policyActions.map(pa => ({ actionId: pa.actionId, family: pa.family, mode: pa.mode, kind: pa.kind, rank: actionRankById[pa.actionId] ?? null })) });
 
     state = result.state;
     comboTracker.observe(result.events, state);
@@ -491,22 +567,25 @@ export function runPolicyMatch(config) {
       facts.stateDeltaFacts.push(stateDelta);
       facts.causalEdges.push(...createCausalEdges(decisionFact, resolutionFact, stateDelta));
       // Attach stateDelta to the rankDecisions entry so rank analytics can attribute
-      // secured-point and board-presence contributions per rank (scorePower/boardPower axes).
+      // secured-point and board-presence contributions per rank (scorePower/boardPower axes),
+      // plus hand/mini-turn/goal deltas for resource and tempo evidence channels.
       const lastRankDecision = rankDecisions[rankDecisions.length - 1];
       if (lastRankDecision) {
         lastRankDecision.stateDelta = mergeRankStateDelta(lastRankDecision.stateDelta, {
           securedPointDeltaByPlayer: stateDelta.securedPointDeltaByPlayer,
           boardPresenceDeltaByPlayer: stateDelta.boardPresenceDeltaByPlayer,
+          handDeltaByPlayer: stateDelta.handDeltaByPlayer,
+          miniTurnDeltaByPlayer: stateDelta.miniTurnDeltaByPlayer,
+          goalDeltaByPlayer: stateDelta.goalDeltaByPlayer,
           attributionStatus: 'observed',
           causedByDeclarationFactId: decisionFact.factId,
           deferredResolution: false
         });
       }
-      // Update pending causality: the current declaration may have deferred
-      // resolution (stack items that resolve in the next frame). Track its
-      // identity so the next iteration can credit any frame-resolution delta
-      // to this declaration rather than to the next decision.
-      pendingCausality = {
+      // Register stack-item causality: every stack item this decision declared
+      // (and any the engine pushed while executing it) resolves to THIS
+      // decision's identity, even if resolution lands in a later frame.
+      lastDecisionCausality = {
         declarationFactId: decisionFact.factId,
         checkpointId,
         actorId,
@@ -515,8 +594,12 @@ export function runPolicyMatch(config) {
         targetEntityIds: selectedAction.targetHandles ?? [],
         causalChainId
       };
-    } else {
-      pendingCausality = null;
+      for (const event of result.events) {
+        const stackItemId = event?.payload?.stackItemId;
+        if (typeof stackItemId === 'string' && /_DECLARED$/.test(event.type ?? '')) {
+          stackCausalityByItemId.set(stackItemId, lastDecisionCausality);
+        }
+      }
     }
 
     decisions.push({
@@ -536,6 +619,7 @@ export function runPolicyMatch(config) {
       beforeStateHash, afterStateHash: authorityHashCanonical(state), rngCursorBefore, rngCursorAfter: rng.cursor,
       reasonCode: selected.metadata.reasonCode, candidateScores: selected.metadata.candidateScores ?? [],
       hybrixTrace: selected.metadata.hybrixTrace ?? null,
+      ...(adaptiveFrame ? { adaptive: compactAdaptiveFrame(adaptiveFrame, { deep: config.strategicTrace === true }) } : {}),
       selectionMetadata: selected.metadata
     });
 
@@ -652,7 +736,16 @@ export function runPolicyMatch(config) {
       return { ...rest, mechanicCounts: stripComboTag(rest.mechanicCounts), primaryMechanicCounts: stripComboTag(rest.primaryMechanicCounts) };
     }),
   };
-  const summary = { ...summaryCore, ...(strategicTelemetry?{strategicTelemetry}:{}), ...(terminal?{terminalEvidence:terminal}:{}), comboTelemetry, matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
+  // Adaptive telemetry is observational — outside the match-result hash input,
+  // like strategicTelemetry/comboTelemetry. Seats with no adaptive config and
+  // OFF-mode configs contribute no per-decision overhead; an entry is emitted
+  // only for seats that carried an adaptive configuration.
+  const adaptiveSeats = seatOrder.map((_, index) => {
+    const s = adaptiveSeatSummary(adaptiveConfigs[index], adaptiveControllers[index]);
+    return s ? { seat: index + 1, ...s } : null;
+  }).filter(Boolean);
+  const adaptiveTelemetry = adaptiveSeats.length ? { schemaVersion: ADAPTIVE_TELEMETRY_VERSION, seats: adaptiveSeats } : null;
+  const summary = { ...summaryCore, ...(strategicTelemetry?{strategicTelemetry}:{}), ...(terminal?{terminalEvidence:terminal}:{}), ...(adaptiveTelemetry?{adaptiveTelemetry}:{}), comboTelemetry, matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
   const base = { summary, decisions, facts, provenance };
   if(fieldManual) summary.strategyDecisions = fieldManual.finish({initialState,commands,finalStateHash:summary.finalStateHash,winner:summary.winner,terminationReason,finalScores,gameLength:summary.completedFullTurns});
   if (captureTraces) base.decisionTraces = decisionTraces;

@@ -1,8 +1,8 @@
-import { canonicalClone } from "./canonical-json.js?v=943d1ec6c237";
-import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=943d1ec6c237";
-import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=943d1ec6c237";
-import { revalidateAttachments } from "./interactions.js?v=943d1ec6c237";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=943d1ec6c237";
+import { canonicalClone } from "./canonical-json.js?v=46b6024f32eb";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=46b6024f32eb";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=46b6024f32eb";
+import { revalidateAttachments } from "./interactions.js?v=46b6024f32eb";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=46b6024f32eb";
 export const RANK_REGISTRY = Object.freeze({
     A: { rank: "A", prPoints: 4, scuttleOrder: 1, modes: ["base-counter", "purge", "anchor-counter", "spade-exile-counter", "super-counter"], prScuttleImmune: true, notes: ["A♠ and ⭐A use expanded counter authority."] },
     "2": { rank: "2", prPoints: 2, scuttleOrder: 2, modes: ["quick-score-discard", "wild-catalyst", "solo-wild-copy", "commandeer"], notes: ["⭐2 bypasses Guard and rank control protection, never Aegis.", "Solo Wild copies a same-suit rank 3-7 Base effect; wild for effect only, not points."] },
@@ -254,6 +254,7 @@ const SOLO_WILD_EFFECT_RANKS = {
     "four-row-clear": ["4"],
     "total-clear": ["4"],
     "recycle-five": ["5"],
+    "six-dig": ["6"],
     "deep-draw-six-spade": ["6"],
     "topdeck-seven": ["7"],
 };
@@ -340,6 +341,7 @@ export function resolveRankAction(input, actorId, action) {
                         doTotalClear(state, action.sourceCardId);
                         return null;
                     case "recycle-five": return doRecycleFive(state, actorId, action.sourceCardId, copied.rummageCardId);
+                    case "six-dig": return fail("RANK_MODE", "Solo Wild six-dig resolves through the sealed private-choice root");
                     case "deep-draw-six-spade": return doDeepDrawSixSpade(state, actorId, action.sourceCardId, copied.discardCardIds, copied.keepCardIds);
                     case "topdeck-seven": return doTopdeckSeven(state, actorId, action.sourceCardId, copied.handCardId, copied.effectCardId, "GY", copied.scoreCardId);
                 }
@@ -386,6 +388,7 @@ export function resolveRankAction(input, actorId, action) {
                         doTotalClear(state, action.sourceCardId, wildExile);
                         return null;
                     case "recycle-five": return doRecycleFive(state, actorId, action.sourceCardId, copied.rummageCardId, wildExile);
+                    case "six-dig": return fail("RANK_MODE", "Wild Sovereignty six-dig resolves through the sealed private-choice root");
                     case "deep-draw-six-spade": return doDeepDrawSixSpade(state, actorId, action.sourceCardId, copied.discardCardIds, copied.keepCardIds, wildExile);
                     case "topdeck-seven": return doTopdeckSeven(state, actorId, action.sourceCardId, copied.handCardId, copied.effectCardId, wildExile, copied.scoreCardId);
                 }
