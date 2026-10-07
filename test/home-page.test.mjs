@@ -143,6 +143,8 @@ test('fetchHomeStats returns normalized stats on success', async () => {
 test('fetchHomeStats degrades gracefully: no base, http error, network throw, bad fields', async () => {
   // No base URL → not configured
   assert.equal((await fetchHomeStats({ fetchImpl: async () => ({}), httpBase: null })).ok, false);
+  assert.equal((await fetchHomeStats({ fetchImpl: async () => ({}), httpBase: 42 })).ok, false);
+  assert.equal((await fetchHomeStats({ fetchImpl: null, httpBase: 'http://localhost:3099' })).ok, false);
   // HTTP error
   assert.equal((await fetchHomeStats({
     fetchImpl: async () => ({ ok: false }),
@@ -161,6 +163,56 @@ test('fetchHomeStats degrades gracefully: no base, http error, network throw, ba
   assert.equal(res.ok, true);
   assert.equal(res.stats.onlinePlayers, null);
   assert.equal(res.stats.duelsToday, null);
+});
+
+test('fetchHomeStats aborts when the caller lifetime signal aborts (navigation)', async () => {
+  const controller = new AbortController();
+  let requestSignal = null;
+  const settled = fetchHomeStats({
+    fetchImpl: (url, opts) => {
+      requestSignal = opts.signal;
+      return new Promise((_, reject) =>
+        opts.signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))));
+    },
+    httpBase: 'http://localhost:3099',
+    signal: controller.signal,
+  });
+  controller.abort();
+  const res = await settled;
+  assert.equal(res.ok, false, 'caller abort resolves to the degraded contract, not a leaked AbortError');
+  assert.equal(requestSignal.aborted, true);
+  assert.notEqual(requestSignal, controller.signal, 'request signal is composed, not the raw caller signal');
+});
+
+test('fetchHomeStats terminates a stalled request after the HTTP timeout', async () => {
+  const controller = new AbortController();
+  const settled = fetchHomeStats({
+    fetchImpl: (url, opts) => new Promise((_, reject) =>
+      opts.signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))),
+    httpBase: 'http://localhost:3099',
+    signal: controller.signal,
+    timeoutMs: 20,
+  });
+  // The race timer keeps Node's event loop alive — AbortSignal.timeout's
+  // internal timer is unref'd and would otherwise let the loop drain.
+  const res = await Promise.race([settled, new Promise(r => setTimeout(() => r({ timeout: 'did-not-abort' }), 1000))]);
+  assert.equal(res.ok, false, 'timeout resolves to the degraded contract');
+  assert.equal(controller.signal.aborted, false, 'timeout must not abort the caller signal');
+});
+
+test('fetchHomeStats still succeeds when both signals stay quiet', async () => {
+  const controller = new AbortController();
+  const res = await fetchHomeStats({
+    fetchImpl: async (url, opts) => {
+      assert.equal(opts.signal.aborted, false);
+      return { ok: true, json: async () => ({ onlinePlayers: 3 }) };
+    },
+    httpBase: 'http://localhost:3099',
+    signal: controller.signal,
+    timeoutMs: 5000,
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.stats.onlinePlayers, 3);
 });
 
 // ── fetchTopRated ─────────────────────────────────────────────

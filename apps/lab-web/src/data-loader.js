@@ -8,7 +8,7 @@ import { renderExperimentControls, bindGlobal } from './experiment-controls.js';
 import { ensureReplayFrames } from './replay-frames.js';
 import { rerender } from './rerender.js';
 import { openReplay as openReplayDescriptor } from './replay-resolver.js';
-import { classifyIndexRecord, REPLAY_ARTIFACT_CLASS } from './replay-contract.mjs';
+import { classifyIndexRecord, REPLAY_ARTIFACT_CLASS, orderFullMatchCandidates, recordedTimestampMs } from './replay-contract.mjs';
 
 // ── Replay loading ────────────────────────────────────────────────
 // Replay acquisition flows through the resolver layer (replay-resolver.js):
@@ -81,7 +81,7 @@ export async function loadAuthorized() {
 /**
  * Refresh the local (IndexedDB) replay index — lightweight summaries used
  * by the Replay Library's local section and by the Watch standby's
- * "latest retained match" action. Safe no-op when IndexedDB is absent.
+ * "open a full match" action. Safe no-op when IndexedDB is absent.
  */
 export async function refreshLocalReplayIndex() {
   try {
@@ -107,16 +107,25 @@ export async function refreshLocalReplayIndex() {
 }
 
 /**
- * Find the most recent replay Watch can prove is a complete match and open
- * it. Candidates: local retained replays first (user/session evidence),
- * then bundled index records that classify as FULL_MATCH with terminal
- * evidence. Returns the opened result, or null when none qualifies.
+ * Open a replay Watch can prove is a complete match. Candidates: local
+ * retained replays first (user/session evidence with real completedAt
+ * chronology — the newest wins), then bundled index records that classify
+ * as FULL_MATCH with terminal evidence.
+ *
+ * Bundled index/summary records record no wall-clock chronology, so
+ * orderFullMatchCandidates() applies the documented deterministic
+ * fallback there — this action never claims a bundled pick is "latest".
+ * Returns the opened result, or null when none qualifies.
  */
-export async function openLatestRetainedMatch() {
+export async function openRetainedFullMatch() {
+  const summaryFor = r => state.observatory?.summaries?.find(s => s.matchId === r.fixtureId) ?? null;
+  const classify = (r, availability) => ({ id: r.fixtureId, record: r, summary: summaryFor(r),
+    cls: classifyIndexRecord(r, { availability, summary: summaryFor(r) }) });
   const locals = Array.isArray(state.localReplays) ? state.localReplays : await refreshLocalReplayIndex();
   const completeLocal = locals
     .filter(r => r.hasBody && (r.winner != null || r.terminationReason != null))
-    .sort((a, b) => String(b.completedAt ?? '').localeCompare(String(a.completedAt ?? '')));
+    .sort((a, b) => (recordedTimestampMs(b) ?? 0) - (recordedTimestampMs(a) ?? 0)
+      || String(a.replayId ?? '').localeCompare(String(b.replayId ?? '')));
   if (completeLocal.length) {
     return openReplay({ kind: 'local', replayId: completeLocal[0].replayId });
   }
@@ -126,24 +135,20 @@ export async function openLatestRetainedMatch() {
     .filter(r => autonomyFullyBundled || autonomyBundledIds.has(r.fixtureId));
   if (autonomyCandidates.length) {
     const candidates = autonomyCandidates
-      .map(r => ({ record: r, cls: classifyIndexRecord(r, {
-        availability: 'bundled',
-        summary: state.observatory?.summaries?.find(s => s.matchId === r.fixtureId) ?? null }) }))
+      .map(r => classify(r, 'bundled'))
       .filter(c => c.cls.class === REPLAY_ARTIFACT_CLASS.FULL_MATCH);
     if (candidates.length) {
-      candidates.sort((a, b) => (b.cls.evidence?.turns ?? 0) - (a.cls.evidence?.turns ?? 0));
-      return openReplay({ kind: 'autonomy', fixtureId: candidates[0].record.fixtureId });
+      const pick = orderFullMatchCandidates(candidates)[0];
+      return openReplay({ kind: 'autonomy', fixtureId: pick.id });
     }
   }
   const corpusCandidates = (state.index?.records ?? [])
-    .map(r => ({ record: r, cls: classifyIndexRecord(r, {
-      availability: recordAvailability(r, 'corpus'),
-      summary: state.observatory?.summaries?.find(s => s.matchId === r.fixtureId) ?? null }) }))
+    .map(r => classify(r, recordAvailability(r, 'corpus')))
     .filter(c => c.cls.class === REPLAY_ARTIFACT_CLASS.FULL_MATCH);
   const openable = corpusCandidates.filter(c => recordAvailability(c.record, 'corpus') !== 'excluded');
   if (openable.length) {
-    openable.sort((a, b) => (b.cls.evidence?.turns ?? 0) - (a.cls.evidence?.turns ?? 0));
-    return openReplay({ kind: descriptorKindForRecord(openable[0].record, 'corpus'), fixtureId: openable[0].record.fixtureId });
+    const pick = orderFullMatchCandidates(openable)[0];
+    return openReplay({ kind: descriptorKindForRecord(pick.record, 'corpus'), fixtureId: pick.id });
   }
   return null;
 }
@@ -264,7 +269,7 @@ async function _loadObservatoryDataInner() {
     console.warn('[experiments] evidence store init failed — experiment runs disabled this session:', err);
   }
   // Local (IndexedDB) replay index — feeds the Replay Library's retained
-  // section and the Watch standby "latest full match" action. Failure is
+  // section and the Watch standby "open a full match" action. Failure is
   // non-fatal: the library simply shows no local section.
   await refreshLocalReplayIndex();
   // FULL-MATCH WATCH CONTRACT: no automatic fixture selection. Every bundled

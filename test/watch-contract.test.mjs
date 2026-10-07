@@ -26,6 +26,7 @@ const {
   REPLAY_ARTIFACT_CLASS, FRAME_INTEGRITY, TIMELINE_MODES,
   classifyIndexRecord, classifyReplayBody, timelineModel,
   artifactHeadline, commandsExecutable,
+  recordedTimestampMs, orderFullMatchCandidates,
 } = contract;
 const { ensureReplayFrames, hasRedactedInitialState } = framesModule;
 const { REPLAY_STATUS, REPLAY_FAILURE, resolveReplay, describeWatchStandby } = resolver;
@@ -87,6 +88,43 @@ test('retained match records with terminal evidence classify as FULL_MATCH', () 
     { availability: 'bundled', summary: { completedFullTurns: 41, winner: 'P2', terminationReason: 'VICTORY' } });
   assert.equal(cls.class, REPLAY_ARTIFACT_CLASS.FULL_MATCH);
   assert.equal(cls.evidence.turns, 41);
+});
+
+test('a retained record WITH terminal evidence but WITHOUT the retained kind is still FULL_MATCH', () => {
+  const cls = classifyIndexRecord(
+    { fixtureId: 'M-plain', replayKind: 'CAMPAIGN_MATCH', commandCount: 100 },
+    { availability: 'bundled', summary: { winner: 'P1', terminationReason: 'VICTORY' } });
+  assert.equal(cls.class, REPLAY_ARTIFACT_CLASS.FULL_MATCH);
+});
+
+test('retained kind alone never proves FULL_MATCH — terminal evidence is required', () => {
+  for (const kind of ['ADVANCED_CORE_RETAINED', 'FULL_MATCH_ARCHIVE', 'COMPLETE_MATCH_LOG']) {
+    const bundled = classifyIndexRecord(
+      { fixtureId: 'M-no-terminal', replayKind: kind, commandCount: 400 },
+      { availability: 'bundled' });
+    assert.notEqual(bundled.class, REPLAY_ARTIFACT_CLASS.FULL_MATCH,
+      `${kind} must not classify as FULL_MATCH on kind alone`);
+    assert.equal(bundled.class, REPLAY_ARTIFACT_CLASS.UNKNOWN);
+    // An accepted canonical termination reason is sufficient terminal evidence.
+    const terminated = classifyIndexRecord(
+      { fixtureId: 'M-no-terminal', replayKind: kind, commandCount: 400 },
+      { availability: 'bundled', summary: { terminationReason: 'DECISION_LIMIT' } });
+    assert.equal(terminated.class, REPLAY_ARTIFACT_CLASS.FULL_MATCH);
+  }
+});
+
+test('a retained record without terminal evidence and an excluded body is METADATA_ONLY', () => {
+  const cls = classifyIndexRecord(
+    { fixtureId: 'M-retained-ghost', replayKind: 'ADVANCED_CORE_RETAINED', commandCount: 400 },
+    { availability: 'excluded' });
+  assert.equal(cls.class, REPLAY_ARTIFACT_CLASS.METADATA_ONLY);
+});
+
+test('scenario-fixture detection still outranks retained kind and terminal evidence', () => {
+  const cls = classifyIndexRecord(
+    { fixtureId: 'CT-777', replayKind: 'GOVERNING_CONFORMANCE_RETAINED', commandCount: 20 },
+    { availability: 'bundled', summary: { winner: 'P1', terminationReason: 'VICTORY' } });
+  assert.equal(cls.class, REPLAY_ARTIFACT_CLASS.SCENARIO_FIXTURE);
 });
 
 test('excluded bodies without terminal evidence classify as METADATA_ONLY', () => {
@@ -262,6 +300,131 @@ test('non-executable command indexes keep embedded frames but flag partial', asy
   assert.equal(replay._frameIntegrity, FRAME_INTEGRITY.PARTIAL);
 });
 
+test('commandsExecutable accepts every engine-consumed command shape', () => {
+  const replay = {
+    commands: [
+      // Wrapped action envelope.
+      { id: 'C-0', type: 'RESOLVE_PHASE15_ACTION', actorId: 'P1', payload: { action: { kind: 'x' } } },
+      // Direct action envelope.
+      { id: 'C-1', type: 'RESOLVE_CORE_AUTHORITY_ACTION', actorId: 'P1', action: { kind: 'core-begin-start' } },
+      // Declaration primitive (play descriptor, no action field).
+      { id: 'C-2', type: 'DECLARE_PLAY', actorId: 'P1', play: { kind: 'primary', sourceCardIds: ['A'] } },
+      // HIDDEN_CHOICE — the only raw command.payload the engine reads.
+      { id: 'C-3', type: 'HIDDEN_CHOICE', actorId: 'P1', choiceId: 'ch-1', payload: 2, visibility: 'authorized' },
+      // Bare primitives execute on type + scalar fields alone.
+      { id: 'C-4', type: 'PASS_PRIORITY', actorId: 'P1' },
+      { id: 'C-5', type: 'RESOLVE_TOP' },
+    ],
+  };
+  assert.equal(commandsExecutable(replay), true);
+});
+
+test('commandsExecutable rejects metadata payloads and index rows', () => {
+  // A bare payload object is not an executable instruction — the engine
+  // only reads command.payload for HIDDEN_CHOICE (paired with choiceId).
+  assert.equal(commandsExecutable({ commands: [{ payload: { metadata: 'note only' } }] }), false);
+  assert.equal(commandsExecutable({ commands: [{ payload: { metadata: 'x' }, another: 1 }] }), false);
+  // Metadata-only command index rows (public retained artifacts) carry
+  // recording annotations instead of an executable body.
+  const indexRow = {
+    commandIndex: 0, id: 'CORE-1-1-P1-ORCH-0-START', type: 'RESOLVE_CORE_AUTHORITY_ACTION',
+    semanticClass: 'engine-orchestration', actorId: 'P1', accepted: true,
+    eventStartIndex: 0, eventEndIndex: 3,
+  };
+  assert.equal(commandsExecutable({ commands: [indexRow, indexRow] }), false);
+  // One bad row poisons the whole stream — deterministic reconstruction
+  // requires every command to be replayable.
+  assert.equal(commandsExecutable({ commands: [{ id: 'C-0', type: 'PASS_PRIORITY', actorId: 'P1' }, indexRow] }), false);
+  // Empty / missing streams are not executable.
+  assert.equal(commandsExecutable({ commands: [] }), false);
+  assert.equal(commandsExecutable({}), false);
+});
+
+test('metadata-only command indexes are refused reconstruction, never fabricated', async () => {
+  // An artifact whose commands are index rows plus a real initialState
+  // must NOT be re-executed — the rows carry no executable body.
+  const replay = {
+    fixtureId: 'M-index',
+    initialState: { fullTurnSequence: 1, players: { P1: {}, P2: {} } },
+    commands: [
+      { commandIndex: 0, id: 'C-0', type: 'RESOLVE_CORE_AUTHORITY_ACTION', actorId: 'P1', accepted: true, eventStartIndex: 0, eventEndIndex: 2 },
+      { commandIndex: 1, id: 'C-1', type: 'RESOLVE_CORE_AUTHORITY_ACTION', actorId: 'P2', accepted: true, eventStartIndex: 2, eventEndIndex: 5 },
+    ],
+  };
+  assert.equal(commandsExecutable(replay), false);
+  await ensureReplayFrames(replay, { engineModule: fakeEngineModule });
+  assert.equal(replay.frames.length, 0, 'no frames may be fabricated from metadata rows');
+  assert.equal(replay._frameIntegrity, FRAME_INTEGRITY.UNRECONSTRUCTABLE);
+});
+
+test('primitive command streams still reconstruct through ensureReplayFrames', async () => {
+  // Certified replays mix action envelopes with bare primitives — the
+  // whole stream must remain executable or reconstruction is refused.
+  const replay = {
+    format: 'intrilex-replay',
+    fixtureId: 'SIM-prim',
+    initialState: { fullTurnSequence: 1, players: { P1: {}, P2: {} } },
+    commands: [
+      { id: 'SIM-0', type: 'DECLARE_PLAY', actorId: 'P1', play: { kind: 'primary' } },
+      { id: 'SIM-1', type: 'PASS_PRIORITY', actorId: 'P2' },
+      { id: 'SIM-2', type: 'RESOLVE_TOP' },
+      { id: 'SIM-3', type: 'HIDDEN_CHOICE', actorId: 'P1', choiceId: 'ch-9', payload: 4 },
+    ],
+    events: [],
+  };
+  await ensureReplayFrames(replay, { engineModule: fakeEngineModule });
+  assert.equal(replay.frames.length, 5, 'commands + 1 canonical frames reconstructed');
+  assert.equal(replay._frameAnalysis.status, 'canonical');
+  assert.equal(replay._frameIntegrity, FRAME_INTEGRITY.RECONSTRUCTED);
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 3b. Full-match candidate chronology (open-a-full-match selection)
+// ═══════════════════════════════════════════════════════════════
+
+test('recordedTimestampMs reads only genuine timestamp fields', () => {
+  assert.equal(recordedTimestampMs({ completedAt: '2026-10-01T12:00:00Z' }), Date.parse('2026-10-01T12:00:00Z'));
+  assert.equal(recordedTimestampMs({ completedAt: 1_700_000_000_000 }), 1_700_000_000_000);
+  assert.equal(recordedTimestampMs({ completedAt: 'garbage' }), null);
+  assert.equal(recordedTimestampMs({ matchOrdinal: 5 }), null, 'ordinals are not chronology');
+  assert.equal(recordedTimestampMs({ evidenceEpoch: 'post-rules-parity-repair-v0.28.1' }), null);
+  assert.equal(recordedTimestampMs({ fixtureId: 'M-9c890ada2c2ec493c6f9' }), null, 'ids are not chronology');
+  assert.equal(recordedTimestampMs(null, undefined, {}), null);
+  // Joined summary supplies the timestamp when the record lacks one.
+  assert.equal(recordedTimestampMs({}, { completedAt: '2026-10-02T00:00:00Z' }),
+    Date.parse('2026-10-02T00:00:00Z'));
+});
+
+test('orderFullMatchCandidates prefers the newest real timestamp', () => {
+  const mk = (id, ts, turns) => ({ id, record: { completedAt: ts }, cls: { evidence: { turns } } });
+  const ordered = orderFullMatchCandidates([
+    mk('M-old', '2026-09-01T00:00:00Z', 60),
+    mk('M-new', '2026-10-01T00:00:00Z', 10),
+    mk('M-mid', '2026-09-15T00:00:00Z', 40),
+  ]);
+  assert.equal(ordered[0].id, 'M-new', 'newest recorded completion wins even over richer evidence');
+  assert.equal(ordered.at(-1).id, 'M-old');
+});
+
+test('orderFullMatchCandidates falls back deterministically when no chronology exists', () => {
+  const mk = (id, turns) => ({ id, record: { fixtureId: id }, cls: { evidence: { turns } } });
+  const first = orderFullMatchCandidates([mk('M-b', 30), mk('M-a', 50), mk('M-c', 10)]);
+  assert.equal(first[0].id, 'M-a', 'documented fallback: richest recorded evidence (most turns)');
+  const second = orderFullMatchCandidates([mk('M-c', 10), mk('M-a', 50), mk('M-b', 30)]);
+  assert.equal(second[0].id, 'M-a', 'selection is order-independent');
+  // Same turns → id tiebreak keeps the pick deterministic.
+  const tied = orderFullMatchCandidates([mk('M-z', 20), mk('M-y', 20)]);
+  assert.equal(tied[0].id, 'M-y');
+});
+
+test('orderFullMatchCandidates prefers provably-timed records over untimed ones', () => {
+  const ordered = orderFullMatchCandidates([
+    { id: 'M-untimed', record: { fixtureId: 'M-untimed' }, cls: { evidence: { turns: 500 } } },
+    { id: 'M-timed', record: { completedAt: '2026-10-01T00:00:00Z' }, cls: { evidence: { turns: 5 } } },
+  ]);
+  assert.equal(ordered[0].id, 'M-timed', 'a real timestamp is better evidence than none');
+});
+
 // ═══════════════════════════════════════════════════════════════
 // 4. Timeline model — All / Actions / Turns
 // ═══════════════════════════════════════════════════════════════
@@ -363,13 +526,14 @@ test('Watch renderer exposes the contract: evidence strip, modes, disclosure', a
     'timeline-counts',
     'scrollIntoView',
     'watchTimelineModel',
-    'openLatestRetainedMatch',
+    'openRetainedFullMatch',
   ]) assert.ok(app.includes(marker), `app.js must include ${marker}`);
 });
 
 test('Watch standby offers the honest selection actions', async () => {
   const app = await readFile(path.join(root, 'apps/lab-web/src/app.js'), 'utf8');
-  assert.ok(app.includes('watch-standby-latest'), 'standby must offer "open latest full match"');
+  assert.ok(app.includes('watch-standby-full'), 'standby must offer "open a full match"');
+  assert.doesNotMatch(app, /Open latest full match/, 'no "latest" claim without recorded chronology');
   assert.match(app, /href="#\/replays"/);
 });
 

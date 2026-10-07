@@ -9,7 +9,7 @@ import { renderRulesPage } from './rulebook-renderer.js';
 import { RULES_VERSION, ENGINE_VERSION, LAB_VERSION } from './version.js';
 import { state,        app,        shell,        landingContainer,        fxLayer,        pageTitle,        pageSubtitle,        esc,        fmt,        clamp,        showToast,        persistSetting} from './state.js';
 import { TITLES,   SUBTITLES,   INSTRUMENTS,   LANDING_MODES,   isPlayRoute,   route,   updateRailContext} from './router.js';
-import { boot,   loadReplay,   loadAuthorized,   getObservatoryBootPromise,   openReplay,   openLatestRetainedMatch} from './data-loader.js';
+import { boot,   loadReplay,   loadAuthorized,   getObservatoryBootPromise,   openReplay,   openRetainedFullMatch} from './data-loader.js';
 import { replayDescriptorKey,   describeWatchStandby,   REPLAY_STATUS} from './replay-resolver.js';
 import { syncRailToggle } from './experiment-controls.js';
 import {} from './integrity.js';
@@ -1565,8 +1565,8 @@ function renderWatch() {
     const sourceLabel = state.replaySource?.id ? `<span class="theatre-source-label">${esc(state.replaySource.label ?? `${state.replaySource.kind ?? 'replay'} · ${state.replaySource.id}`)}</span>` : '';
     const retryButton = standby.variant === 'error' && state.replayRequest
       ? '<button id="watch-standby-retry" type="button" class="secondary-button">Retry</button>' : '';
-    const latestButton = standby.variant === 'idle'
-      ? '<button id="watch-standby-latest" type="button" class="secondary-button">Open latest full match</button>' : '';
+    const fullMatchButton = standby.variant === 'idle'
+      ? '<button id="watch-standby-full" type="button" class="secondary-button">Open a full match</button>' : '';
     app.innerHTML = `<div class="watch-layout watch-layout-idle">
       <section class="watch-theatre theatre-standby" aria-label="Match theatre — standby" data-standby-variant="${esc(standby.variant)}">
         <div class="theatre-chrome"><span class="theatre-eyebrow"><span class="live-dot standby" aria-hidden="true"></span>MATCH THEATRE // ${esc(eyebrow)}</span><span class="theatre-chrome-meta">OBS-01 · ${esc(eyebrow)}</span></div>
@@ -1578,7 +1578,7 @@ function renderWatch() {
         <div class="theatre-standby-core">
           <strong>${esc(standby.headline)}</strong>${sourceLabel}
           <p>${esc(standby.detail)}</p>
-          <div class="theatre-standby-actions"><a class="primary-button" href="#/replays">Browse replays</a>${latestButton}${retryButton}<button id="watch-standby-experiment" type="button" class="secondary-button">Run experiment</button></div>
+          <div class="theatre-standby-actions"><a class="primary-button" href="#/replays">Browse replays</a>${fullMatchButton}${retryButton}<button id="watch-standby-experiment" type="button" class="secondary-button">Run experiment</button></div>
         </div>
         <div class="theatre-ghost-timeline" aria-hidden="true">${'<i></i>'.repeat(28)}</div>
       </section>
@@ -1591,10 +1591,14 @@ function renderWatch() {
     document.querySelector('#watch-standby-retry')?.addEventListener('click', () => {
       if (state.replayRequest) void openReplay(state.replayRequest, { navigate: false });
     });
-    // Full-Match Watch Contract: the standby offers to open the most recent
-    // provably-complete match — never a scenario fixture (CT-*).
-    document.querySelector('#watch-standby-latest')?.addEventListener('click', () => {
-      void openLatestRetainedMatch().then(result => {
+    // Full-Match Watch Contract: the standby offers to open a provably
+    // complete match — never a scenario fixture (CT-*). Local retained
+    // replays carry real completedAt chronology, so the newest local match
+    // wins; bundled index records carry no trustworthy chronology, so the
+    // action makes a documented deterministic pick instead of claiming
+    // "latest" (see orderFullMatchCandidates in replay-contract.mjs).
+    document.querySelector('#watch-standby-full')?.addEventListener('click', () => {
+      void openRetainedFullMatch().then(result => {
         if (!result) showToast('No complete match replay is retained in this build.', { type: 'info' });
       });
     });
