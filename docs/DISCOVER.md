@@ -93,6 +93,38 @@ IndexedDB `intrilex-evolution-lab` schema v5 adds two stores:
 
 Both share the existing `persistRunBytes` budget. Experiment runs are ordinary series artifacts in the existing `runs` store — discovery artifacts reference them by ID and never duplicate records.
 
+## Evidence boundary: DISCOVER vs. the Experiment store
+
+DISCOVER scans **Evolution Lab series artifacts** (`EL-*` run envelopes in
+`intrilex-evolution-lab`) only. The Experiment **Run → Analysis Set** system is
+a *separate* evidence store (`intrilex-experiment-lab`) whose records carry
+per-match `{summaries, aggregate}` payloads — a different artifact shape,
+a different admissibility model, and a different identity contract.
+
+Consequence a user can legitimately observe: thousands of games played through
+the Experiment panel and curated into an Analysis Set produce **zero**
+admissible DISCOVER evidence — that is correct behavior, not a bug. The
+Evidence Resolution panel states this explicitly (corpus and Experiment
+counts are disclosed as distinct, non-scanned sources), and a zero-eligible
+scope disables **Start Run** with the stated reason rather than launching a
+doomed BLOCKED run — except Auditor mode with prior Discoveries, which
+re-tests artifacts instead of scanning evidence.
+
+**TODO (architecture follow-up):** proper multi-source evidence selection
+belongs behind an explicit evidence-provider abstraction, e.g.
+
+```
+EvidenceProvider { listScope(identity) → {rows}, load(runId) → records }
+  LabSeriesProvider   → intrilex-evolution-lab 'history'/'runs' (EL-*)
+  ExperimentRunProvider → intrilex-experiment-lab runs+payloads (RUN-*)
+```
+
+The blocker is canonicalization: Experiment payloads are per-match summaries,
+not Lab series records, so an Experiment provider must either implement a
+`summary → record` projection that `scanEvidence` can consume losslessly, or
+the scanner must learn a second row shape. Both are real design work —
+do NOT bridge the stores with an ad-hoc conversion.
+
 ## Browser workflow
 
 `pnpm run build`, serve `apps/lab-web/dist`, open `#/discover`. Configure mode, game budget (128–64,000), confirm-stage size, workers, profile and run seed, then **Start Run**. The queue shows hypotheses with their score breakdown and stage status; the journal streams real state transitions; **Pause** stops cleanly mid-stage for resume; **Past Runs** reloads historical runs read-only; the **Discovery Library** lists promoted artifacts with inspectable gate ledgers and provenance.
@@ -111,7 +143,7 @@ Both share the existing `persistRunBytes` budget. Experiment runs are ordinary s
 
 ## Known limitations
 
-- V1 candidates come from the series-evidence store only; match-ledger and replay evidence are not scanned yet.
+- V1 candidates come from the Lab series-evidence store only; match-ledger, replay, and Experiment Run/Analysis Set evidence are not scanned (see *Evidence boundary* above — multi-source selection is a follow-up, not an ad-hoc conversion).
 - Card hypotheses condition on a coarse used/unused cohort (`mechanicCounts > 0`), not timing or sequencing.
 - The population challenge tests one control opponent; broader population studies remain future work.
 - `turn-phase` candidates are descriptive anomalies (game-length outliers), not phase-mechanism claims.

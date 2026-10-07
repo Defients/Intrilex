@@ -8,7 +8,7 @@ import {
   scoreCandidate, evaluatePromotion, createDiscoveryArtifact, transitionTo, stageSeed,
   discoveryRunEnvelope, validateDiscoveryRunEnvelope, discoveryEnvelope, validateDiscoveryEnvelope,
   validateDiscoveryArtifact, validateDiscoveryRun, discoveryRunSummary, warn,
-  DISCOVERY_LIMITS, DISCOVERY_MODES,
+  DISCOVERY_LIMITS, DISCOVERY_MODES, PROMOTION_GATES,
 } from '../packages/simulation-runtime/src/discovery-domain.mjs';
 import { projectGameRow, scanEvidence, buildEvidenceIndex, surpriseScore } from '../packages/simulation-runtime/src/discovery-scan.mjs';
 import { buildHypothesis, measureStage, estimateFromCell, mergeCells, EMPTY_CELL, seatConsistencyCheck, runDiscovery } from '../packages/simulation-runtime/src/discovery-engine.mjs';
@@ -1128,4 +1128,195 @@ test('non-empty admissible evidence reaches the scanner and advances the run', a
   assert.ok(resolution, 'evidence-resolution journal entry required');
   assert.match(resolution.message, /500 admissible games/);
   assert.match(resolution.message, /500 selected/);
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Workspace: START RUN must never silently no-op
+// vm-eval of workspaces/discover.js over a mini DOM — real module code,
+// stubbed store/runner. Every click must produce a visible transition:
+// PREPARING→RUNNING, or a disabled button with a stated reason, or an
+// inline error. Zero admissible evidence ≠ zero discoveries: the first
+// blocks launch with a reason; the second is a valid COMPLETE outcome.
+// ═══════════════════════════════════════════════════════════════
+
+const flush = async (n = 8) => { for (let i = 0; i < n; i += 1) await Promise.resolve(); };
+
+/** Minimal DOM that records element ids/test-ids + the text between their
+ * tags, and applies real disabled-button click semantics. */
+function fakeDom() {
+  const elements = new Map();
+  const makeEl = (attrs, text) => {
+    const el = {
+      attrs, disabled: 'disabled' in attrs, hidden: 'hidden' in attrs,
+      textContent: (text ?? '').trim(), innerHTML: '', scrollTop: 0, scrollHeight: 0,
+      value: attrs.value ?? '', dataset: {},
+      _l: {},
+      addEventListener(t, fn) { (this._l[t] ??= []).push(fn); },
+      click() { if (this.disabled) return; for (const f of this._l.click ?? []) f({ currentTarget: this, target: this }); },
+      insertAdjacentHTML() {},
+      setAttribute(k, v) { this.attrs[k] = v; },
+    };
+    Object.defineProperty(el, 'outerHTML', { set(html) { registerHtml(html); }, get() { return ''; } });
+    return el;
+  };
+  const registerHtml = (html) => {
+    for (const m of String(html).matchAll(/<([a-zA-Z]+)\s([^>]*)>([^<]*)/g)) {
+      const attrs = {};
+      for (const a of m[2].matchAll(/([\w-]+)(?:="([^"]*)")?/g)) attrs[a[1]] = a[2] ?? true;
+      if (!attrs.id && !attrs['data-testid'] && !attrs['data-load-run'] && !attrs['data-inspect']) continue;
+      const el = makeEl(attrs, m[3]);
+      if (attrs['data-testid']) el.dataset.testid = attrs['data-testid'];
+      if (attrs['data-load-run']) el.dataset.loadRun = attrs['data-load-run'];
+      if (attrs['data-inspect']) el.dataset.inspect = attrs['data-inspect'];
+      if (attrs.id) elements.set(`#${attrs.id}`, el);
+      if (attrs['data-testid']) elements.set(`[data-testid="${attrs['data-testid']}"]`, el);
+      if (attrs['data-load-run']) elements.set(`[data-load-run="${attrs['data-load-run']}"]`, el);
+      if (attrs['data-inspect']) elements.set(`[data-inspect="${attrs['data-inspect']}"]`, el);
+    }
+  };
+  let renders = 0;
+  const app = {
+    _html: '',
+    get innerHTML() { return this._html; },
+    set innerHTML(v) { renders += 1; this._html = v; registerHtml(v); },
+    get renders() { return renders; },
+  };
+  const document = {
+    getElementById: (id) => elements.get(`#${id}`) ?? null,
+    querySelector: (sel) => elements.get(sel) ?? null,
+    querySelectorAll: (sel) => [...elements.entries()].filter(([k]) => k.startsWith(sel.slice(0, -1))).map(([, el]) => el),
+  };
+  return { app, document, elements };
+}
+
+/** Evaluate workspaces/discover.js with stubbed imports — the workspace
+ * logic itself is real. `stubs` controls the store + runner + scope. */
+async function discoverWorkspace({ scope = null, scopeError = null, prepareResult = 'ok', store = {}, executed = null } = {}) {
+  const dom = fakeDom();
+  const calls = { prepare: 0, execute: 0, scope: 0 };
+  const fakeStore = {
+    list: store.list ?? (async () => []),
+    loadForInspection: store.loadForInspection ?? (async () => ({ run: null })),
+    load: store.load ?? (async () => { throw new Error('no runs'); }),
+    save: store.save ?? (async () => {}),
+    saveDiscoveryRun: store.saveDiscoveryRun ?? (async () => {}),
+    saveDiscovery: store.saveDiscovery ?? (async () => {}),
+    listDiscoveryRuns: store.listDiscoveryRuns ?? (async () => []),
+    listDiscoveries: store.listDiscoveries ?? (async () => []),
+    loadDiscoveryRun: store.loadDiscoveryRun ?? (async (id) => ({ runId: id, status: 'PAUSED' })),
+    loadDiscovery: store.loadDiscovery ?? (async () => { throw new Error('none'); }),
+  };
+  const sandbox = {
+    console, document: dom.document, setTimeout, queueMicrotask: globalThis.queueMicrotask,
+    AbortController: class { constructor() { this.signal = { aborted: false }; } abort() { this.signal.aborted = true; } },
+    app: dom.app,
+    esc: (v = '') => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
+    fmt: (n) => (Number.isFinite(n) ? Number(n).toLocaleString('en-US') : '—'),
+    state: { aggregate: { matchCount: 0 }, observatory: {}, evidenceBasis: null },
+    LAB_IDENTITY: IDENT,
+    EvolutionStore: class { constructor() { return fakeStore; } },
+    resolveEvidenceScope: async () => { calls.scope += 1; if (scopeError) throw scopeError; return scope ?? { snapshot: {}, historyRunCount: 0, selectedRunCount: 0, selectedGameCount: 0, eligibleRunCount: 0, eligibleGameCount: 0, excludedRunCount: 0, exclusionReasons: {}, truncatedRunCount: 0 }; },
+    prepareDiscoveryRun: async () => { calls.prepare += 1; if (prepareResult !== 'ok') throw prepareResult; return createDiscoveryRun({ mode: 'open', gameBudget: 512, workerCount: 1, seed: 1, profileId: 'core-advanced-authority' }, createEvidenceSnapshot([], IDENT), IDENT, NOW); },
+    executeDiscoveryRun: async (run) => { calls.execute += 1; executed?.(run); return { ...run, status: 'COMPLETE', hypotheses: run.hypotheses ?? [], candidates: run.candidates ?? [], discoveries: [], warnings: [], journal: [], evidence: run.evidence ?? { gameCount: 0, runCount: 0, snapshotId: 'x', excludedCount: 0 }, budget: { allocated: 512, consumed: 128 } }; },
+    DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary,
+  };
+  const src = (await readFile('apps/lab-web/src/workspaces/discover.js', 'utf8'))
+    .replace(/import\s[^;]*?from\s*'[^']*';/gs, '')
+    .replace(/^export /gm, '');
+  const api = runInNewContext(`${src}\n({ renderDiscover, cleanupDiscover })`, sandbox);
+  api.renderDiscover();
+  return { api, dom, calls };
+}
+
+test('workspace: START transitions to PREPARING synchronously, then RUNNING, then settles — never a silent no-op', async () => {
+  const evidenceScope = { snapshot: {}, historyRunCount: 3, selectedRunCount: 3, selectedGameCount: 384, eligibleRunCount: 3, eligibleGameCount: 384, excludedRunCount: 0, exclusionReasons: {}, truncatedRunCount: 0 };
+  const { api, dom, calls } = await discoverWorkspace({ scope: evidenceScope });
+  await flush();
+  const start = dom.document.getElementById('dsc-start');
+  assert.equal(start.disabled, false, 'start enabled once admissible evidence resolves');
+  start.click();
+  // Immediate, synchronous visible transition — before any storage await.
+  assert.equal(start.disabled, true, 'button disables the instant the run starts preparing');
+  assert.match(dom.document.getElementById('dsc-start-hint').textContent, /Preparing/);
+  assert.match(dom.document.querySelector('[data-testid="dsc-state"]').textContent, /PREPARING/);
+  await flush();
+  assert.equal(calls.prepare, 1);
+  assert.equal(calls.execute, 1, 'the run actually reached the discovery engine');
+  assert.equal(dom.app.renders >= 3, true, 'workspace re-rendered through the lifecycle');
+  api.cleanupDiscover();
+});
+
+test('workspace: zero admissible evidence disables START with a stated reason — auditor stays exempt while it has discoveries', async () => {
+  const emptyScope = { snapshot: {}, historyRunCount: 4, selectedRunCount: 4, selectedGameCount: 256, eligibleRunCount: 0, eligibleGameCount: 0, excludedRunCount: 4, exclusionReasons: { FOREIGN_FINGERPRINT: 4 }, truncatedRunCount: 0 };
+  const { api, dom, calls } = await discoverWorkspace({ scope: emptyScope });
+  await flush();
+  const start = dom.document.getElementById('dsc-start');
+  const hint = dom.document.getElementById('dsc-start-hint');
+  assert.equal(start.disabled, true, 'no admissible evidence disables the button');
+  assert.match(hint.textContent, /No admissible Lab evidence/);
+  start.click(); // real DOM semantics: a disabled button does not fire
+  assert.equal(calls.prepare, 0, 'no doomed run is launched');
+  api.cleanupDiscover();
+});
+
+test('workspace: rapid clicks cannot double-fire — launch is single-flight', async () => {
+  const evidenceScope = { snapshot: {}, historyRunCount: 1, selectedRunCount: 1, selectedGameCount: 64, eligibleRunCount: 1, eligibleGameCount: 64, excludedRunCount: 0, exclusionReasons: {}, truncatedRunCount: 0 };
+  const { api, dom, calls } = await discoverWorkspace({ scope: evidenceScope });
+  await flush();
+  const start = dom.document.getElementById('dsc-start');
+  start.click();
+  start.click();
+  start.click();
+  await flush();
+  assert.equal(calls.prepare, 1, 'three clicks launch exactly one run');
+  assert.equal(calls.execute, 1);
+  api.cleanupDiscover();
+});
+
+test('workspace: a launch failure surfaces a precise inline error and re-enables START', async () => {
+  const evidenceScope = { snapshot: {}, historyRunCount: 1, selectedRunCount: 1, selectedGameCount: 64, eligibleRunCount: 1, eligibleGameCount: 64, excludedRunCount: 0, exclusionReasons: {}, truncatedRunCount: 0 };
+  const { api, dom, calls } = await discoverWorkspace({ scope: evidenceScope, prepareResult: new Error('LAB_STORAGE_BLOCKED') });
+  await flush();
+  const start = dom.document.getElementById('dsc-start');
+  assert.equal(start.disabled, false);
+  start.click();
+  await flush();
+  const err = dom.document.getElementById('dsc-error');
+  assert.match(err.textContent, /blocked by another open Intrilex tab/, 'root-cause error is stated inline');
+  assert.equal(calls.execute, 0);
+  assert.equal(dom.document.getElementById('dsc-start').disabled, false, 'button re-enables after a failed launch');
+  api.cleanupDiscover();
+});
+
+test('workspace: navigating away mid-prepare does not clobber the live route', async () => {
+  const evidenceScope = { snapshot: {}, historyRunCount: 1, selectedRunCount: 1, selectedGameCount: 64, eligibleRunCount: 1, eligibleGameCount: 64, excludedRunCount: 0, exclusionReasons: {}, truncatedRunCount: 0 };
+  const { api, dom, calls } = await discoverWorkspace({ scope: evidenceScope });
+  await flush();
+  const start = dom.document.getElementById('dsc-start');
+  start.click();
+  const rendersAtNav = dom.app.renders;
+  api.cleanupDiscover(); // the router unmounts the workspace mid-flight
+  await flush(16);
+  assert.equal(calls.prepare, 1);
+  assert.equal(dom.app.renders, rendersAtNav, 'no render clobbers the new route after unmount');
+});
+
+test('workspace: auditor with prior discoveries can launch on a zero-evidence scope', async () => {
+  const emptyScope = { snapshot: {}, historyRunCount: 0, selectedRunCount: 0, selectedGameCount: 0, eligibleRunCount: 0, eligibleGameCount: 0, excludedRunCount: 0, exclusionReasons: {}, truncatedRunCount: 0 };
+  const library = [{ discoveryId: 'D-AAAA1111', status: 'discovery', claim: 'x', category: 'matchup', estimate: 0.1, confidence: 'HIGH', createdAt: NOW }];
+  const { api, dom, calls } = await discoverWorkspace({ scope: emptyScope, store: { listDiscoveries: async () => library } });
+  await flush();
+  // Switch the mode select to auditor — the exemption must engage once the
+  // library is known, not silently leave the button dead.
+  const mode = dom.document.getElementById('dsc-mode');
+  mode.value = 'auditor';
+  for (const f of mode._l.change ?? []) f({ target: mode, currentTarget: mode });
+  api.renderDiscover();
+  await flush();
+  const start = dom.document.getElementById('dsc-start');
+  assert.equal(start.disabled, false, 'auditor + prior discoveries can launch on zero evidence');
+  start.click();
+  await flush();
+  assert.equal(calls.prepare, 1);
+  api.cleanupDiscover();
 });

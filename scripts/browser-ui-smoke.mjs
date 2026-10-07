@@ -213,20 +213,59 @@ try{
   if(!hiddenOpponentHand?.ok)throw new Error(`Opponent hand check failed: ${hiddenOpponentHand?.reason??'unknown'}`);
 
   await cdp.evaluate(`(()=>{document.querySelector('#exp-count').value='1';document.querySelector('#run-experiment').click();return true;})()`);
+  // Semantic contract: the campaign lifecycle is signaled via
+  // #experiment-status[data-state] (idle→running→complete|failed|cancelled),
+  // never via prose text — the human-readable status is presentation only.
   try {
-  await waitFor(cdp.evaluate,`document.querySelector('#experiment-status')?.textContent.includes('PASS · 1 matches')`,{timeout:180000,label:'1-match Web Worker campaign'});
+  await waitFor(cdp.evaluate,`['complete','failed'].includes(document.querySelector('#experiment-status')?.dataset.state)`,{timeout:180000,label:'1-match Web Worker campaign'});
   } catch {
     const status=await cdp.evaluate(`document.querySelector('#experiment-status')?.textContent ?? 'NO STATUS'`);
     const excs=cdp.exceptions.slice(-5);
-    throw new Error(`Campaign failed. Status: ${status}. Exceptions: ${JSON.stringify(excs)}`);
+    throw new Error(`Campaign timed out. Status: ${status}. Exceptions: ${JSON.stringify(excs)}`);
   }
-  const campaignStatus=await cdp.evaluate(`document.querySelector('#experiment-status').textContent`);
+  const campaignResult=await cdp.evaluate(`JSON.stringify({state:document.querySelector('#experiment-status')?.dataset.state??'unknown',status:document.querySelector('#experiment-status')?.textContent??''})`).then(JSON.parse);
+  if(campaignResult.state!=='complete')throw new Error(`Campaign ended in state '${campaignResult.state}': ${campaignResult.status}`);
 
   const workspaceProof={};
-  for(const [route,title,needle] of [['replays','Replays','replay'],['history','History','Match History'],['mechanics','Mechanics','Mechanics Atlas'],['synergies','Synergies','Synergy Observatory'],['ranks','Ranks','rank'],['compare','Compare','Policy Comparison'],['traces','Traces','decision traces'],['branches','Branches','counterfactual'],['diagnostics','Diagnostics','Policy Diagnostics'],['evidence','Evidence','Metric registry']]){
+  for(const [route,title,needle] of [['replays','Replays','replay'],['history','History','Match History'],['mechanics','Mechanics','Mechanics Atlas'],['combo','Combo','Combo Atlas'],['synergies','Synergies','Synergy Observatory'],['ranks','Ranks','rank'],['compare','Compare','Policy Comparison'],['traces','Traces','decision traces'],['branches','Branches','counterfactual'],['diagnostics','Diagnostics','Policy Diagnostics'],['evidence','Evidence','Metric registry']]){
     await cdp.evaluate(`location.hash='#/${route}'`);await waitFor(cdp.evaluate,`document.querySelector('#page-title')?.textContent===${JSON.stringify(title)} && document.querySelector('#app')?.textContent.includes(${JSON.stringify(needle)})`,{label:`${title} workspace`});
     workspaceProof[route]=true;
   }
+  // Combo Atlas integration: the workspace must render whatever the dataset
+  // carries (empty, legacy, or covered) without exceptions — and 4♥ Combo
+  // Breaker is explicitly unavailable, never a measured zero. No Combo
+  // evidence is fabricated to satisfy this check.
+  await cdp.evaluate(`location.hash='#/combo'`);
+  await waitFor(cdp.evaluate,`Boolean(document.querySelector('[data-testid="combo-atlas"]'))`,{label:'Combo Atlas workspace'});
+  const comboProof=await cdp.evaluate(`(()=>{
+    const atlas=document.querySelector('[data-testid="combo-atlas"]');
+    const text=atlas?.textContent??'';
+    const brokenExplicit=text.includes('n/a')||text.includes('unimplemented')||text.includes('unavailable');
+    const sections=[...atlas?.querySelectorAll('[data-testid]')??[]].map(e=>e.dataset.testid);
+    return{rendered:Boolean(atlas),brokenExplicit,sections:[...new Set(sections)],coverageNotice:Boolean(atlas?.querySelector('[data-testid="combo-coverage-notice"]')),tabs:Boolean(atlas?.querySelector('[data-testid="combo-section-tabs"]'))};
+  })()`);
+  if(!comboProof.rendered)throw new Error('Combo Atlas did not render');
+  if(!comboProof.brokenExplicit)throw new Error(`Combo Atlas must disclose 4♥ breaker as unavailable, got: ${JSON.stringify(comboProof.sections)}`);
+  workspaceProof.comboDetails=comboProof;
+  // Navigating out of Combo must not break other Observatory routes.
+  await cdp.evaluate(`location.hash='#/mechanics'`);
+  await waitFor(cdp.evaluate,`document.querySelector('#page-title')?.textContent==='Mechanics' && document.querySelector('#app')?.textContent.includes('Mechanics Atlas')`,{label:'Mechanics after Combo'});
+  // DISCOVER START RUN must never silently no-op: with zero admissible Lab
+  // evidence in a fresh profile the button is either disabled with a stated
+  // reason, or — if enabled — clicking produces a visible transition/error.
+  await cdp.evaluate(`location.hash='#/discover'`);
+  await waitFor(cdp.evaluate,`Boolean(document.querySelector('[data-testid="discover-workspace"]'))`,{label:'Discover workspace'});
+  await waitFor(cdp.evaluate,`(()=>{const s=document.querySelector('#dsc-start');const e=document.querySelector('[data-testid="dsc-evidence"]');return s&&e&&!e.textContent.includes('Resolving stored Lab evidence')})()`,{label:'Discover evidence resolution',timeout:30000});
+  const discoverProof=await cdp.evaluate(`(()=>{
+    const start=document.querySelector('#dsc-start');const hint=document.querySelector('#dsc-start-hint');const state=document.querySelector('[data-testid="dsc-state"]');
+    const before={disabled:start?.disabled,hint:hint?.textContent??'',state:state?.textContent??''};
+    if(start&&!start.disabled){start.click();}
+    return{before,after:{disabled:start?.disabled??true,hint:document.querySelector('#dsc-start-hint')?.textContent??'',state:document.querySelector('[data-testid="dsc-state"]')?.textContent??'',error:document.querySelector('#dsc-error')?.textContent??''}};
+  })()`);
+  const dBlocked=discoverProof.before.disabled===true&&String(discoverProof.before.hint??'').length>0;
+  const dReacted=discoverProof.after.disabled===true||discoverProof.after.state!==discoverProof.before.state||String(discoverProof.after.error??'').length>0||String(discoverProof.after.hint??'').length>0;
+  if(!dBlocked&&!dReacted)throw new Error(`DISCOVER START RUN silently no-opped: ${JSON.stringify(discoverProof)}`);
+  workspaceProof.discoverStart=discoverProof;
   // Replay Caster is now a full-screen route rather than an Observatory-shell
   // renderer, so prove it through its setup surface instead of #page-title.
   await cdp.evaluate(`location.hash='#/caster'`);
@@ -283,8 +322,8 @@ try{
   const reducedShot=await cdp.call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});await writeFile(path.join(screenshotDir,'reduced-motion.png'),Buffer.from(reducedShot.data,'base64'));
   if(cdp.exceptions.length)throw new Error(`Browser exceptions: ${cdp.exceptions.join('\n')}`);
 
-  report={schemaVersion:'2.0.0',status:'PASS',browser:'Chromium 144 headless',workspaces:workspaceProof,landing:landingProof,campaign:{status:campaignStatus,matchCount:1,abortCount:0},replay:{checkpointStep:true,playerProjection:true,opponentHandHidden:true},accessibility,responsive:viewportResults,reducedMotion:true,exceptions:[]};
-  if(writeReports){await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`);await writeFile(reportMdPath,`# Browser UI Smoke\n\nStatus: **PASS**\n\n- Eleven smoke-tested workspaces including Caster, Ranks, Traces, Branches, and Diagnostics: PASS\n- Landing page (Play · Puzzles · Rules · Sim): PASS\n- Semantic checkpoint stepping: PASS\n- Player-authorized hidden-hand projection: PASS\n- Browser Worker campaign: 1/1 complete\n- Accessibility-tree unnamed interactive controls: 0\n- Responsive viewports: 390×844, 768×1024, 1366×768, 1920×1080\n- Reduced-motion emulation: PASS\n- Screenshots: \`reports/local/visual-qa/\`\n`);}
-  console.log(`BROWSER UI SMOKE PASS: workspaces=11; landing=4; campaign=1; screenshots=${viewportResults.length+2}`);
+  report={schemaVersion:'2.0.0',status:'PASS',browser:'Chromium 144 headless',workspaces:workspaceProof,landing:landingProof,campaign:{state:campaignResult.state,status:campaignResult.status,matchCount:1,abortCount:0},replay:{checkpointStep:true,playerProjection:true,opponentHandHidden:true},accessibility,responsive:viewportResults,reducedMotion:true,exceptions:[]};
+  if(writeReports){await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`);await writeFile(reportMdPath,`# Browser UI Smoke\n\nStatus: **PASS**\n\n- Twelve smoke-tested workspaces including Caster, Combo Atlas, Ranks, Traces, Branches, and Diagnostics: PASS\n- Landing page (Play · Puzzles · Rules · Sim): PASS\n- Semantic checkpoint stepping: PASS\n- Player-authorized hidden-hand projection: PASS\n- Browser Worker campaign: 1/1 complete (semantic data-state contract)\n- DISCOVER START RUN never silently no-ops: PASS\n- Combo Atlas renders; 4♥ breaker disclosed as unavailable: PASS\n- Accessibility-tree unnamed interactive controls: 0\n- Responsive viewports: 390×844, 768×1024, 1366×768, 1920×1080\n- Reduced-motion emulation: PASS\n- Screenshots: \`reports/local/visual-qa/\`\n`);}
+  console.log(`BROWSER UI SMOKE PASS: workspaces=12; landing=4; campaign=1; screenshots=${viewportResults.length+2}`);
 }catch(error){report={schemaVersion:'2.0.0',status:'FAIL',error:error.stack??String(error),exceptions:cdp?.exceptions??[]};if(writeReports)await writeFile(reportPath,`${JSON.stringify(report,null,2)}\n`).catch(()=>{});console.error(error);process.exitCode=1;}
 finally{try{cdp?.socket.close();}catch{}try{process.kill(-child.pid,'SIGKILL');}catch{}try{await rm(profileDir,{recursive:true,force:true});}catch{/* Windows may lock Chrome crash files; best-effort cleanup */}try{tempServer?.close();}catch{}}

@@ -106,7 +106,7 @@ export class ExperimentStore {
     });
     try {
       return await pending.promise;
-    } catch (error) {
+    } catch {
       // IndexedDB present but refused (private mode, quota policy): degrade
       // to the session backend rather than failing the lab entirely.
       this.memory = createMemoryBackend();
@@ -225,7 +225,7 @@ export class ExperimentStore {
     const run = await this._get(STORES.RUNS, runId);
     if (!run) return null;
     try { return validateRunRecord(run); }
-    catch { return { ...run, corrupt: true }; }
+    catch (error) { return { ...run, corrupt: true, corruptCode: error?.code ?? 'RUN_HASH_MISMATCH' }; }
   }
 
   async getRunPayload(runId) { return (await this._get(STORES.PAYLOADS, runId)) ?? null; }
@@ -233,7 +233,7 @@ export class ExperimentStore {
   async listRuns(experimentId = null) {
     const all = (await this._all(STORES.RUNS)).map(run => {
       try { return validateRunRecord(run); }
-      catch { return { ...run, corrupt: true }; }
+      catch (error) { return { ...run, corrupt: true, corruptCode: error?.code ?? 'RUN_HASH_MISMATCH' }; }
     });
     const filtered = experimentId ? all.filter(r => r.experimentId === experimentId || r.runId === 'RUN-0000-CERTIFIED-CORPUS') : all;
     return filtered.sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0) || String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? '')));

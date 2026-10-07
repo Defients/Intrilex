@@ -314,6 +314,9 @@ const STAGES = [
   // Persistent experiment runs & analysis sets: domain model, IDB store
   // roundtrip, curation transitions, migration, dossier scope disclosure.
   ['experiment-runs', 'node', ['--test', 'test/experiment-runs.test.mjs']],
+  // Run-registration retention: session fallback, metadata failure, refresh
+  // merge, reload semantics — the vanishing-run bug class.
+  ['experiment-run-retention', 'node', ['--test', 'test/experiment-run-retention.test.mjs']],
   ['combo-analytics', 'node', ['--test', 'test/combo-analytics.test.mjs']],
 ];
 

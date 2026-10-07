@@ -20,11 +20,11 @@ export function renderExperimentControls() {
     <div class="inline-fields"><label>Seat 1<select id="exp-p1">${policyOptions('score-rush')}</select></label><label>Seat 2<select id="exp-p2">${policyOptions('control')}</select></label></div>
     <div class="inline-fields"><label>Matches<input id="exp-count" type="number" min="1" max="10000" value="100"></label><label>Workers<select id="exp-workers"><option>1</option><option selected>2</option><option>4</option></select></label></div>
     <label>Seed strategy<select id="exp-seed"><option value="ordinal-hash">Experiment hash + ordinal</option><option value="fixed">Fixed seed</option></select></label>
-    <label>Deep decision tracing <button type="button" class="info-dot tooltip-wide" data-tooltip="Re-ranks all legal actions at every decision and keeps a trace per decision — heavy compute and memory. Use for small evidence runs needing decision-level detail, not large campaigns. Telemetry is hash-excluded: results stay deterministic." aria-label="About deep decision tracing">ⓘ</button><input id="exp-deep-trace" type="checkbox"></label>
+    <label class="exp-toggle"><span class="exp-toggle-text">Deep decision tracing<button type="button" class="info-dot tooltip-wide" data-tooltip="Re-ranks all legal actions at every decision and keeps a trace per decision — heavy compute and memory. Use for small evidence runs needing decision-level detail, not large campaigns. Telemetry is hash-excluded: results stay deterministic." aria-label="About deep decision tracing">ⓘ</button></span><input id="exp-deep-trace" type="checkbox" class="exp-switch" role="switch"></label>
     <div class="preflight" id="preflight"><b>Preflight:</b> 25 ordered pairings · matched AB/BA seat-swap · paired McNemar + bootstrap · deterministic telemetry v4.1 · unsupported systems fail closed.</div>
     <div class="rail-actions"><button id="run-experiment" type="button" class="primary-button">Run experiment</button><button id="cancel-experiment" type="button" class="secondary-button" disabled>Cancel</button><button id="reset-experiment" type="button" class="ghost-button" title="Restore the bundled certified baseline as the working dataset — does not delete stored runs">Baseline</button></div>
-    <output id="experiment-status" class="footer-note" aria-live="polite">Ready.</output>
-    <div id="campaign-progress" class="campaign-progress-bar" hidden><div class="campaign-progress-bar-fill" style="width:0%"></div></div>
+    <output id="experiment-status" class="footer-note" aria-live="polite" data-state="idle">Ready.</output>
+    <div id="campaign-progress" class="campaign-progress" role="progressbar" aria-label="Experiment progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="campaign-progress-bar"><div class="campaign-progress-bar-fill" style="width:0%"></div></div><output class="campaign-progress-pct">0%</output></div>
     <div id="campaign-summary" class="campaign-summary"></div>
     <div id="exp-runs" hidden></div>
   </div>`;
@@ -190,8 +190,17 @@ function renderCommandResults() {
 // Spawns N browser workers and splits the ordinal range across them so matches
 // run in true parallel (one worker per segment). Progress is aggregated across
 // all workers and reported frequently so the UI never looks frozen.
+// Semantic campaign state — the machine-readable contract for tests and CI.
+// textContent stays free-form presentation; data-state is the stable signal:
+// idle → running → complete | failed | cancelled → idle.
+function setCampaignState(value) {
+  const el = document.querySelector('#experiment-status');
+  if (el) el.dataset.state = value;
+}
+
 async function runBrowserCampaign() {
   const status = document.querySelector('#experiment-status');
+  setCampaignState('running');
   const profile = document.querySelector('#exp-profile').value;
   const p1 = document.querySelector('#exp-p1').value;
   const p2 = document.querySelector('#exp-p2').value;
@@ -226,9 +235,7 @@ async function runBrowserCampaign() {
         const p = x.progress ?? {};
         const done = p.completed ?? 0, total = p.total ?? count;
         status.textContent = `Progress: ${done}/${total} matches (1 worker)`;
-        const bar = document.querySelector('#campaign-progress');
-        const fill = bar?.querySelector('.campaign-progress-bar-fill');
-        if (bar && fill) { bar.hidden = false; fill.style.width = `${Math.round((done / Math.max(1, total)) * 100)}%`; }
+        updateCampaignProgress(done, total);
       } else if (x.type === 'autonomy-campaign-result') {
         worker.terminate();
         state.campaignWorker = null;
@@ -241,7 +248,10 @@ async function runBrowserCampaign() {
       state.campaignWorker = null;
       state.campaignWorkers = [];
       recordFailedRun({ config: runConfig, error: e.message }).catch(() => {});
+      setCampaignState('failed');
       status.textContent = `Worker error: ${e.message}`;
+      const bar = document.querySelector('#campaign-progress');
+      if (bar) bar.hidden = true;
       document.querySelector('#run-experiment').disabled = false;
       document.querySelector('#cancel-experiment').disabled = true;
       showToast(e.message ?? 'Worker error', { type: 'error', title: 'Worker error' });
@@ -270,9 +280,7 @@ async function runBrowserCampaign() {
   const reportAggregateProgress = () => {
     const done = segmentDone.reduce((a, b) => a + b, 0);
     status.textContent = `Progress: ${done}/${totalTotal} matches (${workers} workers)`;
-    const bar = document.querySelector('#campaign-progress');
-    const fill = bar?.querySelector('.campaign-progress-bar-fill');
-    if (bar && fill) { bar.hidden = false; fill.style.width = `${Math.round((done / Math.max(1, totalTotal)) * 100)}%`; }
+    updateCampaignProgress(done, totalTotal);
   };
 
   const maybeFinalize = async () => {
@@ -343,6 +351,20 @@ async function runBrowserCampaign() {
     });
   });
   reportAggregateProgress();
+}
+
+// Drives the campaign progress bar: fill width, percentage readout, and the
+// progressbar aria-valuenow so assistive tech hears the same fraction.
+function updateCampaignProgress(done, total) {
+  const bar = document.querySelector('#campaign-progress');
+  if (!bar) return;
+  const pctDone = Math.round((done / Math.max(1, total)) * 100);
+  bar.hidden = false;
+  bar.setAttribute('aria-valuenow', String(pctDone));
+  const fill = bar.querySelector('.campaign-progress-bar-fill');
+  if (fill) fill.style.width = `${pctDone}%`;
+  const pctLabel = bar.querySelector('.campaign-progress-pct');
+  if (pctLabel) pctLabel.textContent = `${pctDone}%`;
 }
 
 // Split `count` ordinals into `workers` contiguous, near-equal segments.
@@ -452,8 +474,12 @@ async function finalizeCampaignResult(x, count, _workers, runConfig = null) {
         await applySelection({ fastPath });
         if (rec?.included === false && rec?.run) {
           showToast(`Run #${String(rec.run.ordinal).padStart(3, '0')} recorded but auto-excluded — it differs materially from the current baseline. Inspect it under Manage Runs.`, { type: 'warning', title: 'Incompatible run' });
+        } else if (rec?.metaFailed) {
+          showToast('Run completed — browser storage is unavailable, so the run and its evidence are retained for this session only and will be lost on reload.', { type: 'warning', title: 'Run recorded (session only)' });
         } else if (rec?.payloadSessionOnly) {
           showToast('Run recorded — evidence payload retained for this session only (storage limit).', { type: 'warning', title: 'Run recorded' });
+        } else if (rec?.setPersisted === false) {
+          showToast('Run recorded — the analysis selection could not be persisted; curation changes are kept for this session only.', { type: 'warning', title: 'Run recorded' });
         }
       } catch (err) {
         console.warn('[experiments] run record failed:', err);
@@ -466,11 +492,19 @@ async function finalizeCampaignResult(x, count, _workers, runConfig = null) {
     const evidenceNote = basis && !basis.fallback
       ? ` · evidence: ${fmt(basis.includedGames)} games from ${basis.includedRunCount} run${basis.includedRunCount === 1 ? '' : 's'}`
       : '';
+    // Retention truth: a completed simulation is not the same as persisted
+    // evidence. The status line must never read as clean success when the
+    // run record or payload only lives in this session.
+    const retentionNote = rec?.metaFailed ? ' · session-only (storage unavailable; lost on reload)'
+      : rec?.payloadSessionOnly ? ' · session-only evidence'
+      : rec?.run ? ' · persisted' : '';
     const runLabel = rec?.run ? `Run #${String(rec.run.ordinal).padStart(3, '0')} · ` : '';
-    status.textContent = `${runLabel}${count} matches, ${r.abortCount ?? r.aborts ?? 0} aborts, ${r.durationMs ?? 0}ms · ${mechCount} mechanics, ${synCount} synergies${evidenceNote}`;
-    showToast(`${count} matches · ${r.abortCount ?? r.aborts ?? 0} aborts · ${mechCount} mechanics · ${synCount} synergies${evidenceNote}`, { type: 'success', title: rec?.run ? `Run #${String(rec.run.ordinal).padStart(3, '0')} complete` : 'Campaign complete' });
+    setCampaignState('complete');
+    status.textContent = `${runLabel}${count} matches, ${r.abortCount ?? r.aborts ?? 0} aborts, ${r.durationMs ?? 0}ms · ${mechCount} mechanics, ${synCount} synergies${evidenceNote}${retentionNote}`;
+    showToast(`${count} matches · ${r.abortCount ?? r.aborts ?? 0} aborts · ${mechCount} mechanics · ${synCount} synergies${evidenceNote}${retentionNote}`, { type: rec?.metaFailed || rec?.payloadSessionOnly ? 'warning' : 'success', title: rec?.run ? `Run #${String(rec.run.ordinal).padStart(3, '0')} complete` : 'Campaign complete' });
   } else {
     if (experimentsReady() && runConfig) recordFailedRun({ config: runConfig, error: x.error }).catch(() => {});
+    setCampaignState('failed');
     status.textContent = `Failed: ${x.error ?? 'unknown error'}`;
     showToast(x.error ?? 'Campaign failed', { type: 'error', title: 'Campaign failed' });
   }
@@ -493,7 +527,10 @@ function cancelBrowserCampaign() {
     recordCancelledRun({ config: state.pendingRunConfig }).catch(() => {});
     state.pendingRunConfig = null;
   }
+  setCampaignState('cancelled');
   document.querySelector('#experiment-status').textContent = 'Cancelled.';
+  const bar = document.querySelector('#campaign-progress');
+  if (bar) bar.hidden = true;
   document.querySelector('#run-experiment').disabled = false;
   document.querySelector('#cancel-experiment').disabled = true;
   refreshRunsUi();
@@ -519,6 +556,7 @@ function resetCampaignResults() {
     rerender();
   }
   document.querySelector('#campaign-summary').innerHTML = '';
+  setCampaignState('idle');
   document.querySelector('#experiment-status').textContent = 'Ready.';
   refreshRunsUi();
 }

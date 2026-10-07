@@ -13,14 +13,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
+import { hashCanonical } from '../packages/shared/src/canonical.mjs';
 import {
   DEFAULT_EXPERIMENT_ID, DEFAULT_ANALYSIS_SET_ID, BUNDLED_RUN_ID,
-  RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY,
+  RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY, EXCLUSION_REASONS, RUN_INTEGRITY,
   createExperiment, createAnalysisSet, createRunRecord,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
   contributingRuns, evidenceBasis, previewSelectionMetrics,
   includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
   planMigration, validateRunRecord, runIdFor, bundledBaselineRun,
+  payloadEvidenceHash, verifyRunPayload, markRunIntegrity, runIntegrityState,
+  runAnalyticallyEligible,
 } from '../packages/simulation-runtime/src/experiment-domain.mjs';
 import { ExperimentStore } from '../apps/lab-web/src/experiments/experiment-store.mjs';
 import { buildAnalysisDossier, renderAnalysisDossierMarkdown } from '../apps/lab-web/src/analysis-dossier.js';
@@ -377,4 +382,222 @@ test('dossier records which runs produced the aggregate', () => {
   const md = renderAnalysisDossierMarkdown(dossier);
   assert.match(md, /Experiment/i);
   assert.match(md, /EXPERIMENT_RUNS/);
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Integrity hardening — the forensic pass:
+//   1. retention bookkeeping (payloadKind/retentionNote) is OUTSIDE runHash
+//      so the session-only fallback survives validation instead of
+//      disappearing as RUN_HASH_MISMATCH (the reported P1 defect)
+//   2. payloadHash seals the exact evidence payload — verified on load,
+//      never before analytics
+//   3. corrupt records and failed payloads are quarantined — inspectable,
+//      disclosed, analytically ineligible forever (no force-include)
+// ═══════════════════════════════════════════════════════════════
+
+test('runHash excludes retention bookkeeping; the schema-1.0 hash envelope still validates', () => {
+  const run = mkRun(1);
+  // The exact fallback shape _persistRunAndPayload writes after a quota
+  // rejection — retention state must never masquerade as evidence.
+  const sessionized = { ...run, payloadKind: 'session', retentionNote: 'Evidence payload retained for this session only' };
+  assert.doesNotThrow(() => validateRunRecord(sessionized), 'retention fallback must not trip RUN_HASH_MISMATCH');
+  // A truly schema-1.0 record: payloadHash field absent, hash computed over
+  // the old envelope that DID include payloadKind.
+  const { payloadHash: _ph, ...onePointZero } = run;
+  const { lifecycle: _l, runHash: _h, compatibilityFingerprint: _f, payloadKind, ...evidence } = onePointZero;
+  const legacy = { ...onePointZero, runHash: hashCanonical({ ...evidence, payloadKind }) };
+  assert.doesNotThrow(() => validateRunRecord(legacy));
+  // But tampering with actual evidence still fails under both formulas.
+  const tampered = { ...legacy, metrics: { ...legacy.metrics, matchCount: 999 } };
+  assert.throws(() => validateRunRecord(tampered), /RUN_HASH_MISMATCH/);
+});
+
+test('payloadHash seals analytical content only — incidental storage fields are not evidence', () => {
+  const payload = { summaries: [fakeSummary(0)], aggregate: { matchCount: 1 } };
+  const sealed = mkRun(1, { payloadHash: payloadEvidenceHash(payload) });
+  // Same analytical content + incidental storage bookkeeping → same hash.
+  const stored = { runId: 'RUN-X', storedAt: '2026-01-01T00:00:00Z', ...payload };
+  assert.equal(verifyRunPayload(sealed, stored).ok, true);
+  assert.equal(verifyRunPayload(sealed, stored).verified, true);
+  // Tampered content fails; missing payload fails; unsealed legacy passes unverified.
+  assert.equal(verifyRunPayload(sealed, { summaries: [fakeSummary(7)], aggregate: null }).code, 'RUN_PAYLOAD_HASH_MISMATCH');
+  assert.equal(verifyRunPayload(sealed, null).code, 'RUN_PAYLOAD_MISSING');
+  const legacy = mkRun(2); // payloadHash null — schema 1.0
+  const v = verifyRunPayload(legacy, null);
+  assert.equal(v.ok, true);
+  assert.equal(v.verified, false);
+});
+
+test('markRunIntegrity quarantines a run without breaking its record hash — and it can never contribute', () => {
+  const run = mkRun(1);
+  const quarantined = markRunIntegrity(run, { state: RUN_INTEGRITY.QUARANTINED, code: 'RUN_PAYLOAD_HASH_MISMATCH', note: 'tampered payload' });
+  assert.doesNotThrow(() => validateRunRecord(quarantined), 'integrity marks are lifecycle state — the sealed evidence is untouched');
+  assert.equal(runIntegrityState(quarantined), 'quarantined');
+  assert.equal(runAnalyticallyEligible(quarantined), false);
+  let set = createAnalysisSet({ experimentId: DEFAULT_EXPERIMENT_ID });
+  set = includeRunInSet(set, run.runId);
+  assert.equal(contributingRuns([quarantined], set).length, 0, 'an includedRunId pointing at a quarantined record yields zero contribution');
+  const basis = evidenceBasis([quarantined], set);
+  assert.equal(basis.quarantinedCount, 1);
+  assert.ok(basis.integrityFailures.some(f => f.runId === run.runId && f.code === 'RUN_PAYLOAD_HASH_MISMATCH'));
+});
+
+// ── Real controller path (vm) ────────────────────────────────────
+// The reported defect lives in _persistRunAndPayload → saveRun(sessionRun)
+// → validateRunRecord → listRuns — only the real controller exercises it.
+// Browser imports are stubbed; domain + store are the real modules.
+
+async function experimentController({ state: stateOverrides = {} } = {}) {
+  const src = (await readFile('apps/lab-web/src/experiments/experiment-controller.mjs', 'utf8'))
+    .replace(/import\s[^;]*?from\s*'[^']*';/gs, '')
+    .replace(/^export /gm, '');
+  const state = { bootState: null, observatory: {}, aggregate: {}, evidenceBasis: null, ...stateOverrides };
+  const toasts = [];
+  const sandbox = {
+    console, structuredClone, TextEncoder, setTimeout, queueMicrotask: globalThis.queueMicrotask,
+    Worker: class { constructor() { throw new Error('no workers in tests'); } },
+    state, showToast: (msg, opts) => toasts.push({ msg, ...opts }),
+    updateRailContext() {}, rerender() {},
+    RULES_VERSION: '4.3.1', LAB_VERSION: '0.29.0', ENGINE_VERSION: '4.2.6',
+    hashCanonical, ExperimentStore,
+    DEFAULT_EXPERIMENT_ID, DEFAULT_ANALYSIS_SET_ID, BUNDLED_RUN_ID,
+    RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY, EXCLUSION_REASONS, RUN_INTEGRITY,
+    createExperiment, createAnalysisSet, createRunRecord,
+    nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
+    contributingRuns, evidenceBasis, previewSelectionMetrics,
+    includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
+    planMigration, payloadEvidenceHash, verifyRunPayload, markRunIntegrity,
+    runIntegrityState, runAnalyticallyEligible,
+  };
+  const api = runInNewContext(`${src}\n({ initExperiments, recordCampaignRun, recordFailedRun, recordCancelledRun, experimentsReady, storePersisted, getExperiment, getExperimentRuns, getActiveAnalysisSet, getIncludedRuns, getEvidenceBasis, runsWithCompatibility, previewRunSelection, allRunIds, nextRunOrdinalStart, setRunIncluded, setRunExcluded, markRunInvalidated, markRunArchived, markRunRestored, markRunPinned, includeAllCompatible, isolateRun, restoreBaseline, deleteRun, applySelection, collectExperimentEvidence })`, sandbox);
+  return { api, state, toasts };
+}
+
+const campaignArgs = { config: { matchCount: 1, profileId: 'core-advanced-authority', policyIds: ['score-rush', 'control'] }, summaries: [fakeSummary(0)], aggregate: { matchCount: 1 } };
+
+test('P1 regression — quota fallback records a session-only run that persists, stays visible, and contributes this session', async () => {
+  const idb = createFakeIndexedDB();
+  const { api } = await experimentController();
+  const store = new ExperimentStore(idb);
+  await api.initExperiments({ bootSummaries: [fakeSummary(100)], store });
+  // Force the payload-write transaction to abort with quota — the exact
+  // reported failure in _persistRunAndPayload.
+  idb._failNextTransaction({ name: 'QuotaExceededError' });
+  const rec = await api.recordCampaignRun(campaignArgs);
+  assert.equal(rec.run.payloadKind, 'session');
+  assert.equal(rec.payloadSessionOnly, true);
+  assert.equal(rec.persisted, true, 'the session-fallback record must persist — previously it died on RUN_HASH_MISMATCH and vanished');
+  assert.ok(api.getExperimentRuns().some(r => r.runId === rec.run.runId), 'session-only run stays visible in the run library');
+  assert.ok(api.getIncludedRuns().some(r => r.runId === rec.run.runId), 'session evidence contributes during the session');
+  // Reload against the same database — the record survives with honest
+  // retention disclosure, and it still passes validation.
+  const reopened = new ExperimentStore(idb);
+  await reopened.open();
+  const persisted = (await reopened.listRuns(DEFAULT_EXPERIMENT_ID)).find(r => r.runId === rec.run.runId);
+  assert.ok(persisted, 'session-only run record survives a store reopen');
+  assert.equal(persisted.corrupt, undefined);
+  assert.equal(persisted.payloadKind, 'session');
+  assert.match(persisted.retentionNote ?? '', /session only/i);
+});
+
+test('session-only payload sealed at record time verifies while it exists; a reopened app honestly marks it payload-unavailable', async () => {
+  const idb = createFakeIndexedDB();
+  const first = await experimentController();
+  await first.api.initExperiments({ bootSummaries: [fakeSummary(100)], store: new ExperimentStore(idb) });
+  idb._failNextTransaction({ name: 'QuotaExceededError' });
+  const rec = await first.api.recordCampaignRun(campaignArgs);
+  // Boot 2: a fresh controller (empty _sessionPayloads) over the same db —
+  // the run is there, its payload is not. That is disclosed, not hidden.
+  const second = await experimentController();
+  await second.api.initExperiments({ bootSummaries: [fakeSummary(100)], store: new ExperimentStore(idb) });
+  const listed = second.api.getExperimentRuns().find(r => r.runId === rec.run.runId);
+  assert.ok(listed, 'session run persists across reload');
+  assert.equal(listed.payloadKind, 'session');
+  await second.api.applySelection();
+  const marked = second.api.getExperimentRuns().find(r => r.runId === rec.run.runId);
+  assert.equal(marked.lifecycle?.integrity?.state, 'payload-unavailable');
+  assert.equal(marked.lifecycle?.integrity?.code, 'RUN_PAYLOAD_MISSING');
+  assert.equal(second.api.getIncludedRuns().some(r => r.runId === rec.run.runId), false, 'a run with no evidence payload cannot contribute');
+  assert.equal(second.api.getEvidenceBasis().payloadUnavailableCount, 1);
+  assert.ok(second.toasts.some(t => t.title === 'Evidence integrity'), 'eviction is disclosed, never silent');
+  await assert.rejects(() => second.api.setRunIncluded(rec.run.runId, { force: true }), /RUN_PAYLOAD_UNAVAILABLE/);
+});
+
+test('P2 — tampered stored payload is detected at load: run is quarantined, stays inspectable, contributes nothing', async () => {
+  const idb = createFakeIndexedDB();
+  const first = await experimentController();
+  await first.api.initExperiments({ bootSummaries: [fakeSummary(100)], store: new ExperimentStore(idb) });
+  const rec = await first.api.recordCampaignRun(campaignArgs);
+  assert.equal(rec.run.payloadKind, 'indexeddb');
+  assert.ok(rec.run.payloadHash, 'run sealed against its payload before persistence');
+  // Tamper the stored payload in place — the fake's get returns the live
+  // stored object, so mutating it simulates in-place storage corruption.
+  const raw = new ExperimentStore(idb);
+  await raw.open();
+  const payload = await raw.getRunPayload(rec.run.runId);
+  payload.summaries[0].scoreMargin = 9999;
+
+  const second = await experimentController();
+  await second.api.initExperiments({ bootSummaries: [fakeSummary(100)], store: new ExperimentStore(idb) });
+  assert.equal(second.api.getIncludedRuns().some(r => r.runId === rec.run.runId), true, 'record itself is clean — it is still included');
+  await second.api.applySelection();
+  const marked = second.api.getExperimentRuns().find(r => r.runId === rec.run.runId);
+  assert.ok(marked, 'quarantined run remains inspectable in the library');
+  assert.equal(marked.lifecycle?.integrity?.state, 'quarantined');
+  assert.equal(marked.lifecycle?.integrity?.code, 'RUN_PAYLOAD_HASH_MISMATCH');
+  assert.equal(second.api.getIncludedRuns().some(r => r.runId === rec.run.runId), false, 'a hash-mismatched payload contributes zero games');
+  const basis = second.api.getEvidenceBasis();
+  assert.equal(basis.quarantinedCount, 1);
+  assert.ok(basis.integrityFailures.some(f => f.runId === rec.run.runId));
+  const evidence = second.api.collectExperimentEvidence();
+  assert.equal(evidence.quarantinedCount, 1);
+  assert.equal(evidence.runs.find(r => r.runId === rec.run.runId).integrity, 'quarantined');
+  await assert.rejects(() => second.api.setRunIncluded(rec.run.runId, { force: true }), /RUN_CORRUPTED/, '"Include anyway" must never override cryptographic corruption');
+  await assert.rejects(() => second.api.isolateRun(rec.run.runId), /RUN_CORRUPTED/);
+});
+
+test('P2 — a stored record whose sealed evidence fields are tampered loads as corrupt: inspectable, never contributes, cannot be force-included', async () => {
+  const idb = createFakeIndexedDB();
+  const first = await experimentController();
+  await first.api.initExperiments({ bootSummaries: [fakeSummary(100)], store: new ExperimentStore(idb) });
+  const rec = await first.api.recordCampaignRun(campaignArgs);
+  // Corrupt the sealed record in place (live-object mutation via fake get).
+  const raw = new ExperimentStore(idb);
+  await raw.open();
+  (await raw.getRun(rec.run.runId)).metrics.matchCount = 9999;
+
+  const second = await experimentController();
+  await second.api.initExperiments({ bootSummaries: [fakeSummary(100)], store: new ExperimentStore(idb) });
+  const listed = second.api.getExperimentRuns().find(r => r.runId === rec.run.runId);
+  assert.ok(listed, 'corrupt record is surfaced, never silently deleted');
+  assert.equal(listed.corrupt, true);
+  assert.equal(listed.corruptCode, 'RUN_HASH_MISMATCH');
+  assert.equal(second.api.getIncludedRuns().some(r => r.runId === rec.run.runId), false, 'includedRunId → corrupt record yields zero contribution');
+  await assert.rejects(() => second.api.setRunIncluded(rec.run.runId, { force: true }), /RUN_CORRUPTED/);
+  const basis = second.api.getEvidenceBasis();
+  assert.equal(basis.corruptCount, 1);
+  assert.ok(basis.integrityFailures.some(f => f.runId === rec.run.runId && f.state === 'corrupt'));
+  assert.equal(second.api.collectExperimentEvidence().runs.find(r => r.runId === rec.run.runId).integrity, 'corrupt');
+});
+
+test('dossier discloses quarantined/corrupt runs and why they were excluded', () => {
+  const bad = mkRun(1);
+  const experiments = {
+    available: true, experimentId: DEFAULT_EXPERIMENT_ID,
+    analysisSetId: `${DEFAULT_EXPERIMENT_ID}/${DEFAULT_ANALYSIS_SET_ID}`,
+    persisted: true, includedRunIds: [], includedRunCount: 0, includedGames: 0,
+    excludedRunCount: 1, excludedGames: 0, totalRuns: 1,
+    invalidatedCount: 0, archivedCount: 0, failedCount: 0,
+    corruptCount: 0, quarantinedCount: 1, payloadUnavailableCount: 0,
+    integrityFailures: [{ runId: bad.runId, state: 'quarantined', code: 'RUN_PAYLOAD_HASH_MISMATCH' }],
+    bundledBaselineContributing: false, fallback: null,
+    runs: [{ runId: bad.runId, ordinal: 1, status: 'COMPLETED', lifecycle: 'active', included: false, integrity: 'quarantined', integrityCode: 'RUN_PAYLOAD_HASH_MISMATCH', integrityNote: 'payload tampered', rulesVersion: '4.3.1', engineVersion: '4.2.6', runHash: bad.runHash }],
+    warnings: [],
+  };
+  const dossier = buildAnalysisDossier({ observatory: { datasetOrigin: 'CERTIFIED_CORPUS', summaries: [] }, aggregate: null, versions: {}, experiments });
+  assert.equal(dossier.experiment.quarantinedCount, 1);
+  assert.equal(dossier.experiment.integrityFailures[0].code, 'RUN_PAYLOAD_HASH_MISMATCH');
+  assert.equal(dossier.experiment.runs[0].integrity, 'quarantined');
+  assert.equal(dossier.experiment.runs[0].integrityCode, 'RUN_PAYLOAD_HASH_MISMATCH');
+  assert.match(dossier.experiment.exclusionReason ?? '', /quarantined/);
 });

@@ -8,5 +8,5 @@ if(ui.status!=='PASS')throw new Error('BROWSER_UI_REPORT_NOT_PASS');
 if(parity.status!=='PASS')throw new Error('BROWSER_PARITY_REPORT_NOT_PASS');
 if(parity.profileId!=='core-advanced-authority'||parity.engineVersion!==info.engineVersion||parity.rulesVersion!==info.rulesVersion)throw new Error('BROWSER_PARITY_SCOPE_MISMATCH');
 if(parity.certifiedReplayCount<121||!Object.values(parity.parity).every(Boolean))throw new Error('BROWSER_PARITY_EVIDENCE_INCOMPLETE');
-if(ui.campaign?.matchCount!==1||ui.campaign?.abortCount!==0||!String(ui.campaign?.status).startsWith('PASS'))throw new Error('BROWSER_UI_CAMPAIGN_INCOMPLETE');
+if(ui.campaign?.matchCount!==1||ui.campaign?.abortCount!==0||!(ui.campaign?.state==='complete'||String(ui.campaign?.status).startsWith('PASS')))throw new Error('BROWSER_UI_CAMPAIGN_INCOMPLETE');
 console.log(`BROWSER PROOF REPORTS PASS: replays=${parity.certifiedReplayCount}; uiCampaign=${ui.campaign.matchCount}`);
