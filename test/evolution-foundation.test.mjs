@@ -1,3 +1,4 @@
+import * as browserCapacity from '../packages/simulation-runtime/src/browser-capacity.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { hashCanonical } from '@intrilex/shared';
@@ -20,7 +21,7 @@ const semanticMetrics=({meanGameDurationMs:_meanGameDurationMs,...metrics}) => m
 async function browserAdapter(file, expression, globals = {}) {
   const source = (await readFile(file, 'utf8')).replace(/^import .*;\r?$/gm, '').replace(/^export /gm, '');
   return runInNewContext(`${source}\n${expression}`, {
-    createLabRun, validateCheckpoint, summarizeRecords, LAB_LIMITS,
+    ...browserCapacity, createLabRun, validateCheckpoint, summarizeRecords, LAB_LIMITS,
     EvolutionSession, performance, setTimeout, clearTimeout, TextEncoder, ...globals,
   });
 }

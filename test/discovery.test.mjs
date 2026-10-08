@@ -930,7 +930,7 @@ test('real engine: mechanic telemetry reaches stage cells and a clean run comple
 
 // ── Browser layer (static wiring + fake store contract) ────────────
 
-test('browser wiring: workspace, router, store v5, and build copy list', async () => {
+test('browser wiring: workspace, router, store v6, and build copy list', async () => {
   const { readFile } = await import('node:fs/promises');
   const ws = await readFile('apps/lab-web/src/workspaces/discover.js', 'utf8');
   assert.match(ws, /export function renderDiscover/);
@@ -954,7 +954,7 @@ test('browser wiring: workspace, router, store v5, and build copy list', async (
   assert.match(runner, /resumeStageRun/);
   assert.match(runner, /export async function resolveEvidenceScope/);
   const store = await readFile('apps/lab-web/src/evolution/evolution-store.mjs', 'utf8');
-  assert.match(store, /intrilex-evolution-lab', 5\)/);
+  assert.match(store, /intrilex-evolution-lab', 6\)/);
   assert.match(store, /createObjectStore\('discoveryRuns'/);
   assert.match(store, /createObjectStore\('discoveries'/);
   assert.match(store, /saveDiscoveryRun/);
@@ -1026,7 +1026,7 @@ test('evidence snapshot reconciles selected vs admissible with reason-coded excl
   foreign.identity = { ...structuredClone(IDENT), fingerprint: 'f'.repeat(64) };
   const imported = fakeRun('value', 'tempo', { games: 10, seed: 3 });
   imported.evidenceOrigin = 'IMPORTED_UNVERIFIED';
-  const noRecords = { runId: 'EL-NORECORDS', identity: { fingerprint: IDENT.fingerprint }, evidenceOrigin: 'LOCAL' };
+  const noRecords = { runId: 'EL-NORECORDS', identity: { fingerprint: IDENT.fingerprint, analysisFingerprint:IDENT.analysisFingerprint }, evidenceOrigin: 'LOCAL' };
   const snap = createEvidenceSnapshot([good, foreign, imported, noRecords], IDENT, { unreadableRunIds: ['EL-GONE'], historyRunCount: 7, truncatedRunCount: 2 });
   assert.equal(snap.selectedRunCount, 5);
   assert.equal(snap.selectedGameCount, 30);

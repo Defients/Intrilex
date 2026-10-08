@@ -37,7 +37,7 @@ export function batchConfigHtml(state, { disabled = false, rulesOptions = [] } =
   return `<div class="evo-filterbar bm-config">
     <button id="evo-batch-select-all" class="ghost-button" type="button" ${d}>Select all compatible</button>
     <button id="evo-batch-clear" class="ghost-button" type="button" ${d}>Clear</button>
-    <label>Games / matchup (even)<input id="evo-batch-games" type="number" min="2" max="10000" step="2" value="${state.games}" list="bm-games-presets" ${d}><datalist id="bm-games-presets"><option value="32"></option><option value="64"></option><option value="128"></option><option value="256"></option></datalist></label>
+    <label>Games / matchup (even; browser max 100, deep max 10)<input id="evo-batch-games" type="number" min="2" max="100" step="2" value="${state.games}" list="bm-games-presets" ${d}><datalist id="bm-games-presets"><option value="32"></option><option value="64"></option><option value="100"></option></datalist></label>
     <label>Matrix seed<input id="evo-batch-seed" type="number" min="1" max="4294967295" step="1" value="${state.seed}" ${d}></label>
     <label>Workers<select id="evo-batch-workers" ${d}>${[1, 2, 4].map(n => `<option ${n === state.workers ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
     <label>Rules profile<select id="evo-batch-profile" ${d}>${rulesOptions.map(([id, label]) => `<option value="${id}" ${state.profileId === id ? 'selected' : ''}>${label}</option>`).join('')}</select></label>

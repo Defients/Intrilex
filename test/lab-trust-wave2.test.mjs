@@ -243,9 +243,9 @@ function executionFixture(overrides={}) {
   const timers={setTimeout(fn){const id=++next;timeouts.set(id,fn);return id;},clearTimeout(id){timeouts.delete(id);},setInterval(){return ++next;},clearInterval(){}};
   const execution={runId:'driver-run',ownerId:'owner',fencingToken:1};
   const driver=campaignExecution({execution,timers,epochId:'test-epoch',commit:async x=>{calls.push(['commit',x.ordinalStart]);},seal:async()=>{calls.push(['seal']);return {};},fail:async cause=>calls.push(['failed',cause.code ?? cause.message]),cancel:async()=>calls.push(['cancelled']),...overrides});
-  const worker=()=>({postMessage(request){this.request=request;},terminate(){this.terminated=true;}});
+  const worker=()=>({postMessage(request){if(request.type!=='autonomy-campaign-ack')this.request=request;},terminate(){this.terminated=true;}});
   const a=worker(),b=worker();driver.attach(a,{index:0,config:{}});driver.attach(b,{index:1,config:{}});
-  const emit=(w,message)=>w.onmessage?.({data:{workerIndex:w.request.workerIndex,execution:w.request.execution,...message}});
+  const emit=(w,message)=>w.onmessage?.({data:{workerIndex:w.request.workerIndex,execution:w.request.execution,batchSequence:0,...message}});
   return {driver,calls,a,b,emit,timeouts};
 }
 const tick=async()=>{for(let i=0;i<8;i++)await Promise.resolve();};
@@ -255,9 +255,9 @@ test('R04: first failed commit rejects queued batches and completion; one termin
   const f=executionFixture({commit:x=>{commits.push(x.ordinalStart);return new Promise((_,j)=>{reject=j;});}});
   const late=f.a.onmessage;
   f.emit(f.a,{type:'autonomy-campaign-batch',ordinalStart:0});
-  f.emit(f.a,{type:'autonomy-campaign-batch',ordinalStart:2});
+  f.emit(f.b,{type:'autonomy-campaign-batch',ordinalStart:2});
   await tick();
-  f.emit(f.a,{type:'autonomy-segment-result',ok:true});f.emit(f.b,{type:'autonomy-segment-result',ok:true});
+  // A compliant producer waits for its commit receipt before completion.
   reject(Object.assign(new Error('quota'),{code:'QUOTA'}));
   const result=await f.driver.done;
   late({data:{type:'autonomy-campaign-batch',workerIndex:0,execution:f.driver.token,ordinalStart:4}});

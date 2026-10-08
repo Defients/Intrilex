@@ -80,7 +80,7 @@ export async function buildResearchEvidencePackage({ onProgress = null } = {}) {
         ...runStub,
         evidenceBearing: bearing && envelope.payload?.evidence?.kind !== 'none',
         fidelity: runDecisionFidelity(envelope.payload.run, { sampleSummaries: summaries }),
-        replayCoverage: replayCoverageForSummaries(summaries),
+        replayCoverage: replayCoverageForSummaries(summaries,{run:envelope.payload.run,implementation:LAB_IDENTITY}),
         artifactFile: `runs/${row.runId}.json`,
       });
       files[`runs/${row.runId}.json`] = JSON.stringify(envelope);

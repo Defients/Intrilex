@@ -139,12 +139,12 @@ export function createEvidenceSnapshot(runs, identity, { unreadableRunIds = [], 
   };
   for (const run of runs ?? []) {
     if (Array.isArray(run?.records)) selectedGameCount += run.records.length;
-    if (run?.identity?.fingerprint !== identity.fingerprint) exclude(run?.runId ?? 'unknown', EVIDENCE_EXCLUSION.FOREIGN_FINGERPRINT);
+    if (run?.identity?.fingerprint !== identity.fingerprint || run?.identity?.analysisFingerprint !== identity.analysisFingerprint) exclude(run?.runId ?? 'unknown', EVIDENCE_EXCLUSION.FOREIGN_FINGERPRINT);
     else if (run.evidenceOrigin === 'IMPORTED_UNVERIFIED') exclude(run.runId, EVIDENCE_EXCLUSION.IMPORTED_UNVERIFIED);
     else if (!Array.isArray(run.records)) exclude(run.runId, EVIDENCE_EXCLUSION.MISSING_RECORDS);
     else {
       try {
-        const summaries=observatorySummariesForRun(run),admission=admitSummaries(summaries,{expectedCount:run.records.length});
+        const summaries=observatorySummariesForRun(run),admission=admitSummaries(summaries,{run,expectedCount:run.records.length});
         if(!admission.eligible)exclude(run.runId,EVIDENCE_EXCLUSION.RESTRICTED);
         else if(!STATIC_POLICIES.includes(run.config.botA) || !STATIC_POLICIES.includes(run.config.botB))exclude(run.runId,EVIDENCE_EXCLUSION.SUBJECT);
         else eligible.push(run);

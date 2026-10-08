@@ -10,9 +10,9 @@
 // season picker — this page is an index/summary.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc } from '../state.js?v=f576f69f79ad';
-import { fetchSeasons } from '../play/ranked/leaderboard-data.js?v=f576f69f79ad';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=f576f69f79ad';
+import { app, esc } from '../state.js?v=5e0a78513ea5';
+import { fetchSeasons } from '../play/ranked/leaderboard-data.js?v=5e0a78513ea5';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=5e0a78513ea5';
 import { SeasonStatus } from "../account-domain/seasons.mjs";
 
 const _state = {

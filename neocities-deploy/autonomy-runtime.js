@@ -1,6 +1,6 @@
-import { LAB_IDENTITY } from './evolution/identity.mjs?v=f576f69f79ad';
-import { sampleIdentity, commandStreamStart, nextCommandDigest, outcomeIdentity } from './evolution/evidence-identity.mjs?v=f576f69f79ad';
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=f576f69f79ad';
+import { LAB_IDENTITY } from './evolution/identity.mjs?v=5e0a78513ea5';
+import { sampleIdentity, commandStreamStart, nextCommandDigest, outcomeIdentity } from './evolution/evidence-identity.mjs?v=5e0a78513ea5';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=5e0a78513ea5';
 import {
   IntrilexEngine,
   createMatchState,
@@ -11,19 +11,19 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=f576f69f79ad';
+} from './engine/browser-entry.js?v=5e0a78513ea5';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
 import { actionSemantics } from './engine-adapter/action-semantics.mjs';
-import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=f576f69f79ad';
-import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=f576f69f79ad';
-import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame, effectiveAdaptiveMode } from './evolution/adaptive-strategy.mjs?v=f576f69f79ad';
-import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=f576f69f79ad';
-import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=f576f69f79ad';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=f576f69f79ad';
-import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=f576f69f79ad';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=f576f69f79ad';
+import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=5e0a78513ea5';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=5e0a78513ea5';
+import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame, effectiveAdaptiveMode } from './evolution/adaptive-strategy.mjs?v=5e0a78513ea5';
+import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=5e0a78513ea5';
+import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=5e0a78513ea5';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=5e0a78513ea5';
+import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=5e0a78513ea5';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=5e0a78513ea5';
 
-export { createAdaptiveController, resolveAdaptiveControllers, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=f576f69f79ad';
+export { createAdaptiveController, resolveAdaptiveControllers, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=5e0a78513ea5';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];

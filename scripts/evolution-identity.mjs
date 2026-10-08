@@ -77,7 +77,7 @@ export async function evolutionIdentity({ readSource = name => readFile(path.joi
   const analysis = await closure([...IDENTITY_DEPENDENCIES.analysis, ...instrumentation]);
   // Reviewed orchestration leaves: their scientific dependencies are already
   // in the closure; UI/router imports do not define the experiment protocol.
-  for(const name of ['apps/lab-web/src/experiment-controls.js','apps/lab-web/src/experiments/experiment-controller.mjs','apps/lab-web/src/workspaces/evolution-dashboard.js','apps/lab-web/src/workspaces/meta-atlas.js'])analysis.push([name,hashCanonical((await readSource(name)).replace(/\r\n/g,'\n'))]);
+  for(const name of ['apps/lab-web/src/experiment-controls.js','apps/lab-web/src/experiments/experiment-controller.mjs','apps/lab-web/src/evolution/evolution-store.mjs','apps/lab-web/src/workspaces/evolution-dashboard.js','apps/lab-web/src/workspaces/meta-atlas.js'])analysis.push([name,hashCanonical((await readSource(name)).replace(/\r\n/g,'\n'))]);
   analysis.sort(([a],[b])=>a.localeCompare(b));
   const engineHash = hashCanonical(execution.filter(([n]) => n.startsWith('runtime/autonomy-engine-dist/')));
   const policyImplementationHash = hashCanonical(execution.filter(([n]) => /^packages\/(policies|game-ai|policy-sdk)\//.test(n)));

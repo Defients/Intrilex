@@ -1,7 +1,7 @@
-import { sha256Text } from "./engine/hash.js?v=f576f69f79ad";
-import { tacticalBase, tacticalScore } from './tactics.mjs?v=f576f69f79ad';
-import { CONTROL_CONVERSION_ID, controlConversionScore } from './control-conversion.mjs?v=f576f69f79ad';
-export { evaluateAction, ACTION_PURPOSES, recordActionCoverage } from './action-evaluation.mjs?v=f576f69f79ad';
+import { sha256Text } from "./engine/hash.js?v=5e0a78513ea5";
+import { tacticalBase, tacticalScore } from './tactics.mjs?v=5e0a78513ea5';
+import { CONTROL_CONVERSION_ID, controlConversionScore } from './control-conversion.mjs?v=5e0a78513ea5';
+export { evaluateAction, ACTION_PURPOSES, recordActionCoverage } from './action-evaluation.mjs?v=5e0a78513ea5';
 
 // ── Default scoring weights (parameterized for tuning and sensitivity analysis) ──
 // Provenance: hand-tuned baseline from v0.10.0. Each weight can be overridden

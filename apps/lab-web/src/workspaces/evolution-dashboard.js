@@ -1,3 +1,4 @@
+import { BROWSER_CAPACITY, assertBrowserCapacity, evidenceBudget, jsonBytes, browserSizeEstimate } from '../evolution/browser-capacity.mjs';
 import { admitSummaries, selectEvidence, analyticsSummaries, publishEvidenceSnapshot, markEvidenceSnapshotStale } from '../evolution/evidence-admission.mjs';
 import { acknowledgedSave, persistenceLabel } from '../evolution/persistence-state.mjs';
 import '../evolution/evolution-training-ui.js';
@@ -21,20 +22,20 @@ import { EvolutionStore, parseLabImport } from '../evolution/evolution-store.mjs
 import { StrategyStore } from '../strategy/strategy-store.mjs';
 import { createStrategyEvidenceWriter, ingestRunEvidence } from '../evolution/strategy-live.mjs';
 import { observatorySummariesForRun, observatoryCoverage } from '../evolution/observatory-bridge.mjs';
-import { collectExperimentEvidence, exportRunArtifactText, exportAllRunArtifacts, importRunArtifact } from '../experiments/experiment-controller.mjs';
+import { aggregateBoundedEvidence, collectExperimentEvidence, exportRunArtifactText, exportAllRunArtifacts, importRunArtifact } from '../experiments/experiment-controller.mjs';
 import { importResearchPackageText, downloadResearchPackage } from '../experiments/research-package.mjs';
 import { openManageRuns } from '../experiment-controls.js';
 
 const store = new EvolutionStore(LAB_IDENTITY);
-// Strategy evidence is a separate persistence concern from the monolithic
-// Arena artifact: every finalized accepted game is streamed to its own sealed
+// Strategy evidence is a separate persistence concern from the incremental
+// Arena checkpoint: every finalized accepted game is streamed to its own sealed
 // store while the series is still running.
 const strategies = new StrategyStore();
 const profiles = new ProfileStore(new IndexedDbBackend(), { identity: LAB_IDENTITY });
 let roster = [], rosterRequest = 0, startRequest = 0;
 let starting = false;
 const seatChoice = (cfg, i) => run()?.arenaProfiles?.snapshots?.[i]?.profile ? profileChoice(run().arenaProfiles.snapshots[i].profile.agentProfileId) : (i ? cfg.botB : cfg.botA);
-const view = { config: { botA:'tempo-tactical', botB:'value-tactical', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
+const view = { config: { botA:'tempo-tactical', botB:'value-tactical', gameCount:100, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
   session:null, workers:[], timers:new Map(), tick:null, start:0, elapsed:0, agg:createSeriesAggregator(), samples:[],
   archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), saveRevision:0, persistenceState:'SESSION_ONLY', ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null, strategyWriter:null, strategyStats:null, batchWriter:null };
 const run = () => view.archive ?? view.session?.run;
@@ -89,12 +90,13 @@ export function renderEvolutionLab() {
       <button id="evo-reset" class="ghost-button" data-testid="evo-reset" ${disabled}>Reset</button></div></div>
     <div class="panel-body"><div class="notice">Experimental local heuristic evolution is available in Research experiments. The shipped baseline policies remain frozen. All rule execution uses the authoritative engine. HybriX admission awaits separate reproducibility checks.</div>
     ${historical ? '<p class="notice">Historical research series. Inspect its immutable evidence below; use Research to evaluate a selected checkpoint, or Reset to start a frozen-policy series.</p>' : ''}
+    <p class="notice">Browser series: up to 100 ordinary games or 10 deep games. Record-size estimate: ~${(browserSizeEstimate(cfg).bytes/1000000).toFixed(1)} MB, based on the October 7, 2026 audit workload; varies by policy and tracing and excludes archive overhead. Storage failures stop execution; the estimate is not a guarantee.</p>
     <p id="evo-error" class="danger" role="alert">${esc(view.error)}</p>
     ${run()?.evidenceOrigin === 'IMPORTED_UNVERIFIED' ? '<div class="notice">Imported evidence: checksums and compatibility passed. Outcome claims have not been independently reproduced. Replay inspection verifies one retained command sequence at a time.</div>' : ''}
     <div class="evo-config" data-testid="evo-config"><div class="evo-vs-grid">
       <label class="evo-bot-select">Bot A<select id="evo-bot-a" ${disabled}>${arenaOptions(seatChoice(cfg,0),cfg.profileId)}</select></label><div class="evo-vs">vs</div>
       <label class="evo-bot-select">Bot B<select id="evo-bot-b" ${disabled}>${arenaOptions(seatChoice(cfg,1),cfg.profileId)}</select></label></div>
-      <p><button id="evo-profiles-refresh" type="button">Refresh Custom Profiles</button> <span id="evo-profile-status" role="status">Loading Custom Profiles...</span></p><div class="evo-config-row"><label class="field">Games<input id="evo-games" type="number" min="1" max="10000" step="1" value="${cfg.gameCount}" ${disabled}></label>
+      <p><button id="evo-profiles-refresh" type="button">Refresh Custom Profiles</button> <span id="evo-profile-status" role="status">Loading Custom Profiles...</span></p><div class="evo-config-row"><label class="field">Games<input id="evo-games" type="number" min="1" max="100" step="1" value="${cfg.gameCount}" ${disabled}></label>
       <label class="field">Seed (0 becomes 1)<input id="evo-seed" type="number" min="0" max="4294967295" step="1" value="${cfg.seed}" ${disabled}></label>
       <label class="field">Workers<select id="evo-workers" ${disabled}>${[1,2,4].map(n => `<option ${n === cfg.workerCount ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="field">Rules profile<select id="evo-profile" ${disabled}>${[['core-advanced-authority','Advanced Core'],['core-unrestricted-authority','Unrestricted Core'],['first-contact-trigger-closure','Complete First Contact']].map(([id,label]) => `<option value="${id}" ${cfg.profileId === id ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
@@ -107,7 +109,7 @@ export function renderEvolutionLab() {
     <div class="evo-chart-wrap evo-analytics"><h3>Arena analytics</h3><div class="evo-filterbar"><label>Rolling window<select id="evo-chart-window">${[25,50,100,200].map(n=>`<option value="${n}" ${view.analytics.window===n?'selected':''}>${n} clean games</option>`).join('')}</select></label><label>From game<input id="evo-chart-from" type="number" min="1" max="10000" value="${view.analytics.from}"></label><label>Through game<input id="evo-chart-to" type="number" min="1" max="10000" value="${view.analytics.to}"></label>${diagnosticFiltersHtml()}<button id="evo-chart-apply">Apply observational filters</button><span>View filters only · execution unchanged</span></div><p id="evo-chart-filter-error" role="status"></p><div id="evo-chart" data-testid="evo-chart">${chart()}</div></div>
     <section id="evo-batch-matrix" class="evo-section"></section>
     <section class="evo-section" data-testid="evo-benchmarks"><h3>Frozen benchmark arena</h3><p>Evaluate either selected bot against a shipped reference. This is measured performance for a reproducible seed suite, not a universal rating or an improvement claim.</p>
-      <div class="toolbar"><label>Reference<select id="evo-baseline" ${disabled}>${options('random-legal')}</select></label><label>Evaluation games (even)<input id="evo-eval-games" type="number" min="2" max="10000" step="2" value="100" ${disabled}></label>
+      <div class="toolbar"><label>Reference<select id="evo-baseline" ${disabled}>${options('random-legal')}</select></label><label>Evaluation games (even)<input id="evo-eval-games" type="number" min="2" max="100" step="2" value="100" ${disabled}></label>
       <button id="evo-evaluate-a" class="secondary-button" ${disabled}>Evaluate A</button><button id="evo-evaluate-b" class="secondary-button" ${disabled}>Evaluate B</button></div>
       <div id="evo-evaluation-results">${details()}</div></section>
     <section class="evo-section" data-testid="evo-checkpoints"><h3>Immutable checkpoint history</h3><p>Original checkpoint identities and generation state for this execution.</p>
@@ -208,22 +210,22 @@ async function refreshHistory() {
 // session — cohorts are never mixed — and is reversible via bootState.
 async function propagateToObservatory({cohort=document.getElementById('evo-evidence-cohort')?.value || null}={}) {
   try {
-    const entries=[],rows=await store.list();
+    const entries=[],rows=await store.list(),budget=evidenceBudget();
+    if(rows.length>BROWSER_CAPACITY.analysisSources || rows.reduce((n,r)=>n+r.games,0)>BROWSER_CAPACITY.analysisRows)throw new Error('EVIDENCE_ANALYSIS_CAPACITY_EXCEEDED');
     for(const row of rows){
       try {
         const {run}=await store.loadForInspection(row.runId);
-        const summaries=observatorySummariesForRun(run);
-        entries.push({id:run.runId,summaries,admission:admitSummaries(summaries,{expectedCount:run.records.length})});
-      } catch(error){entries.push({id:row.runId,summaries:[],admission:{eligible:false,classification:'INVALID_QUARANTINED',reasons:[error.code ?? 'EVIDENCE_UNREADABLE'],evidenceDigest:null}});}
+        const summaries=observatorySummariesForRun(run);budget.add(summaries);
+        entries.push({id:run.runId,summaries,admission:admitSummaries(summaries,{run,expectedCount:run.records.length})});
+      } catch(error){if(error.code==='EVIDENCE_ANALYSIS_CAPACITY_EXCEEDED')throw error;entries.push({id:row.runId,summaries:[],admission:{eligible:false,classification:'INVALID_QUARANTINED',reasons:[error.code ?? 'EVIDENCE_UNREADABLE'],evidenceDigest:null}});}
     }
     const selected=selectEvidence(entries,{cohort});
     if(!selected.summaries.length)throw new Error('EVIDENCE_NO_ADMISSIBLE_SAMPLES');
-    const {campaignAggregate,buildObservatoryAnalytics}=await import('../browser-analytics.js');
-    const analytical=analyticsSummaries(selected.summaries),aggregate=campaignAggregate(analytical,{profileId:null});
-    const observatory=buildObservatoryAnalytics({summaries:analytical,aggregate});
+    const analytical=analyticsSummaries(selected.summaries);
+    const {aggregate,observatory}=await aggregateBoundedEvidence(analytical,{profileId:null});
     const ids=entries.filter(e=>e.admission.eligible && e.admission.cohorts.includes(selected.selection.cohort)).map(e=>e.id);
-    publishEvidenceSnapshot(state,{aggregate,observatory:{...observatory,summaries:selected.summaries},basis:{includedRunIds:ids,includedRunCount:ids.length,includedGames:selected.summaries.length,
-      effectiveSampleCount:selected.summaries.length,repeatCount:selected.selection.repeatCount,selection:selected.selection},selection:selected.selection,origin:'EVOLUTION_LAB'});
+    publishEvidenceSnapshot(state,{aggregate,observatory:{...observatory,summaries:analytical},basis:{includedRunIds:ids,includedRunCount:ids.length,includedGames:selected.summaries.length,
+      effectiveSampleCount:selected.selection.effectiveSampleCount,repeatCount:selected.selection.repeatCount,selection:selected.selection},selection:selected.selection,origin:'EVOLUTION_LAB'});
     const cov=observatoryCoverage(selected.summaries);
     view.propagateStatus=`Propagated ${selected.summaries.length} distinct samples from ${ids.length} run(s); ${selected.selection.repeatCount} repeats counted once, ${selected.selection.rejected.length} restricted runs excluded. Telemetry coverage: ${cov.withRankDecisions}/${cov.matches} rank decisions. Session-scoped.`;
   }catch(error){if(error.cohorts)view.evidenceCohorts=error.cohorts;markEvidenceSnapshotStale(state,error);view.propagateStatus=`Propagation failed: ${error.message}. Previous coherent view retained.`;}
@@ -275,10 +277,10 @@ function storageStatus() {
 }
 function persist() {
   if (!run() || view.archive) return Promise.resolve();
-  const snapshot=structuredClone(run()); snapshot.elapsedMs=elapsed();
+  const snapshot=run(); snapshot.elapsedMs=elapsed();
   const revision=++view.saveRevision; view.persistenceState='PENDING'; if(view.mounted)storageStatus();
   const updateState=state=>{if(revision===view.saveRevision && run()?.runId===snapshot.runId){view.persistenceState=state;if(view.mounted)storageStatus();}};
-  view.saveChain=view.saveChain.then(() => acknowledgedSave(() => store.save(snapshot),updateState)).then(() => { if(revision===view.saveRevision && run()?.runId===snapshot.runId)view.storageError=''; return refreshHistory(); }).catch(error => {
+  view.saveChain=acknowledgedSave(() => store.save(snapshot),updateState).then(() => { if(revision===view.saveRevision && run()?.runId===snapshot.runId)view.storageError=''; return refreshHistory(); }).catch(error => {
     const detail=error?.artifactSize?` Artifact is ${(error.artifactSize/1048576).toFixed(1)} MiB vs the ${((error.persistLimit??0)/1048576).toFixed(0)} MiB browser archive limit.`:'';
     if(revision!==view.saveRevision || run()?.runId!==snapshot.runId)return;
     view.storageError=`Save failed: ${error.message}.${detail} The run remains in memory. ${strategyEvidenceNote()}`; if (view.mounted) storageStatus();
@@ -421,14 +423,15 @@ async function begin(kind,candidate) {
   try {
     const input=readConfig();
     if (kind === 'EVALUATION') { input.botA=candidate === 'B' ? input.botB : input.botA; input.botB=document.getElementById('evo-baseline').value; input.gameCount=Number(document.getElementById('evo-eval-games').value); input.mirrorSeats=true; }
+    assertBrowserCapacity(input);
     starting=true;
     for (const id of ['evo-run','evo-evaluate-a','evo-evaluate-b']) document.getElementById(id).disabled=true;
     text('evo-profile-status','Resolving exact participant checkpoints...');
     const saved=await createProfileArenaRun({...input,kind},LAB_IDENTITY,profiles);
     if (!view.mounted || request !== startRequest) return;
-    if (run()) persist();
+    if (run()) await persist();
     release(); ++view.saveRevision; view.persistenceState='SESSION_ONLY'; view.session=new EvolutionSession(saved); view.config={...saved.config,botA:input.botA,botB:input.botB}; view.elapsed=0; view.agg=createSeriesAggregator(); view.samples=[]; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null;
-    starting=false; persist(); launch();
+    starting=false; await persist(); if(view.persistenceState==='FAILED')throw new Error('EVOLUTION_CHECKPOINT_NOT_COMMITTED'); launch();
   } catch(error) {
     if (view.mounted && request === startRequest) { starting=false; view.error=`Configuration rejected: ${error.message}`; renderEvolutionLab(); }
   }
@@ -436,7 +439,7 @@ async function begin(kind,candidate) {
 
 function launch() {
   if (!view.session || !['IDLE','PAUSED'].includes(status())) return;
-  try { validateArtifact(artifactEnvelope(run()),LAB_IDENTITY); validateProfileArenaRun(run(),LAB_IDENTITY); }
+  try { assertBrowserCapacity(run().config); validateArtifact(artifactEnvelope(run()),LAB_IDENTITY); validateProfileArenaRun(run(),LAB_IDENTITY); }
   catch(error) { view.error=`Resume rejected: ${error.message}`; renderEvolutionLab(); return; }
   const owner=view.session, epoch=owner.start(); view.start=performance.now();
   // Every finalized accepted game registers in the analysis evidence index —
@@ -448,12 +451,13 @@ function launch() {
     worker.onmessage=async e => {
       const x=e.data; if (view.session !== owner || x.epoch !== epoch || status() !== 'RUNNING') return;
       try { if (x.type === 'evolution-fault') throw new Error(x.error); if (x.type !== 'evolution-evidence') return;
+        if(jsonBytes(x.evidence)>BROWSER_CAPACITY.batchBytes)throw new Error('EVOLUTION_EVIDENCE_BYTES_EXCEEDED');
         if (!view.session.accept(i,epoch,x.evidence)) return;
         clearTimeout(view.timers.get(i)); view.timers.delete(i); ingestGameRecord(view.agg,x.evidence.record); pushChartSample(view.samples,view.agg);
         // Bounded write queue: awaiting offer() applies backpressure before
         // the next ordinal is dispatched. Offer never rejects.
         await view.strategyWriter.offer(run(), x.evidence);
-        if (run().records.length % 250 === 0) persist(); if (status() === 'COMPLETE') { finish(); return; } dispatch(worker,i,epoch);
+        await persist(); if(view.persistenceState==='FAILED')throw new Error('EVOLUTION_CHECKPOINT_NOT_COMMITTED'); if (view.session!==owner || epoch!==owner.epoch)return; if (status() === 'COMPLETE') { finish(); return; } dispatch(worker,i,epoch);
       } catch(error) { failRun(error); }
     };
     worker.onerror=e => { if (view.session === owner && epoch === owner.epoch && status() === 'RUNNING') failRun(new Error(e.message || 'WORKER_FAILED')); }; dispatch(worker,i,epoch);
@@ -470,7 +474,7 @@ function captureElapsed() { view.elapsed+=performance.now()-view.start; if (run(
 function finish() { captureElapsed(); releaseWorkers(); persist(); void flushStrategyEvidence(); renderEvolutionLab(); }
 function pause() { if (status() !== 'RUNNING') return; captureElapsed(); view.session.pause(); releaseWorkers(); persist(); void flushStrategyEvidence(); renderEvolutionLab(); }
 function stop() { if (!active()) return; if (status() === 'RUNNING') captureElapsed(); view.session.stop(); releaseWorkers(); persist(); void flushStrategyEvidence(); renderEvolutionLab(); }
-function failRun(error) { if (status() !== 'RUNNING') return; captureElapsed(); view.session.error(error.message); view.error=error.message; releaseWorkers(); persist(); void flushStrategyEvidence(); if (view.mounted) renderEvolutionLab(); }
+function failRun(error) { if (!['RUNNING','COMPLETE'].includes(status())) return; captureElapsed(); view.session.error(error.message); view.error=error.message; releaseWorkers(); persist(); void flushStrategyEvidence(); if (view.mounted) renderEvolutionLab(); }
 function updateLive() {
   if (!view.mounted) return; const m=seriesMetrics(view.agg,elapsed()); text('evo-progress-count',`${fmt(m.gamesCompleted)} / ${fmt(run().config.gameCount)}`); text('evo-elapsed',num(elapsed()/1000)); text('evo-gps',num(m.gamesPerSec));
   text('evo-strategy-evidence',strategyEvidenceNote());

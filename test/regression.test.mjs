@@ -192,8 +192,8 @@ test('Defect #2: match count validation rejects invalid and exceeds-max counts',
 
 test('Defect #2: app.js preflight validates match count and rejects outside range', async () => {
   const js = await readFile('apps/lab-web/src/experiment-controls.js', 'utf8');
-  assert.match(js, /max="10000"/, 'input max should be 10000');
-  assert.match(js, /INVALID_MATCH_COUNT|outside permitted range/, 'preflight should reject invalid counts');
+  assert.match(js, /max="100"/, 'input max must agree with the restricted browser tier');
+  assert.match(js, /INVALID_MATCH_COUNT|outside the supported browser range/, 'preflight should reject invalid counts');
   assert.doesNotMatch(js, /Math\.min\(1000/, 'no silent Math.min(1000) clamp');
 });
 

@@ -1,3 +1,4 @@
+export { BROWSER_CAPACITY, evidenceBudget } from './browser-capacity.mjs';
 // ═══════════════════════════════════════════════════════════════
 // experiment-portability.mjs — portable evidence contracts for the
 // Experiment subsystem (platform-neutral, no I/O).
@@ -29,6 +30,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { hashCanonical } from '@intrilex/shared';
+import { sampleIdentity } from './evidence-identity.mjs';
 import { createEvidenceAdmission, admitSummaries, hasDecisionEvidence, validateEvidenceBatch } from './evidence-admission.mjs';
 export { createEvidenceAdmission, admitSummaries, validateEvidenceBatch, selectEvidence, analyticsSummaries, publishEvidenceSnapshot, markEvidenceSnapshotStale, evidenceDigest } from './evidence-admission.mjs';
 import {
@@ -91,8 +93,8 @@ export function runDecisionFidelity(run, { sampleSummaries = null } = {}) {
 
 /**
  * Replay coverage for a run. Experiment campaign summaries carry no retained
- * command transcripts; every accepted match is re-executable from
- * seed+ordinal+configuration, which is reproducibility, not a replay.
+ * command transcripts. Reproducibility requires retained executable inputs
+ * and an available matching implementation; an ordinal is not sufficient.
  */
 export function replayCoverageForSummaries(summaries, { run = null, implementation = null } = {}) {
   const list = summaries ?? [];
@@ -101,9 +103,17 @@ export function replayCoverageForSummaries(summaries, { run = null, implementati
     gamesReproducible: list.filter(s => {
       const id = s.identity;
       const cfg = run?.config;
-      return s.seed != null && id?.sampleInputs && id.subjectDigests?.length === 2 && cfg?.policyIds?.length === 2 &&
-        implementation?.fingerprint === id.executionFingerprint && implementation?.analysisFingerprint === id.analysisFingerprint &&
-        (!cfg.policyIds.includes('weighted-heuristic') || cfg.policyStates?.some(Boolean));
+      const inputs=id?.sampleInputs;
+      if(s.seed == null || !inputs || id.subjectDigests?.length!==2 || cfg?.policyIds?.length!==2 ||
+        implementation?.fingerprint!==id.executionFingerprint || implementation?.analysisFingerprint!==id.analysisFingerprint ||
+        cfg.policyIds.some((policy,i)=>policy==='weighted-heuristic-v1' && !cfg.policyStates?.[i]) ||
+        (inputs.initialStateHash && !cfg.initialState))return false;
+      try {
+        const retained=sampleIdentity({...cfg,seed:s.seed,profileId:inputs.profileId,ruleOverrides:inputs.ruleOverrides,
+          seatOrder:inputs.seatOrder,seedStreamVersion:inputs.seedStreamVersion,seedCatalogVersion:inputs.seedCatalogVersion,
+          decisionLimit:inputs.decisionLimit,orchestrationCommandLimit:inputs.orchestrationCommandLimit},implementation);
+        return retained.deterministicSampleId===id.deterministicSampleId;
+      }catch{return false;}
     }).length,
     totalGames: list.length,
   };
@@ -369,7 +379,7 @@ ${pkg.manifest.strategyEvidence.present ? '- strategy/evidence.json  — decisio
 
 - Run artifacts: ${pkg.manifest.runArtifacts.included}/${pkg.manifest.runArtifacts.expected} included${pkg.manifest.runArtifacts.missingRunIds.length ? ` (missing: ${pkg.manifest.runArtifacts.missingRunIds.join(', ')})` : ''}
 - Decision evidence: ${pkg.manifest.strategyEvidence.fidelity}
-- Replay transcripts: ${pkg.manifest.replayCoverage.gamesWithFullTranscript} retained / ${pkg.manifest.replayCoverage.totalGames} games (${pkg.manifest.replayCoverage.gamesReproducible} reproducible by ordinal+seed)
+- Replay transcripts: ${pkg.manifest.replayCoverage.gamesWithFullTranscript} retained / ${pkg.manifest.replayCoverage.totalGames} games (${pkg.manifest.replayCoverage.gamesReproducible} reproducible from retained inputs and matching code)
 ${pkg.manifest.warnings.length ? `\n## Warnings\n${pkg.manifest.warnings.map(w => `- ${w}`).join('\n')}\n` : ''}`;
 
 /**

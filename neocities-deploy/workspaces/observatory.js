@@ -3,14 +3,14 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=f576f69f79ad';
-import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow, scatterPlot, intervalPlot } from '../chart-toolkit.js?v=f576f69f79ad';
-import { wilsonInterval } from '../observatory-analytics-browser.js?v=f576f69f79ad';
-import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js?v=f576f69f79ad';
-// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=f576f69f79ad') to break backedge
-import { rerender } from '../rerender.js?v=f576f69f79ad';
-import { openReplay, descriptorKindForRecord, recordAvailability } from '../data-loader.js?v=f576f69f79ad';
-import { classifyIndexRecord, REPLAY_ARTIFACT_CLASS, ARTIFACT_CLASS_LABEL } from '../replay-contract.mjs?v=f576f69f79ad';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=5e0a78513ea5';
+import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow, scatterPlot, intervalPlot } from '../chart-toolkit.js?v=5e0a78513ea5';
+import { wilsonInterval } from '../observatory-analytics-browser.js?v=5e0a78513ea5';
+import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js?v=5e0a78513ea5';
+// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=5e0a78513ea5') to break backedge
+import { rerender } from '../rerender.js?v=5e0a78513ea5';
+import { openReplay, descriptorKindForRecord, recordAvailability } from '../data-loader.js?v=5e0a78513ea5';
+import { classifyIndexRecord, REPLAY_ARTIFACT_CLASS, ARTIFACT_CLASS_LABEL } from '../replay-contract.mjs?v=5e0a78513ea5';
 
 // Generic segmented-control binder shared by the workspace display modes.
 // Each button carries data-seg-id (state key) + data-seg-value.
@@ -593,7 +593,7 @@ export async function renderOpeningPatterns() {
   let idx = state.traceIndex;
   if (!idx) {
     try {
-      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=f576f69f79ad');
+      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=5e0a78513ea5');
       idx = await loadTraceIndex();
       if (!idx || !idx.records) {
         return `<div class="ix-chart-empty" data-testid="opening-patterns-empty">No decision traces available. Run a campaign with decision traces enabled to analyze opening patterns.</div>`;
@@ -606,7 +606,7 @@ export async function renderOpeningPatterns() {
     }
   }
   // If traceIndex exists but trace data isn't preloaded, load it
-  const { loadTraceData } = await import('../data-loader.js?v=f576f69f79ad');
+  const { loadTraceData } = await import('../data-loader.js?v=5e0a78513ea5');
   const traceFiles = await Promise.all(idx.records.map(r => loadTraceData(r.matchId)));
   return _renderOpeningPatternsFromTraces(idx.records, traceFiles);
 }

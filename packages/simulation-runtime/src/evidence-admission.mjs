@@ -4,7 +4,7 @@ import { createManifestHeadline, foldSummariesIntoHeadline } from './experiment-
 const fault = code => { throw Object.assign(new Error(code), { code }); };
 const digest = value => typeof value==='string' && /^[a-f0-9]{64}$/.test(value);
 const freeze = value => {if(value && typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
-const supported = value => value == null || ['4.1.0', '1.0.0', 1].includes(value);
+const supported = value => value == null || ['4.0.0', '4.1.0', '1.0.0', 1].includes(value);
 export const evidenceDigest = value => hashCanonical(value);
 export const hasDecisionEvidence = s => !!(s?.strategicTelemetry || s?.strategyDecisions?.length || s?.decisions?.some(d => d?.candidateScores?.length));
 
@@ -29,6 +29,7 @@ export function admitPairedEvidence(measurement, manifest) {
   if(!Array.isArray(body.matchups))fault('EVIDENCE_MEASUREMENT_INVALID');
   if(body.status==='COMPLETE' && body.matchups.length!==manifest.body.opponents.length)fault('EVIDENCE_MEASUREMENT_INCOMPLETE');
   for(const matchup of body.matchups){
+    if(body.status==='COMPLETE' && matchup.status!=='COMPLETE')fault('EVIDENCE_MEASUREMENT_INCOMPLETE');
     if(opponents.has(matchup.opponentCheckpointId))fault('EVIDENCE_OPPONENT_DUPLICATE');opponents.add(matchup.opponentCheckpointId);
     if(!Array.isArray(matchup.blocks))fault('EVIDENCE_BLOCKS_INVALID');
     const seeds=new Set();let clean=0,complete=0,score=0;
@@ -38,11 +39,18 @@ export function admitPairedEvidence(measurement, manifest) {
       if(block.ab!==null && block.ba!==null){complete++;score+=(block.ab+block.ba)/2;}
     }
     if(matchup.status==='COMPLETE' && (matchup.metrics.games!==matchup.plannedGames || matchup.blocks.length*2!==matchup.plannedGames))fault('INCOMPLETE_BLOCKS');
-    if(matchup.metrics.clean!==clean || matchup.metrics.pairCount!==complete ||
+    if(!Number.isInteger(matchup.metrics.games) || matchup.metrics.games<0 || !Number.isInteger(matchup.metrics.aborted) || matchup.metrics.aborted<0 ||
+      (matchup.status==='COMPLETE' && matchup.metrics.games!==matchup.blocks.length*2) || matchup.metrics.clean!==clean || matchup.metrics.pairCount!==complete ||
       matchup.metrics.games!==clean+matchup.metrics.aborted ||
-      (complete ? Math.abs(matchup.metrics.pairedScore-score/complete)>1e-12 : matchup.metrics.pairedScore!==null))fault('EVIDENCE_MEASUREMENT_COUNTS_MISMATCH');
+      (complete ? !Number.isFinite(matchup.metrics.pairedScore) || Math.abs(matchup.metrics.pairedScore-score/complete)>1e-12 : matchup.metrics.pairedScore!==null))fault('EVIDENCE_MEASUREMENT_COUNTS_MISMATCH');
     games+=matchup.metrics.games;pairs+=complete;
   }
+  const weights=body.aggregate?.weights;
+  if(!weights || body.matchups.some(m=>!Number.isFinite(weights[m.opponentPolicyId]) || weights[m.opponentPolicyId]<0))fault('EVIDENCE_OBJECTIVE_INVALID');
+  const expected=body.status==='COMPLETE' && body.matchups.every(m=>m.metrics.pairedScore!==null)
+    ? body.matchups.reduce((total,m)=>total+weights[m.opponentPolicyId]*m.metrics.pairedScore,0) : null;
+  if(expected===null ? body.aggregate.objectiveScore!==null : !Number.isFinite(body.aggregate.objectiveScore) ||
+    Math.abs(expected-body.aggregate.objectiveScore)>1e-12)fault('EVIDENCE_OBJECTIVE_MISMATCH');
   return {contract:'intrilex-admission@1',classification:'VERIFIED',purpose:body.purpose,games,independentPairCount:pairs,
     evidenceDigest:hashCanonical({measurement:measurement.digest,manifest:manifest.digest}),automaticPromotion:false};
 }
@@ -126,6 +134,9 @@ export function createEvidenceAdmission({ run = null, expectedCount = null, aggr
         }
         if (claim.seatWins && hashCanonical(claim.seatWins) !== hashCanonical(headline.seatWins)) fault('RUN_COUNTS_MISMATCH');
       }
+      if(Array.isArray(run?.records))for(const [key,value] of Object.entries({games:headline.matchCount,clean:headline.completedMatchCount,aborted:headline.abortCount,draws:headline.drawCount})){
+        if(run.metrics?.[key]!=null && run.metrics[key]!==value)fault('RUN_COUNTS_MISMATCH');
+      }
       if (!headline.matchCount) reasons.add('RUN_NO_RETAINED_EVIDENCE');
       if (cohorts.size > 1) reasons.add('EVIDENCE_COHORT_MIXED');
       const list = [...reasons].sort();
@@ -149,9 +160,11 @@ export function analyticsSummaries(rows) {
   return rows.map(row => {
     const digests = row.identity?.subjectDigests;
     if (!digests?.length) fault('EVIDENCE_SUBJECT_UNKNOWN');
-    const subjectIds=digests.map((digest,i)=>`${row.policyIds[i]}::${digest}`);
-    return { ...row, sourcePolicyIds: row.policyIds, policyIds: [...subjectIds],
-      participants: row.participants?.map((p,i) => ({...p,sourcePolicyId:p.policyId,policyId:subjectIds[(p.seat ?? i+1)-1]})) };
+    const baseIds=row.sourcePolicyIds ?? row.policyIds;
+    const subjectIds=digests.map((digest,i)=>`${baseIds[i]}::${digest}`),matchId=row.identity.deterministicSampleId;
+    return { ...row, sourceMatchId:row.sourceMatchId ?? row.matchId, matchId, sourcePolicyIds: baseIds, policyIds: [...subjectIds],
+      participants: row.participants?.map((p,i) => ({...p,matchId,participantId:`${matchId}:seat-${p.seat ?? i+1}`,
+        sourcePolicyId:p.sourcePolicyId ?? p.policyId,policyId:subjectIds[(p.seat ?? i+1)-1]})) };
   });
 }
 
@@ -195,7 +208,7 @@ export function publishEvidenceSnapshot(state, { aggregate, observatory, basis, 
     aggregate, observatory: { ...observatory, evidenceSelectionDigest: selection.digest, datasetOrigin: origin }, basis: { ...basis, selectionDigest: selection.digest, stale: false } });
   Object.assign(state, { aggregate: snapshot.aggregate, observatory: snapshot.observatory, evidenceBasis: snapshot.basis,
     rankPower: observatory.rankPower ?? null, swapMatrix: observatory.swapMatrix ?? null, variantAnalytics: observatory.variantAnalytics ?? null,
-    evidenceSnapshot: snapshot, evidenceViewStatus: { stale: false, error: null } });
+    evidenceSnapshot: snapshot, evidenceViewStatus: { stale: false, error: null, cohorts:selection.cohorts, cohort:selection.cohort } });
   return snapshot;
 }
 

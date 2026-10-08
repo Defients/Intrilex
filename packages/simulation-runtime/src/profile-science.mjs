@@ -106,6 +106,20 @@ export async function runMeasurement({ manifest, subject, pack, era, identity, e
     status: complete ? 'COMPLETE' : signal?.aborted ? 'STOPPED' : 'ERROR', matchups, aggregate: { objectiveScore, weights } }, { scope: manifest.scope });
 }
 /** Admission contract: purpose, producer, subject, pack, era and completeness bound to an exact manifest. */
+const legacyMeasurementAdmission = function admitMeasurement(measurement, manifest, { purpose, subjectCheckpointId }) {
+  validateArtifact(measurement); validateArtifact(manifest);
+  const b = measurement.body;
+  if (measurement.kind !== 'MEASUREMENT_RESULT' || manifest.kind !== 'MEASUREMENT_MANIFEST' || b.manifestId !== manifest.id) fail('FOREIGN_EVIDENCE', measurement.id);
+  if (b.purpose !== purpose || manifest.body.purpose !== purpose) fail('FORGED_OR_WRONG_PURPOSE', { measured: b.purpose, manifest: manifest.body.purpose, required: purpose });
+  if (b.subjectCheckpointId !== subjectCheckpointId || manifest.body.subjectCheckpointId !== subjectCheckpointId) fail('WRONG_SUBJECT', measurement.id);
+  if (b.packId !== manifest.body.packId || b.eraId !== manifest.body.eraId) fail('EVIDENCE_MANIFEST_MISMATCH', measurement.id);
+  if (digest(b.matchups.map(m => m.opponentCheckpointId)) !== digest(manifest.body.opponents.slice(0, b.matchups.length))) fail('EVIDENCE_OPPONENT_MISMATCH', measurement.id);
+  for (const m of b.matchups) {
+    if (m.status === 'COMPLETE' && (m.metrics.games !== m.plannedGames || m.blocks.length * 2 !== m.plannedGames)) fail('INCOMPLETE_BLOCKS', measurement.id);
+  }
+  return measurement;
+};
+
 export function admitMeasurement(measurement, manifest, { purpose, subjectCheckpointId }) {
   validateArtifact(measurement); validateArtifact(manifest);
   const b = measurement.body;
@@ -474,5 +488,5 @@ export function buildExperienceRecord({ encounterId, source = 'LOCAL_AI_PLAY', s
 }
 
 export const VERSIONED_SCIENCE_FUNCTIONS = { 'PROFILE_PACK_V1': createPack, 'ONE_PLUS_LAMBDA_V1+FIXED_REJECTION_THEN_CLAMP_V1': proposeCandidates, 'MEAN_PAIRED_TRAINING_SCORE_PARENT_FIRST@1': selectGeneration,
-  'FINAL_COMMITTED_SELECTION_AT_BUDGET@1': nominate, 'PAIRED_BLOCK_STUDENT_T@1': pairedBlockAnalysis, 'TAIL_BALANCE_V1': tailBalance, 'FIXED_BUDGET_PAIRED_GENERALIST_DECISION@1': decideChallenge, 'PROFILE_MEASUREMENT@1': runMeasurement, 'MEASUREMENT_ADMISSION@1': admitMeasurement };
+  'FINAL_COMMITTED_SELECTION_AT_BUDGET@1': nominate, 'PAIRED_BLOCK_STUDENT_T@1': pairedBlockAnalysis, 'TAIL_BALANCE_V1': tailBalance, 'FIXED_BUDGET_PAIRED_GENERALIST_DECISION@1': decideChallenge, 'PROFILE_MEASUREMENT@1': runMeasurement, 'MEASUREMENT_ADMISSION@1': legacyMeasurementAdmission, 'MEASUREMENT_ADMISSION@2': admitMeasurement };
 export { sameContent, deepFreeze };

@@ -6,7 +6,7 @@
 // statistical derivation happens here.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc, fmt, short } from '../state.js?v=f576f69f79ad';
+import { esc, fmt, short } from '../state.js?v=5e0a78513ea5';
 
 export const EVIDENCE_GRADE_RANK = { ROBUST: 4, SUPPORTED: 3, EXPLORATORY: 2, INSUFFICIENT: 1, strong: 4, moderate: 3, weak: 2, insufficient: 1 };
 

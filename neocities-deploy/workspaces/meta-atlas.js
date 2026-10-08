@@ -1,4 +1,4 @@
-import { evidenceDigest, analyticsSummaries } from '../evolution/evidence-admission.mjs?v=f576f69f79ad';
+import { evidenceDigest, analyticsSummaries } from '../evolution/evidence-admission.mjs?v=5e0a78513ea5';
 // ═══════════════════════════════════════════════════════════════
 // workspaces/meta-atlas.js — /atlas workspace (Meta Atlas V1)
 //
@@ -8,19 +8,19 @@ import { evidenceDigest, analyticsSummaries } from '../evolution/evidence-admiss
 // (pure string builders). This file owns DOM wiring only.
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, persistSetting, showToast } from '../state.js?v=f576f69f79ad';
-import { rerender } from '../rerender.js?v=f576f69f79ad';
-import { chartTableAlternative } from '../chart-toolkit.js?v=f576f69f79ad';
+import { state, app, esc, persistSetting, showToast } from '../state.js?v=5e0a78513ea5';
+import { rerender } from '../rerender.js?v=5e0a78513ea5';
+import { chartTableAlternative } from '../chart-toolkit.js?v=5e0a78513ea5';
 import {
   buildAtlasModel, atlasMetric, atlasCohortLabel,
   ATLAS_DEFAULT_X, ATLAS_DEFAULT_Y, EVIDENCE_TIER_LABELS,
-} from '../shared-analytics/meta-atlas.mjs?v=f576f69f79ad';
+} from '../shared-analytics/meta-atlas.mjs?v=5e0a78513ea5';
 import {
   renderAtlasSvg, atlasSummaryHtml, atlasLegendHtml, atlasInspectorHtml,
   atlasTooltipHtml, atlasViewport, atlasScales, policyLabel, ATLAS_CANVAS,
-} from '../atlas/atlas-render.mjs?v=f576f69f79ad';
-import { labDatasetBanner } from './observatory.js?v=f576f69f79ad';
-import { obsContextStrip } from './observatory-ui.js?v=f576f69f79ad';
+} from '../atlas/atlas-render.mjs?v=5e0a78513ea5';
+import { labDatasetBanner } from './observatory.js?v=5e0a78513ea5';
+import { obsContextStrip } from './observatory-ui.js?v=5e0a78513ea5';
 
 const MIN_GAMES_OPTIONS = [1, 6, 12, 24];
 const COLOR_OPTIONS = [['winRate', 'Win rate'], ['evidence', 'Evidence tier'], ['identity', 'Policy identity'], ['uniform', 'Uniform']];

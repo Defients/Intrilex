@@ -1,3 +1,4 @@
+import * as browserCapacity from '../packages/simulation-runtime/src/browser-capacity.mjs';
 import { AggregateWorker } from './fixtures/aggregate-worker.mjs';
 import { trustedSummary } from './fixtures/admission-fixtures.mjs';
 import * as admissionContract from '../packages/simulation-runtime/src/evidence-admission.mjs';
@@ -110,7 +111,7 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     .replace(/^export /gm, '');
   const state = { bootState: null, observatory: {}, aggregate: {}, evidenceBasis: null, ...stateOverrides };
   const toasts = [];
-  const sandbox = { ...admissionContract,
+  const sandbox = { ...browserCapacity, ...admissionContract,
     console, structuredClone, TextEncoder, setTimeout, clearTimeout, queueMicrotask: globalThis.queueMicrotask,
     Worker: AggregateWorker,
     state, showToast: (msg, opts) => toasts.push({ msg, ...opts }),

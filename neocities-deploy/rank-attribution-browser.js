@@ -6,7 +6,7 @@
 // Imports parseIdentity and RANK_REGISTRY directly from the browser engine.
 // ═══════════════════════════════════════════════════════════════
 
-import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=f576f69f79ad';
+import { parseIdentity, RANK_REGISTRY } from './engine/ranks.js?v=5e0a78513ea5';
 
 export const CANONICAL_RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K","RJ","BJ"];
 

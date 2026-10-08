@@ -1,3 +1,4 @@
+import { BROWSER_CAPACITY, assertBrowserCapacity, browserSizeEstimate } from './evolution/browser-capacity.mjs';
 import { campaignExecution } from './evolution/campaign-execution.mjs';
 import { persistenceLabel } from './evolution/persistence-state.mjs';
 // ═══════════════════════════════════════════════════════════════
@@ -20,7 +21,7 @@ export function renderExperimentControls() {
     <label>Experiment preset<select id="exp-preset"><option value="">Custom (manual config)</option><option value="EXP-01-2B2R-HOLD-FIRE">EXP-01: 2B2R Hold vs Fire</option><option value="EXP-02-BOARD-LOCK-LEAD">EXP-02: Board Lock Lead vs Comeback</option><option value="EXP-03-TEN-HEART-OPPORTUNITY-COST">EXP-03: 10♥ Tempo Opportunity Cost</option><option value="EXP-04-QUEEN-FORTRESS-WINDOW">EXP-04: Queen Fortress Breach Window</option><option value="EXP-05-TOTAL-CLEAR-REBOUND">EXP-05: Total Clear Rebound</option><option value="EXP-06-UNRESTRICTED-BENCHMARK">EXP-06: Unrestricted Seat Balance</option><option value="EXP-07-COUNTER-RETENTION-VALUE">EXP-07: Counter Retention Value</option></select></label>
     <label>Profile<select id="exp-profile"><option value="core-advanced-authority">Advanced Core · supported</option><option value="core-unrestricted-authority">Unrestricted Core · hidden supers + sudden death</option><option value="first-contact-trigger-closure">Complete First Contact</option></select></label>
     <div class="inline-fields"><label>Seat 1<select id="exp-p1">${policyOptions('score-rush')}</select></label><label>Seat 2<select id="exp-p2">${policyOptions('control')}</select></label></div>
-    <div class="inline-fields"><label>Matches<input id="exp-count" type="number" min="1" max="10000" value="100"></label><label>Workers<select id="exp-workers"><option>1</option><option selected>2</option><option>4</option></select></label></div>
+    <div class="inline-fields"><label>Matches<input id="exp-count" type="number" min="1" max="100" value="100"></label><label>Workers<select id="exp-workers"><option>1</option><option selected>2</option><option>4</option></select></label></div>
     <label>Seed strategy<select id="exp-seed"><option value="ordinal-hash">Experiment hash + ordinal</option><option value="fixed">Fixed seed</option></select></label>
     <label class="exp-toggle"><span class="exp-toggle-text">Deep decision tracing<button type="button" class="info-dot tooltip-wide" data-tooltip="Re-ranks all legal actions at every decision and keeps a trace per decision — heavy compute and memory. Use for small evidence runs needing decision-level detail, not large campaigns. Telemetry is hash-excluded: results stay deterministic." aria-label="About deep decision tracing">ⓘ</button></span><input id="exp-deep-trace" type="checkbox" class="exp-switch" role="switch"></label>
     <div class="preflight" id="preflight"><b>Preflight:</b> 25 ordered pairings · paired AB/BA design — each policy plays once per physical seat per pair · paired McNemar + bootstrap · deterministic telemetry v4.1 · unsupported systems fail closed.</div>
@@ -37,6 +38,8 @@ export function renderExperimentControls() {
   document.querySelector('#reset-experiment').addEventListener('click', resetCampaignResults);
   for (const id of ['exp-preset', 'exp-profile', 'exp-p1', 'exp-p2', 'exp-count', 'exp-workers', 'exp-seed', 'exp-deep-trace'])
     document.querySelector(`#${id}`).addEventListener('change', updatePreflight);
+  document.querySelector('#exp-count').addEventListener('input', updatePreflight);
+  updatePreflight();
 }
 
 export function updatePreflight() {
@@ -49,18 +52,18 @@ export function updatePreflight() {
   const preset = document.querySelector('#exp-preset')?.value ?? '';
   const deepTrace = document.querySelector('#exp-deep-trace')?.checked === true;
   const scope = p1 === p2 ? 'self-play focused pair' : 'focused pair';
-  const valid = Number.isInteger(n) && n >= 1 && n <= 10000;
+  const valid = Number.isInteger(n) && n >= 1 && n <= (deepTrace ? BROWSER_CAPACITY.deepGames : BROWSER_CAPACITY.games);
   const runBtn = document.querySelector('#run-experiment');
   if (!valid) {
     runBtn.disabled = true;
-    document.querySelector('#preflight').innerHTML = `<b class="danger">Rejected:</b> match count ${esc(String(n))} is outside permitted range 1–10000. Adjust before running.`;
+    document.querySelector('#preflight').innerHTML = `<b class="danger">Rejected:</b> match count ${esc(String(n))} is outside the supported browser range 1–${deepTrace ? BROWSER_CAPACITY.deepGames : BROWSER_CAPACITY.games}; larger tiers are restricted. Adjust before running.`;
     return;
   }
   runBtn.disabled = false;
   const seatDesign = p1 === p2 ? 'self-play (excluded from cross-policy inference)' : 'paired AB/BA — each policy occupies each physical seat once per 2-match block';
   const oddNote = n % 2 === 1 && p1 !== p2 ? ` · <b>odd count: last match is an unpaired AB leg</b> (pairing reports it incomplete)` : '';
   const presetLabel = preset ? `preset ${esc(preset)} · ` : '';
-  document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${presetLabel}${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)}${oddNote} · paired McNemar + bootstrap · semantic telemetry v4.1${deepTrace ? ' · deep decision tracing (per-decision traces + candidate scores)' : ''} · evidence epoch: post-rules-parity-repair · unsupported systems fail closed.`;
+  document.querySelector('#preflight').innerHTML = `<b>Preflight:</b> ${presetLabel}${esc(scope)} · ${esc(p1)} vs ${esc(p2)} · ${fmt(n)} matches · ${w} browser worker${w === 1 ? '' : 's'} · ${esc(seed === 'ordinal-hash' ? 'ordinal-hash seed' : 'fixed seed')} · ${esc(seatDesign)}${oddNote} · paired McNemar + bootstrap · semantic telemetry v4.1${deepTrace ? ' · deep decision tracing (per-decision traces + candidate scores)' : ''} · record-size estimate: ~${(browserSizeEstimate({matchCount:n,strategicTrace:deepTrace}).bytes/1000000).toFixed(1)} MB (October 7, 2026 audit workload; varies by policy and tracing, excludes archive overhead; not a storage guarantee) · evidence epoch: post-rules-parity-repair · unsupported systems fail closed.`;
 }
 
 /** Open the Experiment dialog directly on the Manage Runs surface —
@@ -219,7 +222,7 @@ function setCampaignState(value) {
 // the evidence store (batch record + manifest checkpoint, one transaction)
 // before continuing. Bounds the volatile working set to ~this many payloads
 // per worker regardless of run size.
-const RUN_BATCH_SIZE = 50;
+const RUN_BATCH_SIZE = 5;
 
 let activeExecution = null, launchEpoch = 0;
 
@@ -235,6 +238,7 @@ async function runBrowserCampaign() {
   const seedSel = document.querySelector('#exp-seed');
   const seedStrategy = seedSel ? seedSel.value : 'ordinal-hash';
   const strategicTrace = document.querySelector('#exp-deep-trace')?.checked === true;
+  try { assertBrowserCapacity({matchCount:count,workers,strategicTrace}); } catch(error) { setCampaignState('failed');status.textContent=error.message;return; }
   // Ordinals continue where prior runs stopped so a new run observes fresh
   // seeds (and continues AB/BA pairing) instead of re-observing identical
   // games — evidence accumulation, not duplication.
@@ -314,7 +318,7 @@ async function _driveRunSegments(plan) {
     commit:async(msg,execution)=>{
       const result=await commitExperimentBatch(plan.runId,{segmentIndex:plan.segments[msg.workerIndex]?.index ?? msg.workerIndex,ordinalStart:msg.ordinalStart,ordinalEnd:msg.ordinalEnd,summaries:JSON.parse(msg.summariesJson),execution});
       committed=result.committedMatches;
-      if(activeExecution===driver)reportProgress();
+      if(activeExecution===driver)reportProgress();return result;
     },
     heartbeat:execution=>touchRunLease(plan.runId,execution),
     seal:execution=>finalizeExperimentRun(plan.runId,{durationMs:Math.round(performance.now()-startedAt),execution,requireComplete:true}),

@@ -1,3 +1,4 @@
+import { BROWSER_CAPACITY, assertBrowserCapacity, jsonBytes } from './browser-capacity.mjs';
 let epoch = 0;
 const error = message => Object.assign(new Error(message), { code: message });
 
@@ -9,6 +10,8 @@ export function campaignExecution({ execution, commit, seal, fail, cancel, heart
   timers = globalThis, epochId = `${Date.now()}:${++epoch}` }) {
   const token = { ...execution, epoch: epochId }, workers = new Map();
   let chain = Promise.resolve(), stopped = false, finishing = false, settled = false;
+  let heartbeatPending=false;
+  const metrics={pendingBatches:0,pendingBytes:0,peakBatches:0,peakBytes:0,committedBatches:0};
   let resolveDone;
   const done = new Promise(resolve => { resolveDone = resolve; });
   const matches = x => x?.runId === token.runId && x?.ownerId === token.ownerId &&
@@ -20,7 +23,7 @@ export function campaignExecution({ execution, commit, seal, fail, cancel, heart
   };
   const clear = () => { timers.clearInterval(leaseTimer); for (const entry of workers.values()) terminate(entry); };
   const publish = (state, detail) => {
-    if (settled) return; settled = true;
+    if (settled) return; settled = true;metrics.pendingBatches=0;metrics.pendingBytes=0;
     try { onTerminal(state, detail); } finally { resolveDone({ state, detail }); }
   };
   const stop = (state, cause) => {
@@ -55,20 +58,33 @@ export function campaignExecution({ execution, commit, seal, fail, cancel, heart
     entry.timer = timers.setTimeout(() => stop('failed', error('CAMPAIGN_WORKER_TIMEOUT')), timeoutMs);
   };
   const leaseTimer = heartbeat ? timers.setInterval(() => {
-    if (!finishing) enqueue(() => heartbeat(token));
+    if (!finishing && !heartbeatPending) { heartbeatPending=true; enqueue(async()=>{try {await heartbeat(token);}finally{heartbeatPending=false;}}); }
   }, 15000) : null;
   return {
-    token, done,
+    token, done, metrics,
     cancel: () => stop('cancelled', error('CAMPAIGN_CANCELLED')),
     attach(worker, { index, config }) {
       if (stopped || finishing || workers.has(index)) throw error('CAMPAIGN_EXECUTION_CLOSED');
-      const entry = { worker, timer: null, finished: false }; workers.set(index, entry); arm(entry);
+      if(config.matchCount!=null)assertBrowserCapacity(config);
+      if(workers.size>=BROWSER_CAPACITY.workers)throw error('BROWSER_WORKER_LIMIT');
+      const entry = { worker, timer: null, finished: false, pending:false, sequence:0 }; workers.set(index, entry); arm(entry);
       worker.onmessage = ({ data: x }) => {
         if (stopped || settled || entry.finished || !matches(x?.execution) || (x.workerIndex ?? x.progress?.workerIndex) !== index) return;
         arm(entry);
         if (x.type === 'autonomy-campaign-progress') onProgress(index, x.progress);
-        else if (x.type === 'autonomy-campaign-batch') enqueue(() => commit(x, token));
+        else if (x.type === 'autonomy-campaign-batch') {
+          const bytes=jsonBytes(x.summariesJson ?? '[]');
+          if(entry.pending || x.batchSequence!==entry.sequence || bytes>BROWSER_CAPACITY.batchBytes || metrics.pendingBytes+bytes>BROWSER_CAPACITY.queuedBytes){stop('failed',error('CAMPAIGN_BACKPRESSURE_VIOLATION'));return;}
+          entry.pending=true;metrics.pendingBatches++;metrics.pendingBytes+=bytes;
+          metrics.peakBatches=Math.max(metrics.peakBatches,metrics.pendingBatches);metrics.peakBytes=Math.max(metrics.peakBytes,metrics.pendingBytes);
+          enqueue(async()=>{try {
+            const receipt=await commit(x,token);
+            if(!stopped){entry.pending=false;entry.sequence++;metrics.committedBatches++;
+              worker.postMessage({type:'autonomy-campaign-ack',execution:token,workerIndex:index,batchSequence:x.batchSequence,receipt:receipt?.receipt ?? receipt});}
+          }finally{metrics.pendingBatches--;metrics.pendingBytes-=bytes;}});
+        }
         else if (x.type === 'autonomy-segment-result') {
+          if(entry.pending){stop('failed',error('CAMPAIGN_COMPLETION_BEFORE_COMMIT'));return;}
           if (x.ok !== true) { stop('failed', error(x.error ?? 'CAMPAIGN_WORKER_FAILED')); return; }
           entry.finished = true; terminate(entry); finish();
         }

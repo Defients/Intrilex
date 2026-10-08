@@ -37,6 +37,7 @@ import {
   runIntegrityState, runAnalyticallyEligible, validateRunRecord,
 } from '../evolution/experiment-domain.mjs';
 import {
+  BROWSER_CAPACITY, evidenceBudget,
   experimentRunArtifact, artifactEvidenceForRun,
   validateExperimentRunArtifact, parseExperimentRunArtifact,
   validateResearchPackage, parseResearchPackage,
@@ -603,35 +604,20 @@ export async function touchRunLease(runId, execution = null) {
  * available). Each batch is loaded, hash-verified, posted, and released —
  * finalize never materializes the whole run on the main thread.
  */
-async function _aggregateCommitted(runId, descriptors, semantic) {
-  let stream = null;
-  try { stream = _aggregateStream(); } catch { stream = null; }
-  const parts = stream ? null : []; // union only for the no-worker fallback
-  for (const d of descriptors) {
-    const batch = await _store.getRunBatch(runId, d.batchIndex);
-    if (!batch) throw Object.assign(new Error('RUN_PAYLOAD_MISSING'), { code: 'RUN_PAYLOAD_MISSING' });
-    if (batchSummariesHash(batch.summaries) !== d.summariesHash) {
-      throw Object.assign(new Error('RUN_PAYLOAD_HASH_MISMATCH'), { code: 'RUN_PAYLOAD_HASH_MISMATCH' });
-    }
-    if (stream) stream.worker.postMessage({ type: 'run-autonomy-aggregate-chunk', summariesJson: JSON.stringify(batch.summaries) });
-    else parts.push(...batch.summaries);
-  }
-  if (stream) {
-    stream.worker.postMessage({ type: 'run-autonomy-aggregate-finish', semantic });
-    try { return await stream.done; }
-    catch (error) { console.warn('[experiments] streamed aggregate failed — sealing with headline metrics:', error?.message ?? error); return { aggregate: null, observatory: null }; }
-  }
+async function _aggregateCommitted(runId,descriptors,semantic) {
+  if(descriptors.reduce((n,d)=>n+d.matchCount,0)>BROWSER_CAPACITY.analysisRows)return {aggregate:null,observatory:null};
+  let stream;
+  try {stream=_aggregateStream();}catch{return {aggregate:null,observatory:null};}
+  const budget=evidenceBudget();
   try {
-    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js');
-    const aggregate = campaignAggregate(parts, semantic);
-    return { aggregate, observatory: buildObservatoryAnalytics({ summaries: parts, aggregate }) };
-  } catch (error) {
-    // The seal must not fail because the observatory recompute did — the
-    // committed batches are already durable evidence. Metrics fall back to
-    // the manifest headline; applySelection recomputes analytics later.
-    console.warn('[experiments] aggregate unavailable at seal — headline metrics used:', error?.message ?? error);
-    return { aggregate: null, observatory: null };
-  }
+    for(const d of descriptors){
+      const batch=await _store.getRunBatch(runId,d.batchIndex);
+      if(!batch)throw new Error('RUN_PAYLOAD_MISSING');
+      if(batchSummariesHash(batch.summaries)!==d.summariesHash)throw new Error('RUN_PAYLOAD_HASH_MISMATCH');
+      budget.add(batch.summaries);await stream.send(batch.summaries);
+    }
+    return await stream.finish(semantic);
+  }catch(error){stream.abort(error);console.warn('[experiments] aggregate unavailable at seal — committed headline retained:',error.message);return {aggregate:null,observatory:null};}
 }
 
 /** Load and hash-verify every descriptor's batch row, returning the
@@ -947,8 +933,8 @@ export async function setRunIncluded(runId, { force = false } = {}) {
   _set = includeRunInSet(_set, runId);
   await _persistSet();
   _syncEvidenceBasis();
-  await applySelection();
-  return { ok: true, compatibility: compat };
+    const result=await applySelection();
+    return { ...result, compatibility: compat };
 }
 
 export async function setRunExcluded(runId, { reason = 'other', note = '' } = {}) {
@@ -1024,7 +1010,7 @@ export async function includeAllCompatible() {
   }
   await _persistSet();
   _syncEvidenceBasis();
-  await applySelection();
+  return applySelection();
 }
 
 /** Analyze a single run in isolation — excludes all others with a recorded
@@ -1045,7 +1031,7 @@ export async function isolateRun(runId) {
   if (!_set.includedRunIds.includes(runId)) _set = includeRunInSet(_set, runId);
   await _persistSet();
   _syncEvidenceBasis();
-  await applySelection();
+  return applySelection();
 }
 
 /** Restore the bundled certified baseline as the working dataset — empties
@@ -1095,8 +1081,11 @@ function _syncEvidenceBasis() {
 }
 
 function _restoreBootView() {
-  if (!state.bootState) return;
   state.evidenceSnapshot = null; state.evidenceViewStatus = {stale:false,error:null};
+  if (!state.bootState) {
+    Object.assign(state,{observatory:{},aggregate:{},rankPower:null,swapMatrix:null,variantAnalytics:null});
+    return;
+  }
   state.observatory = structuredClone(state.bootState.observatory);
   state.aggregate = structuredClone(state.bootState.aggregate);
   state.rankPower = state.bootState.rankPower != null ? structuredClone(state.bootState.rankPower) : state.observatory?.rankPower ?? null;
@@ -1125,7 +1114,7 @@ function _restoreBootView() {
  *   artifact: 'durable'|'session'|'missing'|'missing-chunks'|'corrupt'|
  *             'unreachable'|'none'|'bundled'|integrity state
  */
-async function _probeRunEvidence(run) {
+async function _probeRunEvidence(run,{budget=null}={}) {
   const rejected = (code, artifact = 'corrupt') => ({ ok: false, code, artifact, payload: null, descriptors: null, decisionEvidence: null, summaryCount: 0 });
   if (runIntegrityState(run) !== 'ok') return rejected(run.corruptCode ?? run.lifecycle?.integrity?.code ?? 'RUN_INTEGRITY_FLAGGED', runIntegrityState(run));
   try {
@@ -1139,25 +1128,32 @@ async function _probeRunEvidence(run) {
     const admission = createEvidenceAdmission({run,aggregate:payload.aggregate});
     let descriptors = null;
     const receiptHashes=[];
-    if (run.payloadKind === 'indexeddb-batches') {
-      descriptors = (payload.batches ?? []).slice().sort((a,b)=>a.ordinalStart-b.ordinalStart || a.batchIndex-b.batchIndex);
+      if (run.payloadKind === 'indexeddb-batches') {
+      const manifest=await _store.getManifest(run.runId);
+      const committed=manifest?.sealedRunId ? new Map((manifest.committedBatches ?? []).map(d=>[d.batchIndex,d])) : null;
+        descriptors = (payload.batches ?? []).slice().sort((a,b)=>a.ordinalStart-b.ordinalStart || a.batchIndex-b.batchIndex);
+      if(committed && committed.size!==descriptors.length)return rejected('RUN_DESCRIPTOR_MISMATCH');
       const indexes = new Set();
       for (const d of descriptors) {
         if(indexes.has(d.batchIndex))return rejected('RUN_DESCRIPTOR_DUPLICATE'); indexes.add(d.batchIndex);
         const batch = await _store.getRunBatch(run.runId,d.batchIndex);
         if(!batch)return rejected('RUN_CHUNK_MISSING','missing-chunks');
-        validateEvidenceBatch(batch,d,run.runId);
+        const sealed=committed?.get(d.batchIndex);
+        if(committed && (!sealed || ['ordinalStart','ordinalEnd','matchCount','summariesHash'].some(key=>sealed[key]!==d[key])))return rejected('RUN_DESCRIPTOR_MISMATCH');
+          validateEvidenceBatch(batch,sealed ?? d,run.runId);
         if(batch.receipt)receiptHashes.push(batch.receipt.receiptHash);
         if(batchSummariesHash(batch.summaries)!==d.summariesHash)return rejected('RUN_PAYLOAD_HASH_MISMATCH');
         if(batch.ordinalStart!==d.ordinalStart || batch.ordinalEnd!==d.ordinalEnd || d.matchCount!==batch.summaries.length ||
           d.ordinalEnd-d.ordinalStart!==batch.summaries.length || batch.summaries.some(s=>!Number.isInteger(s.matchOrdinal) || s.matchOrdinal<d.ordinalStart || s.matchOrdinal>=d.ordinalEnd))return rejected('RUN_DESCRIPTOR_MISMATCH');
-        admission.add(batch.summaries);
+        budget?.add(batch.summaries);admission.add(batch.summaries);
       }
-    } else admission.add(payload.summaries);
+    } else {budget?.add(payload.summaries);admission.add(payload.summaries);}
     const result = admission.finish();
     if(descriptors){
       const manifest=await _store.getManifest(run.runId);
       if(manifest?.sealedRunId && manifest.committedMatches!==result.summaryCount)return rejected('RUN_COUNTS_MISMATCH');
+      if(manifest?.sealedRunId && manifest.headline && (['matchCount','completedMatchCount','abortCount','drawCount'].some(key=>manifest.headline[key]!==result.headline[key]) ||
+        hashCanonical(manifest.headline?.seatWins)!==hashCanonical(result.headline.seatWins)))return rejected('RUN_COUNTS_MISMATCH');
     }
     return {ok:true,code:null,artifact:run.payloadKind==='session'?'session':'durable',payload,descriptors,
       admission:result,receiptDigest:hashCanonical(receiptHashes),decisionEvidence:result.fidelity==='FULL_DECISION_EVIDENCE',summaryCount:result.summaryCount};
@@ -1176,8 +1172,8 @@ async function _probeRunEvidence(run) {
  *     of its summaries streams — a corrupt batch quarantines the whole run
  *     and nothing partial reaches the aggregate.
  */
-async function _verifyAndStreamRun(run, onChunk) {
-  const probe = await _probeRunEvidence(run);
+async function _verifyAndStreamRun(run, onChunk, verifiedProbe=null) {
+  const probe = verifiedProbe ?? await _probeRunEvidence(run);
   if (!probe.ok) return { ok: false, code: probe.code };
   if (probe.artifact === 'bundled') { await onChunk(_bootSummaries); return { ok: true, code: null }; }
   if (probe.descriptors) {
@@ -1209,75 +1205,92 @@ async function _flagRunIntegrity(runId, { state: integrityState, code = null, no
 
 /** Open a streaming aggregate worker: post begin → chunk×N → finish. */
 function _aggregateStream() {
-  const worker = new Worker('worker.js', { type: 'module' });
-  const done = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => { try { worker.terminate(); } catch { /* already terminated */ } reject(new Error('AGGREGATE_WORKER_TIMEOUT')); }, 180000);
-    worker.onmessage = e => {
-      const x = e.data ?? {};
-      if (x.type !== 'autonomy-aggregate-result') return;
-      clearTimeout(timer);
-      try { worker.terminate(); } catch { /* already terminated */ }
-      if (x.ok) resolve({ aggregate: JSON.parse(x.aggregateJson ?? 'null'), observatory: JSON.parse(x.observatoryJson ?? 'null') });
-      else reject(new Error(x.error ?? 'AGGREGATE_FAILED'));
-    };
-    worker.onerror = e => { clearTimeout(timer); try { worker.terminate(); } catch { /* already terminated */ } reject(new Error(e.message ?? 'AGGREGATE_WORKER_ERROR')); };
-    worker.onmessageerror = () => {clearTimeout(timer);worker.terminate();reject(new Error('AGGREGATE_WORKER_MESSAGE_ERROR'));};
-  });
-  worker.postMessage({ type: 'run-autonomy-aggregate-begin' });
-  return { worker, done };
+  const worker=new Worker('worker.js',{type:'module'});
+  let sequence=0,pending=null,closed=false,resolveDone,rejectDone;
+  const done=new Promise((resolve,reject)=>{resolveDone=resolve;rejectDone=reject;});
+  done.catch(()=>{});
+  const close=error=>{if(closed)return;closed=true;clearTimeout(timer);worker.terminate();if(error){pending?.reject(error);pending=null;rejectDone(error);}};
+  const timer=setTimeout(()=>close(new Error('AGGREGATE_WORKER_TIMEOUT')),180000);
+  worker.onmessage=({data:x})=>{
+    if(closed)return;
+    if(x.type==='autonomy-aggregate-ack' && pending?.sequence===x.sequence){pending.resolve();pending=null;return;}
+    if(x.type!=='autonomy-aggregate-result')return;
+    if(!x.ok){close(new Error(x.error ?? 'AGGREGATE_FAILED'));return;}
+    try {const value={aggregate:JSON.parse(x.aggregateJson ?? 'null'),observatory:JSON.parse(x.observatoryJson ?? 'null')};close();resolveDone(value);}catch(error){close(error);}
+  };
+  worker.onerror=event=>close(new Error(event.message ?? 'AGGREGATE_WORKER_ERROR'));
+  worker.onmessageerror=()=>close(new Error('AGGREGATE_WORKER_MESSAGE_ERROR'));
+  worker.postMessage({type:'run-autonomy-aggregate-begin'});
+  return {worker,done,abort:close,
+    async send(rows){
+      for(let i=0;i<rows.length;i+=BROWSER_CAPACITY.batchRows){
+        if(closed||pending)throw new Error('AGGREGATE_TRANSPORT_CLOSED');
+        const summariesJson=JSON.stringify(rows.slice(i,i+BROWSER_CAPACITY.batchRows));
+        if(new TextEncoder().encode(summariesJson).byteLength>BROWSER_CAPACITY.batchBytes){const error=new Error('AGGREGATE_PAGE_TOO_LARGE');close(error);throw error;}
+        await new Promise((resolve,reject)=>{const current=sequence++;pending={sequence:current,resolve,reject};try{worker.postMessage({type:'run-autonomy-aggregate-chunk',sequence:current,summariesJson});}catch(error){close(error);}});
+      }
+    },
+    finish(semantic){if(closed||pending)throw new Error('AGGREGATE_TRANSPORT_CLOSED');worker.postMessage({type:'run-autonomy-aggregate-finish',semantic});return done;}
+  };
+}
+
+export async function aggregateBoundedEvidence(rows,semantic={}) {
+  evidenceBudget().add(rows);
+  const stream=_aggregateStream();
+  try {await stream.send(rows);return await stream.finish(semantic);}catch(error){stream.abort(error);throw error;}
 }
 
 /**
  * Recompute state.observatory / state.aggregate from the currently included
- * runs. Verified run evidence streams to the aggregate worker one batch at
- * a time — the union is never assembled on the main thread. The retained
- * UI index is the slim projection (no per-decision detail). Empty selection
+ * runs. Admission selects compatible independent samples before sending
+ * chunks to the aggregate worker. The retained UI index is the slim
+ * projection (no per-decision detail). Empty selection
  * restores the certified baseline view — never an erased/blank dataset.
  */
 export async function applySelection({ fastPath: _fastPath = null, cohort = null } = {}) {
   if (!_ready) return;
   const token=++_applyToken;
   const runs=contributingRuns(_runs,_set).filter(r=>r.runId!==BUNDLED_RUN_ID);
-  if(!runs.length){_restoreBootView();_syncEvidenceBasis();updateRailContext();rerender();return;}
+  if(!runs.length){_restoreBootView();_syncEvidenceBasis();updateRailContext();rerender();return {ok:true};}
   try {
-    const entries=[];
+    const entries=[],budget=evidenceBudget(),probeBudget=evidenceBudget();
+    if(runs.length>BROWSER_CAPACITY.analysisSources || runs.reduce((n,r)=>n+(r.metrics?.matchCount ?? 0),0)>BROWSER_CAPACITY.analysisRows)throw new Error('EVIDENCE_ANALYSIS_CAPACITY_EXCEEDED');
     for(const run of runs){
-      const probe=await _probeRunEvidence(run);
+      const probe=await _probeRunEvidence(run,{budget:probeBudget});
       if(!probe.ok){
+        if(probe.code==='EVIDENCE_ANALYSIS_CAPACITY_EXCEEDED')throw new Error(probe.code);
         const missing=['RUN_PAYLOAD_MISSING','RUN_CHUNK_MISSING','RUN_NO_RETAINED_EVIDENCE'].includes(probe.code);
         await _flagRunIntegrity(run.runId,{state:missing?RUN_INTEGRITY.PAYLOAD_UNAVAILABLE:RUN_INTEGRITY.QUARANTINED,code:probe.code,note:'Evidence admission failed; retained for inspection.'});
         continue;
       }
       const summaries=[];
-      const streamed=await _verifyAndStreamRun(run,async chunk=>summaries.push(...chunk));
+      const streamed=await _verifyAndStreamRun(run,async chunk=>{budget.add(chunk);summaries.push(...chunk);},probe);
       if(!streamed.ok)throw Object.assign(new Error(streamed.code),{code:streamed.code});
       entries.push({id:run.runId,summaries,admission:probe.admission,receiptDigest:probe.receiptDigest});
     }
     const selected=selectEvidence(entries,{cohort});
     if(!selected.summaries.length)throw new Error('EVIDENCE_NO_ADMISSIBLE_SAMPLES');
     if(token!==_applyToken)return;
-    const stream=_aggregateStream();
-    // Attach rejection immediately; errors during preparation cannot leak a rejection.
-    stream.done.catch(()=>{});
     const analytical=analyticsSummaries(selected.summaries);
-    for(let i=0;i<analytical.length;i+=250)stream.worker.postMessage({type:'run-autonomy-aggregate-chunk',summariesJson:JSON.stringify(analytical.slice(i,i+250))});
-    stream.worker.postMessage({type:'run-autonomy-aggregate-finish',semantic:{labVersion:LAB_VERSION,canonicalResultHash:selected.selection.digest}});
-    const {aggregate,observatory}=await stream.done;
+    const {aggregate,observatory}=await aggregateBoundedEvidence(analytical,{labVersion:LAB_VERSION,canonicalResultHash:selected.selection.digest});
     if(token!==_applyToken)return;
     const basis={..._selectionBasis(),includedRunIds:entries.filter(e=>e.admission.eligible && e.admission.cohorts.includes(selected.selection.cohort)).map(e=>e.id),
       includedRunCount:entries.filter(e=>e.admission.eligible && e.admission.cohorts.includes(selected.selection.cohort)).length,
       includedGames:selected.summaries.length,effectiveSampleCount:selected.selection.effectiveSampleCount,repeatCount:selected.selection.repeatCount,selection:selected.selection};
-    publishEvidenceSnapshot(state,{aggregate,observatory:{...observatory,summaries:selected.summaries.map(slimSummary)},basis,selection:selected.selection,origin:'EXPERIMENT_RUNS'});
+    publishEvidenceSnapshot(state,{aggregate,observatory:{...observatory,summaries:analytical.map(slimSummary)},basis,selection:selected.selection,origin:'EXPERIMENT_RUNS'});
     updateRailContext();rerender();
     return {ok:true,digest:selected.selection.digest};
   } catch(error){
     if(token!==_applyToken)return;
     markEvidenceSnapshotStale(state,error);
+    if(error.cohorts)state.evidenceViewStatus.cohorts=error.cohorts;
     showToast(`Could not recompute evidence (${error.code ?? error.message}) — previous view retained.`,{type:'error',title:'Evidence selection'});
     rerender();
     return {ok:false,code:error.code ?? error.message};
   }
 }
+
+export function getEvidenceViewStatus() { return state.evidenceViewStatus ?? {stale:false,error:null}; }
 
 /** Dossier/export projection — which runs produced the current analysis. */
 export function collectExperimentEvidence() {
@@ -1448,7 +1461,7 @@ export async function exportAllRunArtifacts() {
  * Runs sealed under a foreign experimentId persist under that id — durable
  * and ledger-visible, but not rehomed into the active experiment.
  */
-async function _admitRunArtifact({ run, payload, batches }) {
+async function _admitRunArtifact({ run, payload, batches, admission }) {
   run={...run,lifecycle:{...run.lifecycle,imported:{origin:'IMPORTED_UNVERIFIED',localPromotionAuthority:false}}};
   const existing = _findRun(run.runId) ?? await _store.getRun(run.runId).catch(() => null);
   if (existing) {
@@ -1476,7 +1489,8 @@ async function _admitRunArtifact({ run, payload, batches }) {
     updatedAt: new Date().toISOString(), completedAt: run.createdAt,
     config: run.config ?? {}, requestedMatches: run.config?.requestedMatchCount ?? run.config?.matchCount ?? run.metrics?.matchCount ?? 0,
     committedMatches: run.metrics?.matchCount ?? 0, batchSize: 0,
-    segments: [], committedBatches: descriptors, headline: null,
+    segments: [], committedBatches: descriptors, headline: admission?.headline ?? null,
+    derivation:admission ? {source:'RETAINED_ORIGINAL_SUMMARIES',evidenceDigest:admission.evidenceDigest,fields:['headline']} : null,
     resumable: false, sealedRunId: run.runId, failure: null,
   };
   await _store.saveRunArtifact({ run, payload, manifest: sealedManifest, batches: batches ?? [] });
@@ -1530,7 +1544,7 @@ export async function importResearchPackage(input) {
   const resolved = new Map();
   for (const art of runArtifacts) {
     try {
-      const res = await _admitRunArtifact({ run: art.run, payload: art.payload, batches: art.batches });
+      const res = await _admitRunArtifact({ run: art.run, payload: art.payload, batches: art.batches, admission:art.admission });
       resolved.set(art.run.runId, { sameExperiment: res.sameExperiment === true });
       if (res.outcome === 'duplicate') report.duplicates.push(art.run.runId);
       else report.imported.push(art.run.runId);

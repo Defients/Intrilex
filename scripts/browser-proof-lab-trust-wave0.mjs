@@ -13,7 +13,7 @@ import { build } from 'esbuild';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'apps/lab-web/dist');
-const mirrors = new Set(['evidence-admission.mjs','experiment-portability.mjs','observatory-bridge.mjs','campaign-execution.mjs', 'lab-trust-policy.mjs', 'profile-store.mjs', 'profile-contracts.mjs', 'discovery-domain.mjs', 'experiment-domain.mjs', 'experiment-portability.mjs', 'profile-science.mjs', 'profile-journal.mjs', 'evolution-domain.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'adaptive-strategy.mjs', 'evidence-identity.mjs', 'persistence-state.mjs', 'identity.mjs']);
+const mirrors = new Set(['browser-capacity.mjs','evidence-admission.mjs','experiment-portability.mjs','observatory-bridge.mjs','campaign-execution.mjs', 'lab-trust-policy.mjs', 'profile-store.mjs', 'profile-contracts.mjs', 'discovery-domain.mjs', 'experiment-domain.mjs', 'experiment-portability.mjs', 'profile-science.mjs', 'profile-journal.mjs', 'evolution-domain.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'adaptive-strategy.mjs', 'evidence-identity.mjs', 'persistence-state.mjs', 'identity.mjs']);
 const sourceFiles = new Set(['/experiment-controls.js', '/experiments/experiment-controller.mjs', '/experiments/experiment-store.mjs', '/evolution/profile-workspace.js', '/workspaces/discover.js', '/autonomy-runtime.js', '/workspaces/evolution-dashboard.js', '/worker.js']);
 // Bundle current source in memory using the existing built engine/assets.
 // Resolve version-query imports once so state modules are not duplicated.
@@ -82,7 +82,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-let browser;
+let browser,diagnosticPage;
 const report = { containment: [], deferred: [], pageErrors: [] };
 try {
   browser = await chromium.launch({ channel: process.env.INTRILEX_BROWSER_CHANNEL || 'chrome', headless: true });
@@ -205,13 +205,17 @@ try {
   await rp.route('**/worker.js',async route=>{
     const mock=workerText+`
       const realHandler=self.onmessage;
-      self.onmessage=event=>{
+      self.onmessage=async event=>{
         if(event.data.type!=='run-autonomy-segment')return realHandler(event);
         const {execution,workerIndex,config}=event.data;
         const start=(config.ordinalBase||0)+config.ordinalStart,end=(config.ordinalBase||0)+config.ordinalEnd;
+        let sequence=0;
         for(let o=start;o<end;o+=2){
           const summaries=Array.from({length:Math.min(2,end-o)},(_,i)=>({matchId:'proof-'+(o+i),matchOrdinal:o+i,matchResultHash:'proof-hash-'+(o+i),policyIds:config.policyIds,winner:'P1',winningSeat:1,terminationReason:'NORMAL_VICTORY',completedFullTurns:6,scoreMargin:3,identity:{schemaVersion:'2.0.0',executionFingerprint:config.implementation.fingerprint,analysisFingerprint:config.implementation.analysisFingerprint}}));
-          self.postMessage({type:'autonomy-campaign-batch',execution,workerIndex,ordinalStart:o,ordinalEnd:o+summaries.length,summariesJson:JSON.stringify(summaries)});
+          await new Promise(resolve=>{
+            const current=sequence++;self.onmessage=ack=>{if(ack.data.type==='autonomy-campaign-ack' && ack.data.batchSequence===current)resolve();else realHandler(ack);};
+            self.postMessage({type:'autonomy-campaign-batch',execution,workerIndex,batchSequence:current,ordinalStart:o,ordinalEnd:o+summaries.length,summariesJson:JSON.stringify(summaries)});
+          });
         }
         self.postMessage({type:'autonomy-segment-result',execution,workerIndex,ok:true});
       };`;
@@ -271,19 +275,21 @@ try {
     const invalidPayload={summaries:[rows[0],rows[0]],aggregate:null};
     const invalid=domain.createRunRecord({experimentId:'EXP-LAB',ordinal:2,config:{matchCount:999},metrics:{matchCount:999,completedMatchCount:999},payloadKind:'indexeddb',payloadHash:domain.payloadEvidenceHash(invalidPayload)});
     let invalidCode;try{await api.importRunArtifact(portable.experimentRunArtifact({run:invalid,evidence:{kind:'summaries',...invalidPayload}}));}catch(error){invalidCode=error.code;}
-    return {native:store.persisted,count:selectedState.evidenceSnapshot.selection.retainedSampleCount,subjects:rows.map(r=>r.identity.subjectDigests[0]),digest,
+    return {native:store.persisted,count:selectedState.evidenceSnapshot.selection.retainedSampleCount,summaryCount:selectedState.observatory.summaryCount,
+      analyticalIds:selectedState.observatory.summaries.map(s=>s.matchId),sourceIds:selectedState.observatory.summaries.map(s=>s.sourceMatchId),subjects:rows.map(r=>r.identity.subjectDigests[0]),digest,
       failed:failed.code,stale:selectedState.evidenceViewStatus.stale,coherent:before===after,invalidCode,retained:(await store.listRuns()).filter(r=>r.origin!=='bundled').length};
   },parityResults);
   assert.equal(admitted.native,true);assert.equal(admitted.count,2);assert.notEqual(admitted.subjects[0],admitted.subjects[1]);assert.equal(admitted.coherent,true);assert.equal(admitted.stale,true);
+  assert.equal(admitted.summaryCount,2);assert.equal(new Set(admitted.analyticalIds).size,2);assert.equal(new Set(admitted.sourceIds).size,1);
   assert.equal(admitted.failed,'INJECTED_AGGREGATE_FAILURE');assert.equal(admitted.invalidCode,'RUN_ARTIFACT_DUPLICATE_ORDINAL');assert.equal(admitted.retained,1);
   report.containment.push({status:'PASS',name:'Wave 3 native admission, distinct executable subjects and coherent failed recomputation',...admitted});
   await admissionContext.close();
   const blocked = await browser.newContext();
   await blocked.addInitScript(() => Object.defineProperty(globalThis, 'indexedDB', { value: undefined, configurable: true }));
-  const ui = await blocked.newPage(); ui.on('pageerror', error => report.pageErrors.push(error.message));
+  const ui = await blocked.newPage();diagnosticPage=ui; ui.on('pageerror', error => report.pageErrors.push(error.message));
   await ui.goto(base + '/#/evolution', { waitUntil: 'domcontentloaded' });
   await ui.waitForSelector('#experiment-button', { timeout: 45000 });
-  await ui.click('#experiment-button'); await ui.fill('#exp-count', '2'); await ui.click('#run-experiment');
+  await ui.click('#experiment-button'); await ui.evaluate(()=>{globalThis.__proofEvents=[];for(const type of ['pointerdown','pointerup','click','change'])document.addEventListener(type,event=>{globalThis.__proofEvents.push({type,target:event.target.id,buttonY:document.querySelector('#run-experiment')?.getBoundingClientRect().y});},true);}); await ui.fill('#exp-count', '2'); await ui.click('#run-experiment');
   await ui.waitForFunction(() => /durable run cannot start/.test(document.querySelector('#experiment-status')?.textContent ?? ''), {}, { timeout: 15000 });
   const text = await ui.locator('#experiment-status').textContent();
   assert.doesNotMatch(text, /\bpersisted\b|\bcommitted\b/);
@@ -302,7 +308,7 @@ try {
   report.containment.push({ status: 'PASS', name: 'browser policy and confirmatory gate match source' });
   await blocked.close();
   if (process.argv.includes('--strict') && report.deferred.length) process.exitCode = 1;
-} catch (error) { report.failure = error.stack; process.exitCode = 1; }
+} catch (error) { report.failure = error.stack; if(diagnosticPage)report.failureUi=await diagnosticPage.evaluate(()=>({status:document.querySelector('#experiment-status')?.textContent,state:document.querySelector('#experiment-status')?.dataset.state,count:document.querySelector('#exp-count')?.value,enabled:!document.querySelector('#run-experiment')?.disabled,evidence:document.querySelector('#exp-evidence')?.textContent,events:globalThis.__proofEvents})).catch(()=>null); process.exitCode = 1; }
 finally {
   console.log(JSON.stringify(report, null, 2));
   await browser?.close();

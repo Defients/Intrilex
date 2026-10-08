@@ -103,7 +103,7 @@ test('EXPORT-09: experiment store is initialized at boot — dossier scope can n
 });
 
 test('EXPORT-10: campaign observatory is tagged EXPERIMENT_RUNS; runs refuse to start without durable persistence', () => {
-  assert.ok(controller.includes("datasetOrigin: 'EXPERIMENT_RUNS'"), 'campaign dataset is never mislabeled certified corpus');
+  assert.match(controller,/publishEvidenceSnapshot\(state,.*origin:'EXPERIMENT_RUNS'/,'campaign snapshot carries the experimental origin');
   assert.ok(controls.includes('Evidence store unavailable'), 'a persistence-unavailable run never produces undurable campaign data');
 });
 

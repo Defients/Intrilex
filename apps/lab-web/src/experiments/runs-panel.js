@@ -19,6 +19,7 @@ import {
   previewRunSelection, allRunIds,
   getIncompleteRuns, resumeExperimentRun, finalizeExperimentRun, discardManifest,
   verifyRunArtifacts, exportRunArtifactText, exportAllRunArtifacts, importRunArtifact,
+  applySelection, getEvidenceViewStatus,
 } from './experiment-controller.mjs';
 import { downloadResearchPackage, importResearchPackageText } from './research-package.mjs';
 import {
@@ -263,10 +264,12 @@ export function renderRunsPanel() {
   const rows = runsWithCompatibility();
   const basis = getEvidenceBasis();
   const visible = _visibleRows(rows);
+  const view = getEvidenceViewStatus();
   const incomplete = getIncompleteRuns();
   const preview = panel.previewAll ? previewRunSelection(allRunIds()) : null;
   host.hidden = false;
   host.innerHTML = `<div class="runs-panel">
+    ${view.cohorts?.length>1 ? `<label>Compatible evidence group <select id="exp-evidence-cohort" aria-label="Compatible evidence group"><option value="">Choose a group</option>${view.cohorts.map((c,i)=>`<option value="${esc(c)}" ${view.cohort===c?'selected':''}>Group ${i+1} · ${esc(c.slice(0,8))}</option>`).join('')}</select></label><small>Results use one compatible group at a time. Other groups remain stored.</small>` : ''}
     <div class="runs-head">
       <div class="runs-head-left"><b>Runs</b><small>${basis.includedRunCount}/${basis.totalRuns} included · ${fmt(basis.includedGames)} games in analysis${incomplete.length ? ` · ${incomplete.length} incomplete` : ''}</small>${(basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount) ? `<small class="exp-evidence-warn">⚠ ${fmt(basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount)} run${basis.corruptCount + basis.quarantinedCount + basis.payloadUnavailableCount === 1 ? '' : 's'} quarantined or missing evidence — never contributes</small>` : ''}</div>
       <div class="runs-head-right">
@@ -296,6 +299,9 @@ export function renderRunsPanel() {
   </div>`;
 
   host.querySelector('#exp-runs-filter')?.addEventListener('change', e => { panel.filter = e.target.value; renderRunsPanel(); });
+  host.querySelector('#exp-evidence-cohort')?.addEventListener('change',e=>{
+    if(e.target.value)_guarded(applySelection({cohort:e.target.value}),'Evidence group updated');
+  });
   host.querySelector('#exp-runs-include-compat')?.addEventListener('click', async () => { await _guarded(includeAllCompatible(), 'Compatible runs included'); });
   host.querySelector('#exp-runs-preview')?.addEventListener('click', () => { panel.previewAll = !panel.previewAll; renderRunsPanel(); });
   host.querySelectorAll('[data-run-action]').forEach(el => el.addEventListener('click', _onRunAction));
@@ -391,6 +397,8 @@ async function _guarded(promise, okMessage) {
     const result = await promise;
     if (result?.requiresForce) {
       showToast('Run differs materially from the baseline — use “Include anyway” in the run details.', { type: 'warning', title: 'Incompatible run' });
+    } else if (result?.ok===false) {
+      showToast(`Results could not be updated (${result.code}). The previous view is retained.`,{type:'warning',title:'Evidence selection'});
     } else if (okMessage) {
       showToast(okMessage, { type: 'success', title: 'Runs' });
     }
