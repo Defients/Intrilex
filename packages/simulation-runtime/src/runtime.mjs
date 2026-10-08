@@ -36,7 +36,7 @@ import {
 import { createDecisionTrace} from '@intrilex/decision-intelligence/decision-trace';
 import { attributeAction, classifyVariantEntity, isNoAttributionAction } from './rank-attribution.mjs';
 import { createComboTracker, comboClassOf } from './combo-telemetry.mjs';
-import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame } from './adaptive-strategy.mjs';
+import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame, effectiveAdaptiveMode } from './adaptive-strategy.mjs';
 
 export { LAB_VERSION, REPLAY_DATA_VERSION, ANALYTICS_SCHEMA_VERSION };
 const COMPLETE_REASONS = new Set(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
@@ -196,8 +196,61 @@ function resolutionOutcome(result) {
   return 'resolved';
 }
 
+/**
+ * Canonical executable-subject record (R01). "What actually decided" is the
+ * compiled policy state/genome plus decision-affecting dependencies — a
+ * policy *name* is only a label. Returns null when no compiled subject state
+ * is supplied, in which case the legacy label-only identity applies.
+ *
+ * Distinct:   executableHash (subject) — what decided
+ *             deterministicSampleId (matchId) — the complete reproducible inputs
+ *             executionOccurrenceId — one actual run of that sample
+ *             displayOrdinal — presentation ordering only, not ownership
+ */
+export function executableIdentityParts(config = {}) {
+  const policyStates = config.policyStates ?? null;
+  // Decision-inert adaptive configs (OFF / unresolved LEARNED) contribute no
+  // executable identity — an OFF arm is the same subject as no adaptive arm.
+  const adaptiveConfigs = (config.adaptiveConfigs ?? [])
+    .map((c) => (effectiveAdaptiveMode(c) === 'OFF' ? null : c));
+  const hasCompiledState = (policyStates ?? []).some((s) => s != null)
+    || adaptiveConfigs.some((c) => c != null);
+  if (!hasCompiledState) return null;
+  return {
+    schema: 'executable-identity/1.0.0',
+    profileId: config.profileId,
+    engineVersion: ENGINE_VERSION,
+    rulesVersion: RULES_VERSION,
+    policyIds: config.policyIds,
+    policyStates,
+    adaptiveConfigs: adaptiveConfigs.some((c) => c != null) ? adaptiveConfigs : null,
+    decisionLimit: config.decisionLimit ?? 1800,
+    orchestrationCommandLimit: config.orchestrationCommandLimit ?? 16,
+    ruleOverrides: config.ruleOverrides ?? null,
+  };
+}
+
+/**
+ * Deterministic sample identity (the complete reproducible inputs).
+ * v1 (`M-`) preserves the historical label-based digest for corpora without
+ * compiled executable state. v2 (`M2-`) binds the executable subject hash so
+ * two distinct genomes can never collapse into one sample identity.
+ */
 export function createMatchId(config) {
-  return `M-${hashCanonical({ profileId: config.profileId, seed: config.seed, seatOrder: config.seatOrder, policyIds: config.policyIds, ...(config.ruleOverrides ? { ruleOverrides: config.ruleOverrides } : {}) }).slice(0, 20)}`;
+  const base = {
+    profileId: config.profileId,
+    seed: config.seed,
+    seatOrder: config.seatOrder,
+    policyIds: config.policyIds,
+    ...(config.ruleOverrides ? { ruleOverrides: config.ruleOverrides } : {}),
+  };
+  const executable = executableIdentityParts(config);
+  if (!executable) return `M-${hashCanonical(base).slice(0, 20)}`;
+  return `M2-${hashCanonical({
+    ...base,
+    executableHash: hashCanonical(executable),
+    initialStateHash: config.initialState ? authorityHashCanonical(config.initialState) : null,
+  }).slice(0, 24)}`;
 }
 
 /**
@@ -360,6 +413,12 @@ export function runPolicyMatch(config) {
     for (const event of items) increment(eventTypeCounts, event.type);
   };
   const matchId = createMatchId({ ...config, profileId, seatOrder, policyIds });
+  const executableParts = executableIdentityParts({ ...config, profileId, seatOrder, policyIds, decisionLimit });
+  // Execution occurrence: a unique instance identity, distinct from the
+  // deterministic sample (matchId) it executed. Re-running the same sample
+  // mints a new occurrence — repeats never inflate independent sample size.
+  const executionOccurrenceId = config.executionOccurrenceId
+    ?? `OCC-${matchId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
   const provenance = createRunProvenance({
     runId: config.runId ?? `RUN-${matchId}`,
     matchId, labVersion: LAB_VERSION, engineVersion: ENGINE_VERSION, rulesVersion: RULES_VERSION,
@@ -748,7 +807,19 @@ export function runPolicyMatch(config) {
   // only for seats that carried an adaptive configuration.
   const adaptiveTelemetry = buildAdaptiveTelemetry(adaptiveConfigs, adaptiveControllers);
   const summary = { ...summaryCore, ...(strategicTelemetry?{strategicTelemetry}:{}), ...(terminal?{terminalEvidence:terminal}:{}), ...(adaptiveTelemetry?{adaptiveTelemetry}:{}), comboTelemetry, matchResultHash: hashCanonical(hashInput), perSeatStats:perSeat.map((p,i)=>({playerId:seatOrder[i],...p})), rankDecisions };
-  const base = { summary, decisions, facts, provenance };
+  // R01 identity record — the summary carries only the DETERMINISTIC fields
+  // (safe inside canonical whole-summary hashing); occurrence and run
+  // instance are lifecycle values — they live on the result envelope, never
+  // inside the canonical summary.
+  const identity = {
+    schemaVersion: '1.0.0',
+    matchIdVersion: executableParts ? 2 : 1,
+    deterministicSampleId: matchId,
+    executableHash: executableParts ? hashCanonical(executableParts) : null,
+    displayOrdinal: config.ordinal ?? null,
+  };
+  summary.identity = identity;
+  const base = { summary, decisions, facts, provenance, identity: { ...identity, executionOccurrenceId, runInstanceId } };
   if(fieldManual) summary.strategyDecisions = fieldManual.finish({initialState,commands,finalStateHash:summary.finalStateHash,winner:summary.winner,terminationReason,finalScores,gameLength:summary.completedFullTurns});
   if (captureTraces) base.decisionTraces = decisionTraces;
   if (!config.includeReplay) return base;

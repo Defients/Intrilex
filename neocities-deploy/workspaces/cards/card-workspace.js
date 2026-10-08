@@ -11,19 +11,19 @@
 // this file owns presentation and event wiring only.
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct } from '../../state.js?v=7d7375aa53c1';
-import { rerender } from '../../rerender.js?v=7d7375aa53c1';
-import { labDatasetBanner } from '../observatory.js?v=7d7375aa53c1';
-import { obsContextStrip, metricStrip, emptyEvidenceState, dossierSection } from '../observatory-ui.js?v=7d7375aa53c1';
-import { renderCardFace } from '../../card-face-renderer.js?v=7d7375aa53c1';
-import { renderAdvancedCardRulesView } from '../../play/advanced-card-rules/advanced-card-rules-view.mjs?v=7d7375aa53c1';
-import { radarChart } from '../../chart-toolkit.js?v=7d7375aa53c1';
-import { CARD_FACE_REGISTRY_META } from '../../card-face-data.js?v=7d7375aa53c1';
-import * as M from './card-model.js?v=7d7375aa53c1';
+import { state, app, esc, fmt, pct } from '../../state.js?v=a90b812f827b';
+import { rerender } from '../../rerender.js?v=a90b812f827b';
+import { labDatasetBanner } from '../observatory.js?v=a90b812f827b';
+import { obsContextStrip, metricStrip, emptyEvidenceState, dossierSection } from '../observatory-ui.js?v=a90b812f827b';
+import { renderCardFace } from '../../card-face-renderer.js?v=a90b812f827b';
+import { renderAdvancedCardRulesView } from '../../play/advanced-card-rules/advanced-card-rules-view.mjs?v=a90b812f827b';
+import { radarChart } from '../../chart-toolkit.js?v=a90b812f827b';
+import { CARD_FACE_REGISTRY_META } from '../../card-face-data.js?v=a90b812f827b';
+import * as M from './card-model.js?v=a90b812f827b';
 
 // Lazy Advanced Card Rules modal — same pattern as app.js card clicks.
 let _acrController = null;
-const getAcrController = () => (_acrController ??= import('../../play/advanced-card-rules/advanced-card-rules-controller.mjs?v=7d7375aa53c1'));
+const getAcrController = () => (_acrController ??= import('../../play/advanced-card-rules/advanced-card-rules-controller.mjs?v=a90b812f827b'));
 
 const TIMING_GLYPHS = { instant: '⏱', interrupt: '✋', effect: '▶', quick: '⚡', passive: '∞', super: '⭐', scoring: '◉', anchor: '⚓' };
 

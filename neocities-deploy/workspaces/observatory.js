@@ -3,14 +3,14 @@
 //   Compare, Mechanics, Synergies, History, Replays, Traces
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=7d7375aa53c1';
-import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow, scatterPlot, intervalPlot } from '../chart-toolkit.js?v=7d7375aa53c1';
-import { wilsonInterval } from '../observatory-analytics-browser.js?v=7d7375aa53c1';
-import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js?v=7d7375aa53c1';
-// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=7d7375aa53c1') to break backedge
-import { rerender } from '../rerender.js?v=7d7375aa53c1';
-import { openReplay, descriptorKindForRecord, recordAvailability } from '../data-loader.js?v=7d7375aa53c1';
-import { classifyIndexRecord, REPLAY_ARTIFACT_CLASS, ARTIFACT_CLASS_LABEL } from '../replay-contract.mjs?v=7d7375aa53c1';
+import { state, app, esc, fmt, pct, short, definitionList } from '../state.js?v=a90b812f827b';
+import { barChart, heatmap, donutChart, sparkline, lineChart, stackedBarChart, chartTableAlternative, sankeyFlow, scatterPlot, intervalPlot } from '../chart-toolkit.js?v=a90b812f827b';
+import { wilsonInterval } from '../observatory-analytics-browser.js?v=a90b812f827b';
+import { obsContextStrip, metricStrip, evidenceBadge, dossierSection, miniBar, segmentControl } from './observatory-ui.js?v=a90b812f827b';
+// IRX-C06: Use rerender bus instead of dynamic import('../app.js?v=a90b812f827b') to break backedge
+import { rerender } from '../rerender.js?v=a90b812f827b';
+import { openReplay, descriptorKindForRecord, recordAvailability } from '../data-loader.js?v=a90b812f827b';
+import { classifyIndexRecord, REPLAY_ARTIFACT_CLASS, ARTIFACT_CLASS_LABEL } from '../replay-contract.mjs?v=a90b812f827b';
 
 // Generic segmented-control binder shared by the workspace display modes.
 // Each button carries data-seg-id (state key) + data-seg-value.
@@ -121,8 +121,9 @@ export function renderCompare() {
   };
   const abba = o.pairedABBA;
   const abbaStatusClass = abba?.designStatus === 'verified' ? 'info' : abba?.designStatus === 'malformed' ? 'error' : 'warning';
+  const sbStatus = abba?.seatBalance?.status;
   const seatBalanceNote = abba?.seatBalance?.decisiveLegs
-    ? ` Seat effect: seat 1 won ${pct(abba.seatBalance.seat1WinRate)} of ${abba.seatBalance.decisiveLegs} decisive legs${abba.seatBalance.signTest?.pValue != null ? ` (sign-test p=${abba.seatBalance.signTest.pValue})` : ''}.`
+    ? ` Seat effect: seat 1 won ${pct(abba.seatBalance.seat1WinRate)} of ${abba.seatBalance.decisiveLegs} decisive legs${abba.seatBalance.signTest?.pValue != null ? ` (sign-test p=${abba.seatBalance.signTest.pValue})` : ''}${sbStatus === 'insufficient-data' ? ' — underpowered; balance not established' : sbStatus === 'seat-effect-detected' ? ' — significant seat effect detected' : ' (descriptive; non-significance is not demonstrated equivalence)'}.`
     : '';
   const designNote = abba?.scheduleNote
     ? `<div class="notice ${abbaStatusClass}" style="margin-top:12px"><strong>Matched design:</strong> ${esc(abba.scheduleNote)}.${seatBalanceNote}</div>`
@@ -591,7 +592,7 @@ export async function renderOpeningPatterns() {
   let idx = state.traceIndex;
   if (!idx) {
     try {
-      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=7d7375aa53c1');
+      const { loadTraceIndex, loadTraceData } = await import('../data-loader.js?v=a90b812f827b');
       idx = await loadTraceIndex();
       if (!idx || !idx.records) {
         return `<div class="ix-chart-empty" data-testid="opening-patterns-empty">No decision traces available. Run a campaign with decision traces enabled to analyze opening patterns.</div>`;
@@ -604,7 +605,7 @@ export async function renderOpeningPatterns() {
     }
   }
   // If traceIndex exists but trace data isn't preloaded, load it
-  const { loadTraceData } = await import('../data-loader.js?v=7d7375aa53c1');
+  const { loadTraceData } = await import('../data-loader.js?v=a90b812f827b');
   const traceFiles = await Promise.all(idx.records.map(r => loadTraceData(r.matchId)));
   return _renderOpeningPatternsFromTraces(idx.records, traceFiles);
 }

@@ -27,7 +27,7 @@ import {
   MANIFEST_STATUS, MANIFEST_SCHEMA_VERSION, EXPERIMENT_LIMITS,
   createExperiment, createAnalysisSet, createRunRecord,
   createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
-  commitManifestBatch, manifestTransition, manifestIsActive, manifestIsResumable,
+  commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
   manifestRemainingSegments, manifestCommittedCoverage,
   runIdFor, batchSummariesHash, slimSummary,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
@@ -64,6 +64,12 @@ let _runExecutor = null;
 let _bootSummaries = [];
 let _ready = false;
 let _applyToken = 0;
+// Durable ownership fencing (R02): this controller instance's owner id is
+// minted once per boot. Manifests carry {ownerId, fencingToken, leaseUntil};
+// the store rejects any mutation whose owner/token no longer matches, so a
+// superseded controller can never mutate a run another owner holds.
+let _ownerId = null;
+const OWNER_LEASE_MS = 30000;
 
 // Matches ExperimentStore.listRuns ordering so merged in-memory records slot
 // into the same position a persisted record would occupy.
@@ -147,6 +153,7 @@ export async function initExperiments({ bootSummaries = [], bootAggregate = null
   _sessionPayloads = new Map();
   _memoryOnlyRunIds = new Set();
   _store = store ?? new ExperimentStore();
+  _ownerId = `LAB-OWNER-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
   await _store.open();
   const writes = planMigration({
     experiments: await _store.listExperiments(),
@@ -172,16 +179,19 @@ export async function initExperiments({ bootSummaries = [], bootAggregate = null
     _set = { ..._set, includedRunIds: liveIncluded };
     await _persistSet();
   }
-  // Crash/reload recovery: any manifest still marked active was cut off
-  // mid-execution (the tab cannot resume a dead worker). Reclassify it
-  // interrupted — committed batches are already durable; the run becomes
-  // resumable evidence rather than silently vanishing.
+  // Crash/reload recovery (R02-aware): a manifest still marked active was
+  // cut off mid-execution ONLY if its ownership lease has lapsed or it was
+  // never fenced. A manifest owned by another controller with a live lease
+  // is still being worked — this boot must not invalidate or interrupt it.
   _manifests = new Map();
   try {
     if (typeof _store.listManifests === 'function') {
+      const now = Date.now();
       for (const manifest of await _store.listManifests(_experiment.experimentId)) {
         let live = manifest;
-        if (manifestIsActive(manifest)) {
+        const foreignLeaseLive = manifest?.owner?.ownerId && manifest.owner.ownerId !== _ownerId
+          && Number.isFinite(Date.parse(manifest.owner.leaseUntil ?? '')) && Date.parse(manifest.owner.leaseUntil) > now;
+        if (manifestIsActive(manifest) && !foreignLeaseLive) {
           live = manifestTransition(manifest, MANIFEST_STATUS.INTERRUPTED, {
             failure: { message: 'Execution interrupted (browser closed or reloaded before the run finished).', phase: 'execution' },
           });
@@ -431,8 +441,50 @@ async function _getManifest(manifestId) {
   return _manifests.get(manifestId) ?? await _store.getManifest(manifestId) ?? null;
 }
 
+/** Local ownership guard — fails fast before I/O when this controller is
+ * not the fenced owner. The store still performs the authoritative compare
+ * on every write (another instance may have taken over between checks). */
+function _assertManifestOwner(manifest) {
+  const owner = manifest?.owner ?? null;
+  if (owner?.ownerId && owner.ownerId !== _ownerId) {
+    throw Object.assign(new Error('RUN_OWNERSHIP_STALE'), { code: 'RUN_OWNERSHIP_STALE', manifestId: manifest.manifestId });
+  }
+}
+
+/** Is `manifest` owned by a different live lease? (Inspection is always
+ * allowed; mutation is not.) */
+function _manifestForeignHeld(manifest) {
+  const owner = manifest?.owner ?? null;
+  return Boolean(owner?.ownerId) && owner.ownerId !== _ownerId
+    && Number.isFinite(Date.parse(owner.leaseUntil ?? '')) && Date.parse(owner.leaseUntil) > Date.now();
+}
+
+/** Fresh owner record for a newly claimed manifest. */
+function _newOwnerLease() {
+  const now = Date.now();
+  return { ownerId: _ownerId, fencingToken: 1, acquiredAt: new Date(now).toISOString(), leaseUntil: new Date(now + OWNER_LEASE_MS).toISOString() };
+}
+
+/** Extend this owner's lease on a manifest we hold (heartbeat piggy-back). */
+function _renewedLease(owner) {
+  if (!owner?.ownerId) return owner;
+  return { ...owner, leaseUntil: new Date(Date.now() + OWNER_LEASE_MS).toISOString() };
+}
+
+/** Release ownership on a terminal transition so another controller may
+ * resume the run without waiting out the lease. */
+function _releasedOwner(owner) {
+  if (!owner?.ownerId) return owner;
+  return { ...owner, leaseUntil: new Date(0).toISOString() };
+}
+
 async function _persistManifest(manifest) {
-  await _store.putManifest(manifest);
+  if (manifest?.owner) {
+    _assertManifestOwner(manifest);
+    await _store.putManifestFenced(manifest);
+  } else {
+    await _store.putManifest(manifest);
+  }
   _manifests.set(manifest.manifestId, manifest);
 }
 
@@ -448,25 +500,47 @@ function requirePersistentCampaign() {
 export function registerRunExecutor(fn) { _runExecutor = fn; }
 
 /**
- * Open a manifest for a new run. Persisted before any simulation begins so
- * even a crash during batch 1 leaves an honest interrupted record. Throws
- * when experiments aren't ready or the manifest can't be written — a run
- * that cannot checkpoint does not start.
+ * Open a manifest for a new run — atomically claimed before any simulation
+ * begins (R02). The ordinal/runId is recomputed from the STORE's authoritative
+ * state on every claim attempt, so two controllers racing for the same
+ * ordinal cannot both win: the loser gets EXPERIMENT_OCCURRENCE_CONFLICT and
+ * retries on a fresh, actually-free occurrence. A display ordinal is never
+ * treated as ownership — the claimed manifest carries this controller's
+ * lease and every subsequent mutation is fence-checked.
  */
 export async function beginExperimentRun({ config = {}, segments = null, batchSize = 0 } = {}) {
   if (!_ready || !_experiment) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
   requirePersistentCampaign();
-  const ordinal = Math.max(
-    nextRunOrdinal(_runs.filter(r => r.origin !== 'bundled')),
-    [..._manifests.values()].reduce((m, x) => Math.max(m, (x.ordinal ?? 0) + 1), 0),
-  );
-  const runId = runIdFor(_experiment.experimentId, ordinal);
-  const manifest = createRunManifest({
-    runId, experimentId: _experiment.experimentId, ordinal,
-    config, requestedMatches: config.matchCount ?? 0, batchSize, segments,
-  });
-  await _persistManifest(manifest);
-  return { runId, manifest };
+  for (let attempt = 0; attempt < 32; attempt += 1) {
+    // Authoritative ordinal space: persisted runs + persisted manifests,
+    // merged with this controller's in-memory view (session-only records).
+    const taken = new Set();
+    const persistOrdinals = async () => {
+      for (const r of await _store.listRuns(_experiment.experimentId)) if (r.origin !== 'bundled') taken.add(r.ordinal ?? 0);
+      for (const m of await _store.listManifests(_experiment.experimentId)) taken.add(m.ordinal ?? 0);
+    };
+    try { await persistOrdinals(); }
+    catch (error) { console.warn('[experiments] ordinal scan failed — using local view only:', error); }
+    for (const r of _runs) if (r.origin !== 'bundled') taken.add(r.ordinal ?? 0);
+    for (const m of _manifests.values()) taken.add(m.ordinal ?? 0);
+    let ordinal = 0;
+    while (taken.has(ordinal)) ordinal += 1;
+    const runId = runIdFor(_experiment.experimentId, ordinal);
+    const manifest = createRunManifest({
+      runId, experimentId: _experiment.experimentId, ordinal,
+      config, requestedMatches: config.matchCount ?? 0, batchSize, segments,
+      owner: _newOwnerLease(),
+    });
+    try {
+      await _store.claimRunManifest(manifest);
+      _manifests.set(runId, manifest);
+      return { runId, manifest };
+    } catch (error) {
+      if (error?.code === 'EXPERIMENT_OCCURRENCE_CONFLICT' || error?.code === 'EXPERIMENT_RECORD_EXISTS') continue;
+      throw error;
+    }
+  }
+  throw Object.assign(new Error('EXPERIMENT_OCCURRENCE_EXHAUSTED'), { code: 'EXPERIMENT_OCCURRENCE_EXHAUSTED' });
 }
 
 /**
@@ -482,6 +556,7 @@ export async function commitExperimentBatch(runId, { segmentIndex = 0, ordinalSt
   if (!manifestIsActive(manifest)) {
     throw Object.assign(new Error('RUN_MANIFEST_NOT_ACTIVE'), { code: 'RUN_MANIFEST_NOT_ACTIVE' });
   }
+  _assertManifestOwner(manifest);
   const batchIndex = (manifest.committedBatches ?? []).length;
   const batch = {
     batchId: `${runId}#${batchIndex}`,
@@ -493,7 +568,10 @@ export async function commitExperimentBatch(runId, { segmentIndex = 0, ordinalSt
     committedAt: new Date().toISOString(),
     summaries,
   };
-  const next = commitManifestBatch(manifest, {
+  // Idempotent retained-coverage commit (R03): identical retries never
+  // double-count; conflicting digests for a retained sample identity are a
+  // durable integrity failure, not a silent overwrite.
+  const { manifest: planned, receipt } = planManifestBatchCommit(manifest, {
     batchIndex, segmentIndex,
     ordinalStart: batch.ordinalStart, ordinalEnd: batch.ordinalEnd,
     matchCount: batch.matchCount,
@@ -501,10 +579,30 @@ export async function commitExperimentBatch(runId, { segmentIndex = 0, ordinalSt
     matchResultHashes: summaries.map(s => ({ o: s.matchOrdinal, h: s.matchResultHash })),
     committedAt: batch.committedAt,
   });
+  if (!receipt.accepted) {
+    try { await _store.putManifestFenced(planned); } catch { /* the conflict mark is durable when the fence still holds */ }
+    _manifests.set(runId, planned);
+    throw Object.assign(new Error('RUN_BATCH_SAMPLE_CONFLICT'), { code: 'RUN_BATCH_SAMPLE_CONFLICT', conflicts: receipt.conflicts });
+  }
+  if (receipt.duplicate) {
+    return { runId, batchIndex, committedMatches: manifest.committedMatches ?? 0, requestedMatches: manifest.requestedMatches, duplicate: true };
+  }
+  const next = { ...planned, owner: _renewedLease(planned.owner) };
   next.headline = foldSummariesIntoHeadline(manifest.headline ? { ...manifest.headline, seatWins: { ...manifest.headline.seatWins } } : createManifestHeadline(), summaries);
   await _store.commitRunBatch({ manifest: next, batch });
   _manifests.set(runId, next);
-  return { runId, batchIndex, committedMatches: next.committedMatches, requestedMatches: next.requestedMatches };
+  return { runId, batchIndex, committedMatches: next.committedMatches, requestedMatches: next.requestedMatches, receipt };
+}
+
+/** Owner heartbeat — extend the lease on a manifest this controller holds.
+ * No-op for foreign or inactive manifests; stale owners surface via the
+ * store's fencing rejection. */
+export async function touchRunLease(runId) {
+  const manifest = _manifests.get(runId);
+  if (!manifest?.owner || manifest.owner.ownerId !== _ownerId || !manifestIsActive(manifest)) return null;
+  const next = await _store.renewManifestLease(runId, { ownerId: _ownerId, fencingToken: manifest.owner.fencingToken, leaseMs: OWNER_LEASE_MS });
+  _manifests.set(runId, next);
+  return next;
 }
 
 /**
@@ -551,9 +649,19 @@ async function _aggregateCommitted(runId, descriptors, semantic) {
  */
 export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
   if (!_ready) return null;
-  const manifest = await _getManifest(runId);
+  let manifest = await _getManifest(runId);
   if (!manifest) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING' });
   if (manifest.sealedRunId) throw Object.assign(new Error('RUN_ALREADY_SEALED'), { code: 'RUN_ALREADY_SEALED' });
+  // Sealing is a mutation — only the fenced owner may finalize (R02). An
+  // unowned or expired-lease manifest (e.g. needsSeal after resume) is
+  // claimed atomically; a live foreign owner is refused.
+  if (_manifestForeignHeld(manifest)) {
+    throw Object.assign(new Error('RUN_OWNERSHIP_HELD'), { code: 'RUN_OWNERSHIP_HELD', manifestId: runId });
+  }
+  if (manifest.owner?.ownerId !== _ownerId) {
+    manifest = await _store.acquireManifestOwnership(runId, { ownerId: _ownerId, leaseMs: OWNER_LEASE_MS });
+    _manifests.set(runId, manifest);
+  }
   const descriptors = (manifest.committedBatches ?? []).slice()
     .sort((a, b) => (a.ordinalStart ?? 0) - (b.ordinalStart ?? 0) || (a.batchIndex ?? 0) - (b.batchIndex ?? 0));
   if (!descriptors.length) {
@@ -629,26 +737,45 @@ export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
   return { run: sealed, compatibility: compat, included, persisted: _store.persisted === true, payloadSessionOnly: false, metaFailed: false, setPersisted, aggregate, observatory };
 }
 
-/** Mark a manifest run failed — committed evidence is preserved. */
+/** Mark a manifest run failed — committed evidence is preserved. Ownership
+ * is released so the run remains resumable by another controller; a stale
+ * owner's transition is rejected by the store fence and reported as a no-op. */
 export async function failExperimentRun(runId, error = null) {
   const manifest = await _getManifest(runId);
   if (!manifest) return null;
-  const next = manifestTransition(manifest, MANIFEST_STATUS.FAILED, {
-    failure: { message: String(error ?? 'unknown').slice(0, 500), phase: 'execution' },
-  });
-  await _persistManifest(next).catch(e => { console.warn('[experiments] fail-transition persist failed:', e); _manifests.set(runId, next); });
+  if (_manifestForeignHeld(manifest)) return null; // another live owner decides
+  const next = {
+    ...manifestTransition(manifest, MANIFEST_STATUS.FAILED, {
+      failure: { message: String(error ?? 'unknown').slice(0, 500), phase: 'execution' },
+    }),
+    owner: _releasedOwner(manifest.owner),
+  };
+  try { await _persistManifest(next); }
+  catch (e) {
+    if (e?.code === 'RUN_OWNERSHIP_STALE') { console.warn('[experiments] fail-transition rejected — ownership superseded:', runId); return null; }
+    console.warn('[experiments] fail-transition persist failed:', e); _manifests.set(runId, next);
+  }
   _syncEvidenceBasis();
   return next;
 }
 
-/** Cancel a manifest run — committed evidence is preserved and resumable. */
+/** Cancel a manifest run — committed evidence is preserved and resumable.
+ * Ownership is released; stale-owner cancels are fence-rejected. */
 export async function cancelExperimentRun(runId) {
   const manifest = await _getManifest(runId);
   if (!manifest) return null;
-  const next = manifestTransition(manifest, MANIFEST_STATUS.CANCELLED, {
-    failure: { message: 'Cancelled by user.', phase: 'execution' },
-  });
-  await _persistManifest(next).catch(e => { console.warn('[experiments] cancel-transition persist failed:', e); _manifests.set(runId, next); });
+  if (_manifestForeignHeld(manifest)) return null; // another live owner decides
+  const next = {
+    ...manifestTransition(manifest, MANIFEST_STATUS.CANCELLED, {
+      failure: { message: 'Cancelled by user.', phase: 'execution' },
+    }),
+    owner: _releasedOwner(manifest.owner),
+  };
+  try { await _persistManifest(next); }
+  catch (e) {
+    if (e?.code === 'RUN_OWNERSHIP_STALE') { console.warn('[experiments] cancel-transition rejected — ownership superseded:', runId); return null; }
+    console.warn('[experiments] cancel-transition persist failed:', e); _manifests.set(runId, next);
+  }
   _syncEvidenceBasis();
   return next;
 }
@@ -690,8 +817,12 @@ export async function resumeExperimentRun(manifestId) {
     return { runId: manifestId, resumed: false, needsSeal: true };
   }
   if (!manifestIsResumable(manifest)) throw new Error('RUN_NOT_RESUMABLE');
-  const running = manifestTransition(manifest, MANIFEST_STATUS.RUNNING, { failure: null });
-  await _persistManifest(running);
+  // Take over durable ownership atomically (R02): an expired/absent lease
+  // transfers with a bumped fencing token; a live foreign owner is refused.
+  const acquired = await _store.acquireManifestOwnership(manifestId, { ownerId: _ownerId, leaseMs: OWNER_LEASE_MS });
+  const running = manifestTransition(acquired, MANIFEST_STATUS.RUNNING, { failure: null });
+  await _store.putManifestFenced(running);
+  _manifests.set(manifestId, running);
   const base = manifest.config?.ordinalStart ?? 0;
   const plan = {
     runId: manifestId,
@@ -715,11 +846,13 @@ export async function resumeExperimentRun(manifestId) {
   return plan;
 }
 
-/** Delete an unfinalized manifest plus its committed batches. */
+/** Delete an unfinalized manifest plus its committed batches. A manifest
+ * held by another live owner cannot be discarded (R02). */
 export async function discardManifest(manifestId) {
   const manifest = await _getManifest(manifestId);
   if (!manifest) throw new Error('RUN_MANIFEST_MISSING');
   if (manifest.sealedRunId) throw new Error('RUN_ALREADY_SEALED');
+  if (_manifestForeignHeld(manifest)) throw Object.assign(new Error('RUN_OWNERSHIP_HELD'), { code: 'RUN_OWNERSHIP_HELD', manifestId });
   await _store.deleteManifestCascade(manifestId);
   _manifests.delete(manifestId);
   _syncEvidenceBasis();

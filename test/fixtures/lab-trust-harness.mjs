@@ -18,7 +18,7 @@ export async function controller(store) {
     console: { warn() {} }, Worker: class { constructor() { throw Error('No worker in controlled regression'); } },
     state: { bootState: null, observatory: {}, aggregate: {}, evidenceBasis: null }, showToast() {}, updateRailContext() {}, rerender() {},
     RULES_VERSION: '4.3.1', ENGINE_VERSION: '4.2.6', LAB_VERSION: 'wave0-test' };
-  const api = runInNewContext(src + '\n({initExperiments,beginExperimentRun,commitExperimentBatch,resumeExperimentRun,registerRunExecutor,storePersisted})', sandbox);
+  const api = runInNewContext(src + '\n({initExperiments,beginExperimentRun,commitExperimentBatch,resumeExperimentRun,registerRunExecutor,storePersisted,finalizeExperimentRun,failExperimentRun,cancelExperimentRun,discardManifest,touchRunLease,getIncompleteRuns})', sandbox);
   await api.initExperiments({ store });
   return api;
 }

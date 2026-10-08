@@ -19,7 +19,7 @@
 //   flag so the migration-controller can transfer local achievements.
 // ═══════════════════════════════════════════════════════════════
 
-import { getSupabaseClient, isSupabaseConfigured } from './supabase-client.js?v=7d7375aa53c1';
+import { getSupabaseClient, isSupabaseConfigured } from './supabase-client.js?v=a90b812f827b';
 
 /**
  * @typedef {'UNCONFIGURED'|'SIGNED_OUT'|'ANONYMOUS'|'AUTHENTICATED'|'LINKING'} AuthState
@@ -333,7 +333,7 @@ function setState(newState) {
   // AUTHENTICATED → use the user's accountId. ANONYMOUS/SIGNED_OUT → use guest/legacy.
   try {
     const accountId = (newState === 'AUTHENTICATED' && _session?.user?.id) ? _session.user.id : null;
-    import('../achievements/achievement-runtime.js?v=7d7375aa53c1').then(({ getAchievementRuntime }) => {
+    import('../achievements/achievement-runtime.js?v=a90b812f827b').then(({ getAchievementRuntime }) => {
       const runtime = getAchievementRuntime();
       if (runtime._initialized) {
         runtime.switchAccount(accountId).catch(() => { /* non-fatal */ });

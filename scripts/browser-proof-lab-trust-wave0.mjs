@@ -5,23 +5,60 @@ import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
+import { build } from 'esbuild';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'apps/lab-web/dist');
-const mirrors = new Set(['lab-trust-policy.mjs', 'profile-store.mjs', 'profile-contracts.mjs', 'discovery-domain.mjs']);
-const sourceFiles = new Set(['/experiment-controls.js', '/experiments/experiment-controller.mjs', '/evolution/profile-workspace.js', '/workspaces/discover.js']);
-// Existing built shell with current changed source modules overlaid using the
-// build's import rewrites. No repo artifacts or user browser storage are changed.
+const mirrors = new Set(['lab-trust-policy.mjs', 'profile-store.mjs', 'profile-contracts.mjs', 'discovery-domain.mjs', 'experiment-domain.mjs', 'experiment-portability.mjs']);
+const sourceFiles = new Set(['/experiment-controls.js', '/experiments/experiment-controller.mjs', '/experiments/experiment-store.mjs', '/evolution/profile-workspace.js', '/workspaces/discover.js']);
+// Bundle current source in memory using the existing built engine/assets.
+// Resolve version-query imports once so state modules are not duplicated.
+// No generated repo files or user browser storage are changed by this proof.
+const portableSource = async name => (await readFile(path.join(root, 'packages/simulation-runtime/src', name), 'utf8'))
+  .replaceAll("'@intrilex/shared'", "'../shared-browser.js'")
+  .replaceAll("'@intrilex/statistics/estimators'", "'../shared-analytics/estimators.mjs'")
+  .replaceAll("'../../policies/src/weighted-heuristic.mjs'", "'./weighted-heuristic.mjs'");
+const browserBundle = await build({
+  entryPoints: [path.join(dist, 'app.js')], bundle: true, write: false, format: 'esm', platform: 'browser', target: 'es2020',
+  jsx: 'automatic', alias: { '@intrilex/shared': path.join(dist, 'shared-browser.js') },
+  define: { __INTRILEX_TACTICAL_CSS__: '"/client/game-table.css"' }, logLevel: 'silent',
+  plugins: [{ name: 'wave0-source-overlay', setup(bundler) {
+    bundler.onResolve({ filter: /\?v=|lab-trust-policy\.mjs$/ }, async args => {
+      if (args.pluginData?.resolved) return undefined;
+      const clean = args.path.split('?')[0];
+      if (clean.endsWith('/lab-trust-policy.mjs')) return { path: path.join(dist, 'evolution/lab-trust-policy.mjs') };
+      // This optional theme import is absent from the existing build and
+      // already has a runtime catch. Preserve that behavior; do not invent
+      // a module or change unrelated settings to run the containment proof.
+      if (clean.endsWith('landing/seasonal-theme.js')) return { path: '/landing/seasonal-theme.js', external: true };
+      return bundler.resolve(clean, { resolveDir: args.resolveDir, kind: args.kind, pluginData: { resolved: true } });
+    });
+    bundler.onLoad({ filter: /\.(mjs|js)$/ }, async args => {
+      const relative = path.relative(dist, args.path).replaceAll('\\', '/');
+      if (sourceFiles.has('/' + relative)) return { contents: (await readFile(path.join(root, 'apps/lab-web/src', relative), 'utf8'))
+        .replaceAll('../../../../packages/simulation-runtime/src/', '../evolution/').replaceAll('../../../../packages/shared/src/canonical.mjs', '../shared-browser.js'),
+        resolveDir: path.dirname(args.path), loader: 'js' };
+      if (relative.startsWith('evolution/') && mirrors.has(path.basename(relative))) return { contents: await portableSource(path.basename(relative)), resolveDir: path.dirname(args.path), loader: 'js' };
+      return undefined;
+    });
+  } }],
+});
+const bundleText = browserBundle.outputFiles.find(file => file.path.endsWith('.js') || file.path === '<stdout>')?.text;
+assert.ok(bundleText, 'browser proof must compile a current application bundle');
 const server = http.createServer(async (req, res) => {
   try {
     const pathname = new URL(req.url, 'http://localhost').pathname;
     let content;
-    if (pathname === '/' || pathname === '/index.html') content = (await readFile(path.join(dist, 'index.html'), 'utf8')).replace(/src="app\.[a-f0-9]+\.js"/, 'src="app.js"');
+    if (pathname === '/' || pathname === '/index.html') content = (await readFile(path.join(dist, 'index.html'), 'utf8')).replace(/src="app\.[a-f0-9]+\.js"/, 'src="wave0-proof-app.js"');
+    if (pathname === '/wave0-proof-app.js') content = bundleText;
     if (pathname === '/proof.html') content = '<!doctype html><title>Wave 0 native IndexedDB proof</title>';
     if (pathname === '/source/domain.mjs') content = (await readFile(path.join(root, 'packages/simulation-runtime/src/experiment-domain.mjs'), 'utf8')).replaceAll("'@intrilex/shared'", "'/shared-browser.js'");
     if (pathname === '/source/store.mjs') content = (await readFile(path.join(root, 'apps/lab-web/src/experiments/experiment-store.mjs'), 'utf8')).replaceAll("'../../../../packages/simulation-runtime/src/experiment-domain.mjs'", "'/source/domain.mjs'");
     if (pathname === '/source/controller.txt') content = await readFile(path.join(root, 'apps/lab-web/src/experiments/experiment-controller.mjs'), 'utf8');
-    if (sourceFiles.has(pathname)) content = (await readFile(path.join(root, 'apps/lab-web/src', pathname.slice(1)), 'utf8')).replaceAll('../../../../packages/simulation-runtime/src/', '../evolution/');
+    if (sourceFiles.has(pathname)) content = (await readFile(path.join(root, 'apps/lab-web/src', pathname.slice(1)), 'utf8'))
+      .replaceAll('../../../../packages/simulation-runtime/src/', '../evolution/')
+      .replaceAll('../../../../packages/shared/src/canonical.mjs', '/shared-browser.js')
+      .replaceAll('../../../../packages/', '/packages/');
     if (pathname.startsWith('/evolution/') && mirrors.has(path.basename(pathname))) content = (await readFile(path.join(root, 'packages/simulation-runtime/src', path.basename(pathname)), 'utf8'))
       .replaceAll("'@intrilex/shared'", "'../shared-browser.js'").replaceAll("'@intrilex/statistics/estimators'", "'../shared-analytics/estimators.mjs'").replaceAll("'../../policies/src/weighted-heuristic.mjs'", "'./weighted-heuristic.mjs'");
     const target = path.resolve(dist, '.' + decodeURIComponent(pathname === '/' ? '/index.html' : pathname));
@@ -56,14 +93,11 @@ try {
     return { nativeIndexedDB: sa.persisted && sb.persisted, ids: [ra.runId, rb.runId], manifestCount: (await sa.listManifests()).length };
   });
   assert.equal(result.nativeIndexedDB, true);
-  // Keep the desired behavior as an actual assertion, with a separately
-  // reported expected failure. Strict mode makes this a failing release gate.
-  try { assert.notEqual(result.ids[0], result.ids[1]); assert.equal(result.manifestCount, 2); }
-  catch (error) {
-    if (error.code !== 'ERR_ASSERTION') throw error;
-    report.deferred.push({ ticket: 'R02', status: 'KNOWN_FAILURE', ...result });
-  }
-  assert.equal(report.deferred.length, 1, 'R02 changed: review/update the frozen audit regression instead of silently removing it');
+  // R02 is now a genuine assertion: cross-connection manifest allocation is
+  // fenced — two independent controllers cannot claim the same run occurrence.
+  assert.notEqual(result.ids[0], result.ids[1], 'two controllers must allocate distinct run occurrences');
+  assert.equal(result.manifestCount, 2);
+  report.containment.push({ status: 'PASS', name: 'cross-connection run allocation is fenced (R02)', ids: result.ids });
   await context.close();
 
   const blocked = await browser.newContext();
@@ -89,7 +123,7 @@ try {
   assert.equal(domainGuard.comparison.ok, false);
   report.containment.push({ status: 'PASS', name: 'browser policy and confirmatory gate match source' });
   await blocked.close();
-  if (process.argv.includes('--strict')) process.exitCode = 1;
+  if (process.argv.includes('--strict') && report.deferred.length) process.exitCode = 1;
 } catch (error) { report.failure = error.stack; process.exitCode = 1; }
 finally {
   console.log(JSON.stringify(report, null, 2));

@@ -1,4 +1,4 @@
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=7d7375aa53c1';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=a90b812f827b';
 import {
   IntrilexEngine,
   createMatchState,
@@ -9,19 +9,19 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=7d7375aa53c1';
+} from './engine/browser-entry.js?v=a90b812f827b';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
 import { actionSemantics } from './engine-adapter/action-semantics.mjs';
-import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=7d7375aa53c1';
-import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=7d7375aa53c1';
-import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame } from './evolution/adaptive-strategy.mjs?v=7d7375aa53c1';
-import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=7d7375aa53c1';
-import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=7d7375aa53c1';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=7d7375aa53c1';
-import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=7d7375aa53c1';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=7d7375aa53c1';
+import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=a90b812f827b';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=a90b812f827b';
+import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame, effectiveAdaptiveMode } from './evolution/adaptive-strategy.mjs?v=a90b812f827b';
+import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=a90b812f827b';
+import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=a90b812f827b';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=a90b812f827b';
+import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=a90b812f827b';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=a90b812f827b';
 
-export { createAdaptiveController, resolveAdaptiveControllers, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=7d7375aa53c1';
+export { createAdaptiveController, resolveAdaptiveControllers, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=a90b812f827b';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
@@ -136,7 +136,13 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const fieldManual=strategyIdentities?createStrategyCapture(strategyIdentities):null;
   let decisions=0,_responseDecisions=0,commands=0,events=0,terminationReason='DECISION_LIMIT',errorCode=null;
   // BL-05 fix: compute matchId before the loop so it's available in policy context
-  const matchId=`M-${hashCanonical({profileId,seed:setup.seed,seatOrder:seats,policyIds,...(ruleOverrides?{ruleOverrides}:{})}).slice(0,20)}`;
+  // R01: when a compiled executable subject (policyStates/adaptiveConfigs) is
+  // supplied, the deterministic sample identity binds the executable hash —
+  // two distinct genomes can never collapse into one sample identity. The
+  // legacy label-only M- digest is preserved for corpora without subject state.
+  const executableParts=(()=>{const normalizedAdaptive=(adaptiveConfigs??[]).map(c=>effectiveAdaptiveMode(c)==='OFF'?null:c);const hasCompiled=(policyStates??[]).some(s=>s!=null)||normalizedAdaptive.some(c=>c!=null);if(!hasCompiled)return null;return{schema:'executable-identity/1.0.0',profileId,engineVersion:ENGINE_VERSION,rulesVersion:_RULES_VERSION,policyIds,policyStates,adaptiveConfigs:normalizedAdaptive.some(c=>c!=null)?normalizedAdaptive:null,decisionLimit,orchestrationCommandLimit,ruleOverrides:ruleOverrides??null};})();
+  const matchId=!executableParts?`M-${hashCanonical({profileId,seed:setup.seed,seatOrder:seats,policyIds,...(ruleOverrides?{ruleOverrides}:{})}).slice(0,20)}`
+    :`M2-${hashCanonical({profileId,seed:setup.seed,seatOrder:seats,policyIds,...(ruleOverrides?{ruleOverrides}:{}),executableHash:hashCanonical(executableParts),initialStateHash:initialState?hashCanonical(initialState):null}).slice(0,24)}`;
   // BL-05 fix: mint a fresh opaque executionInstanceToken per top-level run.
   // This is process-local cache/lifecycle ownership only — never serialized or hashed.
   const executionInstanceToken=`${matchId}:${Date.now()}:${Math.random().toString(36).slice(2,10)}`;
@@ -229,6 +235,13 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   const terminal=terminalEvidence(capturedEvents,seats.map(id=>state.players[id].goal),publicTerminalAnchorCounts(state,seats));
   const adaptiveTelemetry=buildAdaptiveTelemetry(adaptiveCfgs,adaptiveControllers);
   const _matchResult={...core,...(strategyData?{strategicTelemetry:strategyData}:{}),...(terminal?{terminalEvidence:terminal}:{}),...(adaptiveTelemetry?{adaptiveTelemetry}:{}),comboTelemetry,matchResultHash:hashCanonical(browserHashInput),rankDecisions,decisions:matchDecisions};
+  // R01 identity record — post-hash provenance metadata: executable subject
+  // hash and deterministic sample id are enumerable/canonical; the execution
+  // occurrence is a lifecycle token — non-enumerable so it is readable for
+  // this session but never serialized into evidence or hashed surfaces.
+  const identity={schemaVersion:'1.0.0',matchIdVersion:executableParts?2:1,deterministicSampleId:matchId,executableHash:executableParts?hashCanonical(executableParts):null,displayOrdinal:ordinal};
+  Object.defineProperty(identity,'executionOccurrenceId',{value:executionInstanceToken,enumerable:false});
+  _matchResult.identity=identity;
   if(recordReplay)_matchResult.replay={initialState:replayInitialState,commands:replayCommands};
   if(fieldManual) {
     if(!recordReplay)throw new Error('STRATEGY_CAPTURE_REQUIRES_TRANSCRIPT');

@@ -1346,7 +1346,12 @@ export function renderAnalysisDossierMarkdown(dossier) {
     const abba = dossier.pairedAnalysis;
     out.push(`Design: ${abba.design ?? 'unknown'} (status: ${abba.designStatus ?? 'unknown'}) · ${abba.totalPairedBlocks ?? 0} complete paired blocks · ${abba.incompletePairs ?? 0} incomplete · ${abba.malformedBlocks ?? 0} malformed · pairing by ${abba.hasPairedRunIds ? 'pairedRunId' : 'policy-pair block (legacy)'}\n`);
     if (abba.scheduleNote) out.push(`> ${abba.scheduleNote}\n`);
-    if (abba.seatBalance) out.push(`Seat balance: seat1 ${pctText(abba.seatBalance.seat1WinRate)} (${abba.seatBalance.seat1Wins ?? 0}/${abba.seatBalance.decisiveLegs ?? 0} decisive) · seat2 ${pctText(1 - (abba.seatBalance.seat1WinRate ?? 0))} (${abba.seatBalance.seat2Wins ?? 0}/${abba.seatBalance.decisiveLegs ?? 0} decisive)\n`);
+    if (abba.seatBalance) {
+      const sb = abba.seatBalance;
+      out.push(`Observed seat outcomes: seat1 ${pctText(sb.seat1WinRate)} (${sb.seat1Wins ?? 0}/${sb.decisiveLegs ?? 0} decisive) · seat2 ${pctText(1 - (sb.seat1WinRate ?? 0))} (${sb.seat2Wins ?? 0}/${sb.decisiveLegs ?? 0} decisive) · status: ${sb.status ?? 'unknown'}\n`);
+      if (sb.seatExposureBalanced != null) out.push(`Seat exposure (design): ${sb.seatExposureBalanced ? 'each policy occupies each seat equally in verified blocks' : 'UNBALANCED seat exposure in verified blocks'}\n`);
+      if (sb.note) out.push(`> ${sb.note}\n`);
+    }
     if (abba.pairResults?.length) out.push(mdTable(['Pair', 'Blocks', 'Design', 'McNemar p', 'A: seat1 / seat2', 'B: seat1 / seat2', 'Interpretation'], abba.pairResults.map(r => [
       r.policyPair, r.pairedBlocks, r.designStatus ?? '—', numText(r.mcnemar?.pValue),
       `${pctText(r.seatConditioned?.[r.policyA]?.seat1?.winRate)} / ${pctText(r.seatConditioned?.[r.policyA]?.seat2?.winRate)}`,

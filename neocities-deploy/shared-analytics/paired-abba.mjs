@@ -352,16 +352,47 @@ export function buildPairedABBAAnalysis(summaries) {
   }
 
   const decisive = globalSeat.seat1Wins + globalSeat.seat2Wins;
+  // Exposure balance is a DESIGN property (does each policy occupy each seat
+  // equally across verified blocks?) — it is computed from assignments and
+  // reported separately from any statistical seat-effect test.
+  const exposureAggregate = {};
+  for (const r of pairResults) {
+    if (!r.seatSwapVerified) continue;
+    for (const [policy, e] of Object.entries(r.seatExposure ?? {})) {
+      exposureAggregate[policy] ??= { seat1: 0, seat2: 0 };
+      exposureAggregate[policy].seat1 += e.seat1 ?? 0;
+      exposureAggregate[policy].seat2 += e.seat2 ?? 0;
+    }
+  }
+  const seatExposureBalanced = Object.keys(exposureAggregate).length > 0
+    && Object.values(exposureAggregate).every((e) => e.seat1 === e.seat2);
+  // A two-sided exact-binomial sign test cannot reject at α=0.05 below
+  // n=6 decisive legs (min p = 2·2⁻⁶ = 0.03125). Below that, the corpus is
+  // insufficient — never reported as "balanced": a non-significant test is
+  // the absence of detected effect, not demonstrated equivalence.
+  const MIN_SEAT_TEST_LEGS = 6;
+  const signTest = binomialSignTest(globalSeat.seat1Wins, decisive);
+  const seatBalanceStatus = decisive === 0 ? 'not-applicable'
+    : decisive < MIN_SEAT_TEST_LEGS ? 'insufficient-data'
+      : signTest.significantAt != null ? 'seat-effect-detected'
+        : 'no-significant-seat-effect';
   const seatBalance = {
     seat1Wins: globalSeat.seat1Wins, seat2Wins: globalSeat.seat2Wins,
     decisiveLegs: decisive, drawLegs: globalSeat.drawLegs, unresolvedLegs: globalSeat.unresolvedLegs,
     seat1WinRate: decisive ? Math.round((globalSeat.seat1Wins / decisive) * 10000) / 10000 : null,
     wilson95: decisive ? wilsonInterval(globalSeat.seat1Wins, decisive) : null,
-    signTest: binomialSignTest(globalSeat.seat1Wins, decisive),
-    status: decisive === 0 ? 'not-applicable' : null,
+    signTest,
+    seatExposure: exposureAggregate,
+    seatExposureBalanced,
+    status: seatBalanceStatus,
+    note: seatBalanceStatus === 'not-applicable'
+      ? 'No decisive legs — no seat-effect observation is possible.'
+      : seatBalanceStatus === 'insufficient-data'
+        ? `${decisive} decisive leg(s) — too few for the sign test to detect even a total seat imbalance; seat balance is UNPROVEN, not established.`
+        : seatBalanceStatus === 'seat-effect-detected'
+          ? `Seat 1 won ${globalSeat.seat1Wins}/${decisive} decisive legs (p=${signTest.pValue}) — a seat effect is detected; policy contrasts are seat-confounded.`
+          : `Seat 1 won ${globalSeat.seat1Wins}/${decisive} decisive legs (p=${signTest.pValue}) — no significant seat effect detected. This is absence of evidence, not demonstrated equivalence; establishing balance requires a separately justified equivalence test.`,
   };
-  seatBalance.status = decisive === 0 ? 'not-applicable'
-    : (seatBalance.signTest.significantAt != null ? 'imbalanced' : 'balanced');
 
   const designStatus = pairResults.some((r) => r.designStatus === PAIR_DESIGN_STATUS.MALFORMED)
     ? 'malformed'
@@ -389,6 +420,7 @@ export function buildPairedABBAAnalysis(summaries) {
     malformedReasons: blockReasonCounts,
     pairCount: pairResults.length,
     seatBalance,
+    seatExposureBalanced,
     scheduleNote,
     pairResults,
     interpretationBoundary: designStatus === 'verified'

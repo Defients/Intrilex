@@ -145,6 +145,13 @@ export class CasterSession {
    */
   loadCompletedMatch(matchResult, frames) {
     this.cancelCommentary();
+    // Authorization is established BEFORE any viewer-scoped derived state
+    // (beats, cumulative event index, diagnostics, commentary inputs) is
+    // built. A redacted or hand-less replay fails closed to PUBLIC even if
+    // the caller requested OMNISCIENT — the request is never the grant.
+    this._handsAuthorized = detectHandAuthorization(frames);
+    this._viewerMode = this._viewerMode === VIEWER_MODE.OMNISCIENT && this._handsAuthorized
+      ? VIEWER_MODE.OMNISCIENT : VIEWER_MODE.PUBLIC;
     this.matchResult = matchResult;
     this.frames = frames;
     const built = buildBeats(matchResult, frames, { viewerMode: this._viewerMode });
@@ -170,10 +177,9 @@ export class CasterSession {
     this._waitWhatCaptures.length = 0;
     this._telemetry = { beatsViewed: 0, commentaryGenerated: 0, cacheHits: 0, cacheMisses: 0, failedGenerations: 0, waitWhatCaptures: 0 };
 
-    // Build the cumulative event index (Game Log) and detect whether
-    // the replay authorizes hand identities.
+    // Build the cumulative event index (Game Log) under the RESOLVED
+    // viewer mode — never the caller's requested mode.
     this._buildEventIndex();
-    this._handsAuthorized = detectHandAuthorization(frames);
 
     return this.envelope();
   }
@@ -204,13 +210,36 @@ export class CasterSession {
   }
 
   setViewerMode(viewerMode) {
-    this._viewerMode = viewerMode === VIEWER_MODE.OMNISCIENT ? viewerMode : VIEWER_MODE.PUBLIC;
+    // Fail closed: OMNISCIENT is granted only when the loaded replay's hand
+    // authorization was positively established at load time. A requested
+    // upgrade on a redacted artifact resolves to PUBLIC — never a grant.
+    const next = viewerMode === VIEWER_MODE.OMNISCIENT && this._handsAuthorized
+      ? VIEWER_MODE.OMNISCIENT : VIEWER_MODE.PUBLIC;
+    if (next === this._viewerMode) return;
+    this._viewerMode = next;
     // Viewer mode change invalidates cache (different projection).
     this.clearCache();
     // Captures and commentary can contain omniscient context. Never carry
     // that context into a subsequent public-view investigation or prompt.
     this._commentaryHistory.length = 0;
     this._waitWhatCaptures.length = 0;
+    // Derived viewer-scoped state must be rebuilt — a downgrade cannot
+    // leave omniscient-projected beats or the authorized event stream
+    // reachable after the switch.
+    if (this.matchResult && this.frames) {
+      const position = this.director?.index ?? 0;
+      const speed = this.director?.speed ?? 1;
+      const wasPlaying = this.director?.playing === true;
+      const built = buildBeats(this.matchResult, this.frames, { viewerMode: this._viewerMode });
+      this.beats = built.beats;
+      this.threads = buildThreadRegistry(this.beats);
+      this.diagnostics = runDiagnostics(this.matchResult, this.beats, this.frames);
+      this.director = new PlaybackDirector({ beats: this.beats });
+      try { this.director.setSpeed(speed); } catch { /* keep default speed */ }
+      this.director.stepTo(Math.min(position, Math.max(0, this.beats.length - 1)));
+      if (wasPlaying) this.director.play();
+      this._buildEventIndex();
+    }
   }
 
   /**

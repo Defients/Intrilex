@@ -23,17 +23,17 @@
 // esc() — never raw innerHTML with model output.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=7d7375aa53c1';
-import { policyOptions } from '../router.js?v=7d7375aa53c1';
-import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=7d7375aa53c1';
-import { ensureReplayFrames } from '../replay-frames.js?v=7d7375aa53c1';
-import { mountGameTable } from '../client/mount.tsx?v=7d7375aa53c1';
+import { esc } from '../state.js?v=a90b812f827b';
+import { policyOptions } from '../router.js?v=a90b812f827b';
+import { listReplays, getReplay, isIndexedDBAvailable } from '../play/persistence.js?v=a90b812f827b';
+import { ensureReplayFrames } from '../replay-frames.js?v=a90b812f827b';
+import { mountGameTable } from '../client/mount.tsx?v=a90b812f827b';
 
 // Lazy-loaded @intrilex/replay-caster (browser-bundleable subset).
 let casterModule = null;
 async function getCaster() {
   if (!casterModule) {
-    casterModule = await import('../replay-caster/browser-entry.js?v=7d7375aa53c1');
+    casterModule = await import('../replay-caster/browser-entry.js?v=a90b812f827b');
   }
   return casterModule;
 }
@@ -77,7 +77,7 @@ async function getAuthorityHash() {
 let _strictViewFn = null;
 async function getStrictView() {
   if (!_strictViewFn) {
-    const mod = await import('../autonomy-runtime.js?v=7d7375aa53c1');
+    const mod = await import('../autonomy-runtime.js?v=a90b812f827b');
     _strictViewFn = mod.strictView;
   }
   return _strictViewFn;
@@ -812,7 +812,10 @@ async function runPreparation(appEl, plan, signal) {
 
 // Build the CasterSession over verified frames. Omniscient only when
 // the replay actually authorizes hand identities — privacy-redacted
-// artifacts stay public (never fabricate identities).
+// artifacts stay public (never fabricate identities). OMNISCIENT here is
+// a REQUEST: CasterSession resolves authorization from the frame evidence
+// BEFORE constructing any viewer-scoped derived state (beats, event
+// index, commentary inputs), so a missing/redacted replay fails closed.
 async function buildCasterSession(matchResult, frames) {
   const { CasterSession, COMMENTARY_MODE, VIEWER_MODE } = await getCaster();
   const c = casterState.config;
@@ -825,6 +828,8 @@ async function buildCasterSession(matchResult, frames) {
   });
   session.loadCompletedMatch(matchResult, frames);
   session.setSpeed(c.speed);
+  // Defense in depth: the session already resolved viewerMode from
+  // evidence; this pin makes the PUBLIC outcome explicit at the boundary.
   if (!session.handsAuthorized) session.setViewerMode(VIEWER_MODE.PUBLIC);
   return session;
 }

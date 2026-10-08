@@ -5,6 +5,7 @@ import { controller, diagnosticStore, config, summaries } from './fixtures/lab-t
 import { createRunRecord, createRunManifest, payloadEvidenceHash, manifestRemainingSegments } from '../packages/simulation-runtime/src/experiment-domain.mjs';
 import { experimentRunArtifact, validateExperimentRunArtifact } from '../packages/simulation-runtime/src/experiment-portability.mjs';
 import { runPolicyMatch } from '../packages/simulation-runtime/src/runtime.mjs';
+import { hashCanonical } from '../packages/shared/src/canonical.mjs';
 import { baselinePolicyState, WEIGHTED_POLICY_ID } from '../packages/policies/src/weighted-heuristic.mjs';
 import { canCompareMeasurements } from '../packages/simulation-runtime/src/profile-contracts.mjs';
 import { prepareChallenge, promoteChallenger } from '../packages/simulation-runtime/src/profile-science.mjs';
@@ -55,20 +56,35 @@ test('Wave 0 refuses automatic promotion at the store authority boundary without
   assert.equal(JSON.stringify(await store.profileView(id)), before);
 });
 
-test('R02: independent controllers allocate distinct run occurrences', pending('R02'), async () => {
+test('R02: independent controllers allocate distinct run occurrences', async () => {
   const store = await diagnosticStore(), a = await controller(store), b = await controller(store);
   const [ra, rb] = await Promise.all([a.beginExperimentRun({ config }), b.beginExperimentRun({ config })]);
   assert.notEqual(ra.runId, rb.runId);
   assert.equal((await store.listManifests()).length, 2);
 });
 
-test('R02: opening a second controller does not interrupt a live owner', pending('R02'), async () => {
+test('R02: opening a second controller does not interrupt a live owner', async () => {
   const store = await diagnosticStore(), a = await controller(store), run = await a.beginExperimentRun({ config });
   await controller(store);
   assert.equal((await store.getManifest(run.runId)).status, 'running');
 });
 
-test('R03: failed middle batch remains pending after later batches commit', pending('R03'), async () => {
+test('R02: a superseded owner cannot mutate the run after takeover', async () => {
+  const store = await diagnosticStore(), a = await controller(store), _b = await controller(store);
+  const { runId } = await a.beginExperimentRun({ config, batchSize: 2 });
+  // Simulate takeover: expire A's lease, B acquires ownership (fencing token bumps).
+  const held = await store.getManifest(runId);
+  await store.putManifest({ ...held, owner: { ...held.owner, leaseUntil: new Date(0).toISOString() } });
+  await store.acquireManifestOwnership(runId, { ownerId: 'controller-b', leaseMs: 30000 });
+  // A's in-memory manifest still carries the old fence — commits are rejected.
+  await assert.rejects(() => a.commitExperimentBatch(runId, { ordinalStart: 0, ordinalEnd: 2, summaries: summaries(0, 2) }), { code: 'RUN_OWNERSHIP_STALE' });
+  // A's manifest-local cache must not resurrect on retry either.
+  const stored = await store.getManifest(runId);
+  assert.equal(stored.owner.ownerId, 'controller-b');
+  assert.equal(stored.committedMatches ?? 0, 0);
+});
+
+test('R03: failed middle batch remains pending after later batches commit', async () => {
   const store = await diagnosticStore(), api = await controller(store), { runId } = await api.beginExperimentRun({ config, batchSize: 2 });
   const commit = store.commitRunBatch.bind(store); let calls = 0;
   store.commitRunBatch = arg => { if (++calls === 2) throw Error('INJECTED_QUOTA_FAILURE'); return commit(arg); };
@@ -79,19 +95,45 @@ test('R03: failed middle batch remains pending after later batches commit', pend
   assert.ok(remaining.some(s => s.ordinalStart <= 2 && s.ordinalEnd >= 4), 'ordinals 2 and 3 must remain scheduled');
 });
 
-test('R03: identical batch retry cannot increase committed sample count', pending('R03'), async () => {
+test('R03: identical batch retry cannot increase committed sample count', async () => {
   const store = await diagnosticStore(), api = await controller(store), { runId } = await api.beginExperimentRun({ config });
   const batch = { ordinalStart: 0, ordinalEnd: 2, summaries: summaries(0, 2) };
   await api.commitExperimentBatch(runId, batch); await api.commitExperimentBatch(runId, batch);
   assert.equal((await store.getManifest(runId)).committedMatches, 2);
 });
 
-test('R01: distinct executable genomes must have distinct sample identity', pending('R01'), () => {
+test('R03: conflicting evidence for a retained sample identity fails durably', async () => {
+  const store = await diagnosticStore(), api = await controller(store), { runId } = await api.beginExperimentRun({ config });
+  await api.commitExperimentBatch(runId, { ordinalStart: 0, ordinalEnd: 2, summaries: summaries(0, 2) });
+  // Same ordinal, different result digest — an integrity failure, not a retry.
+  const tampered = [{ ...summaries(0, 1)[0], matchResultHash: 'conflicting-digest' }, summaries(1, 1)[0]];
+  await assert.rejects(() => api.commitExperimentBatch(runId, { ordinalStart: 0, ordinalEnd: 2, summaries: tampered }), { code: 'RUN_BATCH_SAMPLE_CONFLICT' });
+  const manifest = await store.getManifest(runId);
+  assert.equal(manifest.committedMatches, 2, 'the conflict must not rewrite retained coverage');
+  assert.equal((manifest.integrityFailures ?? []).at(-1)?.code, 'RUN_BATCH_SAMPLE_CONFLICT');
+});
+
+test('R01: distinct executable genomes must have distinct sample identity', () => {
   const a = baselinePolicyState(), b = structuredClone(a); b.weights.points = -2000; b.weights.defense = 2000;
   const cfg = { seed: 42, profileId: 'core-advanced-authority', policyIds: [WEIGHTED_POLICY_ID, 'control'], decisionLimit: 1800, telemetryEnabled: false, includeReplay: false };
   const x = runPolicyMatch({ ...cfg, policyStates: [a, null] }).summary, y = runPolicyMatch({ ...cfg, policyStates: [b, null] }).summary;
   assert.notEqual(x.matchResultHash, y.matchResultHash, 'fixture must exercise distinct actual outcomes');
   assert.notEqual(x.matchId, y.matchId, 'the current consumer identity must not collapse distinct genomes');
+});
+
+test('R01: identity record distinguishes sample, executable subject, and occurrence', () => {
+  const a = baselinePolicyState();
+  const cfg = { seed: 42, profileId: 'core-advanced-authority', policyIds: [WEIGHTED_POLICY_ID, 'control'], decisionLimit: 1800, telemetryEnabled: false, includeReplay: false };
+  const x = runPolicyMatch({ ...cfg, policyStates: [a, null] });
+  const y = runPolicyMatch({ ...cfg, policyStates: [a, null] });
+  assert.equal(x.summary.identity?.deterministicSampleId, x.summary.matchId);
+  assert.equal(x.summary.identity?.executableHash != null, true, 'compiled subject hash recorded');
+  assert.equal(x.summary.matchId, y.summary.matchId, 'same deterministic inputs — same sample identity');
+  assert.notEqual(x.identity?.executionOccurrenceId, y.identity?.executionOccurrenceId,
+    'each execution occurrence is unique — repeats are not independent samples');
+  assert.equal(x.summary.matchResultHash, y.summary.matchResultHash, 'same sample — same canonical result');
+  assert.equal(hashCanonical(x.summary), hashCanonical(y.summary),
+    'occurrence identity must stay off the canonically hashable summary');
 });
 
 test('R05: concurrent challenge preparations cannot both claim automatic attempt 1', pending('R05'), async () => {

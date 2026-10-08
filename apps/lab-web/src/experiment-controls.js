@@ -6,7 +6,7 @@ import { state, esc, fmt, pct, short, definitionList, showToast, persistSetting 
 import { WORKSPACES, WORKSPACE_KEYWORDS, route, policyOptions, updateRailContext } from './router.js';
 import { populateDialogHeading } from './seo-metadata.js';
 import { rerender, invokeAppAction } from './rerender.js';
-import { experimentsReady, storePersisted, nextRunOrdinalStart, beginExperimentRun, commitExperimentBatch, finalizeExperimentRun, failExperimentRun, cancelExperimentRun, registerRunExecutor, restoreBaseline } from './experiments/experiment-controller.mjs';
+import { experimentsReady, storePersisted, nextRunOrdinalStart, beginExperimentRun, commitExperimentBatch, finalizeExperimentRun, failExperimentRun, cancelExperimentRun, registerRunExecutor, restoreBaseline, touchRunLease } from './experiments/experiment-controller.mjs';
 import { renderEvidenceStrip, renderRunsPanel, openRunsPanel } from './experiments/runs-panel.js';
 import { initAnalysisExportHub } from './analysis-export-hub.mjs';
 
@@ -302,11 +302,18 @@ async function _driveRunSegments(plan) {
   state.activeRunManifest = plan.runId;
 
   const commitQueue = { chain: Promise.resolve(), error: null };
+  let lastLeaseTouch = 0;
   const reportProgress = () => {
     const done = priorCommitted + segmentDone.reduce((a, b) => a + b, 0);
     // Simulated vs durably committed are distinct numbers — always.
     status.textContent = `Progress: ${done}/${count} simulated · ${committed} saved`;
     updateCampaignProgress(done, Math.max(count, 1));
+    // Ownership heartbeat (R02): keep the lease live while this controller
+    // is driving; a stale-owner rejection is surfaced by the commit path.
+    if (performance.now() - lastLeaseTouch > 15000) {
+      lastLeaseTouch = performance.now();
+      touchRunLease(plan.runId).catch(() => {});
+    }
   };
   const enqueueCommit = msg => {
     commitQueue.chain = commitQueue.chain.then(async () => {

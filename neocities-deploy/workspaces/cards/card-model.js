@@ -29,9 +29,9 @@
 // and every non-10 ♣/♦/♥ card shares the :normal entity.
 // ═══════════════════════════════════════════════════════════════
 
-import { getCardDefinition, listAuthoritativeCards, getSuit, rankName, CARD_FACE_REGISTRY_META } from '../../card-face-data.js?v=7d7375aa53c1';
-import { getCardArtBoardPath, getCardArtBoardPosition, getCardArtAlt } from '../../card-art-registry.js?v=7d7375aa53c1';
-import { getCardRulesDefinition } from '../../play/advanced-card-rules/card-rules-data.mjs?v=7d7375aa53c1';
+import { getCardDefinition, listAuthoritativeCards, getSuit, rankName, CARD_FACE_REGISTRY_META } from '../../card-face-data.js?v=a90b812f827b';
+import { getCardArtBoardPath, getCardArtBoardPosition, getCardArtAlt } from '../../card-art-registry.js?v=a90b812f827b';
+import { getCardRulesDefinition } from '../../play/advanced-card-rules/card-rules-data.mjs?v=a90b812f827b';
 
 // ── Deck order ───────────────────────────────────────────────────
 export const SUIT_ORDER = ['♣', '♦', '♥', '♠'];

@@ -121,8 +121,9 @@ export function renderCompare() {
   };
   const abba = o.pairedABBA;
   const abbaStatusClass = abba?.designStatus === 'verified' ? 'info' : abba?.designStatus === 'malformed' ? 'error' : 'warning';
+  const sbStatus = abba?.seatBalance?.status;
   const seatBalanceNote = abba?.seatBalance?.decisiveLegs
-    ? ` Seat effect: seat 1 won ${pct(abba.seatBalance.seat1WinRate)} of ${abba.seatBalance.decisiveLegs} decisive legs${abba.seatBalance.signTest?.pValue != null ? ` (sign-test p=${abba.seatBalance.signTest.pValue})` : ''}.`
+    ? ` Seat effect: seat 1 won ${pct(abba.seatBalance.seat1WinRate)} of ${abba.seatBalance.decisiveLegs} decisive legs${abba.seatBalance.signTest?.pValue != null ? ` (sign-test p=${abba.seatBalance.signTest.pValue})` : ''}${sbStatus === 'insufficient-data' ? ' — underpowered; balance not established' : sbStatus === 'seat-effect-detected' ? ' — significant seat effect detected' : ' (descriptive; non-significance is not demonstrated equivalence)'}.`
     : '';
   const designNote = abba?.scheduleNote
     ? `<div class="notice ${abbaStatusClass}" style="margin-top:12px"><strong>Matched design:</strong> ${esc(abba.scheduleNote)}.${seatBalanceNote}</div>`

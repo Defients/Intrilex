@@ -1,7 +1,7 @@
 {
   "extractVersion": "1.0.0",
   "analyticsSchemaVersion": "4.2.0",
-  "sourceHash": "b58a7f268778a63e4a59d31d269c8b1422e0fbd85f41d5eb0b1f41a46106cb4f",
+  "sourceHash": "c64ffcb6b4e928782457b57a68170b1d4f28d8075fb29e93e7a3f08c1de1d36d",
   "aggregateHash": "3e3dd7a23ff2c2fab78c32fbe9e01e8f4a19814f07fac23d91d56158b396acb3",
   "executiveSummary": "Analysis covers 100 Advanced Core matches under Engine v4.2.6 / Rules v4.2.0. All matches completed without aborts. Highest win rate: control-conversion-tactical at 100.0% (CI [0.610, 1.000], 6 games). No synergy pairs reached statistical significance after FDR correction. 171 mechanic(s) measured with evidence-backed associations. 23 anomaly/anomalies flagged (0 critical, 5 warning, 18 info). Data completeness: PASS (no unclassified facts). Mechanics and synergy outputs are policy-, seat-, profile-, and telemetry-conditioned. They are evidence-backed associations, not automatic canon or balance changes. Win association is not causal proof. Synergy interaction is the A×B odds-ratio from a stratified logistic model.",
   "dataset": {
@@ -7226,5 +7226,5 @@
   "recommendations": [
     "141 mechanic(s) have sample size below 20 — interpret with caution."
   ],
-  "extractHash": "ef0e5831621a90e2fae4069661edb36484a5b454518bcc816fa053b819498e05"
+  "extractHash": "3839aa4bbda7fba125c19591d5e111e109f16ec592ae54030db8fc722262981b"
 }

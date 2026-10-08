@@ -13,18 +13,18 @@
 // module never reaches into app-level singletons.
 // ═══════════════════════════════════════════════════════════════
 
-import { esc } from '../state.js?v=7d7375aa53c1';
-import { LAB_VERSION, RULES_VERSION } from '../version.js?v=7d7375aa53c1';
-import { getMatchServerUrl } from '../play/network/match-server-config.js?v=7d7375aa53c1';
-import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=7d7375aa53c1';
-import { fetchDirectory } from '../play/players/players-data.js?v=7d7375aa53c1';
+import { esc } from '../state.js?v=a90b812f827b';
+import { LAB_VERSION, RULES_VERSION } from '../version.js?v=a90b812f827b';
+import { getMatchServerUrl } from '../play/network/match-server-config.js?v=a90b812f827b';
+import { fetchLeaderboard, fetchSeasons } from '../play/ranked/leaderboard-data.js?v=a90b812f827b';
+import { fetchDirectory } from '../play/players/players-data.js?v=a90b812f827b';
 import {
   renderHomePage,
   renderPulseMetricsHtml,
   renderPulseStatusText,
   renderNewsHtml,
-} from './home-view.js?v=7d7375aa53c1';
-import { mountHeroTransmission } from './hero-transmission.js?v=7d7375aa53c1';
+} from './home-view.js?v=a90b812f827b';
+import { mountHeroTransmission } from './hero-transmission.js?v=a90b812f827b';
 import {
   HOME_PULSE_INTERVAL_MS,
   matchServerHttpBase,
@@ -34,7 +34,7 @@ import {
   parseChangelogEntries,
   buildPulseMetrics,
   formatUpdatedAgo,
-} from './home-data.js?v=7d7375aa53c1';
+} from './home-data.js?v=a90b812f827b';
 
 // AbortController for the current homepage's listeners/timers.
 // Aborted on each re-render to prevent accumulation (IRX-M41).
@@ -156,7 +156,7 @@ async function loadContinueCard(root) {
   const slot = root.querySelector('#landing-continue-slot');
   if (!slot) return;
   try {
-    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=7d7375aa53c1');
+    const { isIndexedDBAvailable, listSaves } = await import('../play/persistence.js?v=a90b812f827b');
     if (!isIndexedDBAvailable()) return;
     const saves = await listSaves();
     // Guard: user may have navigated away during the async work.

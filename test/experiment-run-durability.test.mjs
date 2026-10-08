@@ -20,7 +20,7 @@ import {
   MANIFEST_STATUS,
   createExperiment, createAnalysisSet, createRunRecord,
   createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
-  commitManifestBatch, manifestTransition, manifestIsActive, manifestIsResumable,
+  commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
   manifestRemainingSegments, manifestCommittedCoverage,
   runIdFor, batchSummariesHash, slimSummary,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
@@ -116,7 +116,7 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     MANIFEST_STATUS,
     createExperiment, createAnalysisSet, createRunRecord,
     createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
-    commitManifestBatch, manifestTransition, manifestIsActive, manifestIsResumable,
+    commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
     manifestRemainingSegments, manifestCommittedCoverage,
     runIdFor, batchSummariesHash, slimSummary,
     nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
@@ -135,6 +135,15 @@ const initApi = async (idb, opts = {}) => {
   const store = new ExperimentStore(idb);
   await api.initExperiments({ bootSummaries: [fakeSummary(9000)], store, ...opts.init });
   return { api, state, toasts, store };
+};
+
+/** Simulate elapsed time after a tab crash: the dead owner's lease lapses,
+ * so the next boot's recovery path may authoritatively interrupt/reclaim
+ * the manifest. Ownership fencing forbids interrupting a live lease — this
+ * helper is the test's stand-in for the 30s lease window passing. */
+const expireLease = async (store, manifestId) => {
+  const m = await store.getManifest(manifestId);
+  if (m?.owner) await store.putManifest({ ...m, owner: { ...m.owner, leaseUntil: new Date(0).toISOString() } });
 };
 
 /** Drive a plan's segments synchronously through the commit API — the test
@@ -249,7 +258,9 @@ test('crash mid-run: committed batches survive; manifest becomes resumable inter
   for (let o = 0; o < 150; o += 50) {
     await first.api.commitExperimentBatch(runId, { segmentIndex: 0, ordinalStart: o, ordinalEnd: o + 50, summaries: fakeSummaries(o, 50) });
   }
-  // Simulate the tab dying: a fresh controller boots against the same DB.
+  // Simulate the tab dying and the ownership lease expiring: a fresh
+  // controller boots against the same DB after the lease window.
+  await expireLease(first.store, runId);
   const second = await initApi(idb);
   const incomplete = second.api.getIncompleteRuns();
   assert.equal(incomplete.length, 1);
@@ -269,6 +280,7 @@ test('resume replans only uncommitted ordinals and seals without duplicates', as
   for (let o = 0; o < 150; o += 50) {
     await api.commitExperimentBatch(runId, { segmentIndex: 0, ordinalStart: o, ordinalEnd: o + 50, summaries: fakeSummaries(o, 50) });
   }
+  await expireLease(store, runId);
   const second = await initApi(idb);
   drivePlan(second.api, { runId });
   const plan = await second.api.resumeExperimentRun(runId);

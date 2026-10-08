@@ -44,6 +44,20 @@ const STORES = Object.freeze({
 const byteSize = value => new TextEncoder().encode(JSON.stringify(value)).byteLength;
 const quotaError = cause => Object.assign(new Error('BROWSER_STORAGE_QUOTA_EXCEEDED'), { code: 'BROWSER_STORAGE_QUOTA_EXCEEDED', cause });
 const isQuota = err => err?.name === 'QuotaExceededError' || err?.code === 'BROWSER_STORAGE_QUOTA_EXCEEDED';
+const _normalizeTxError = (err) => {
+  if (isQuota(err)) return quotaError(err);
+  if (err?.name === 'ConstraintError') return Object.assign(new Error('EXPERIMENT_RECORD_EXISTS'), { code: 'EXPERIMENT_RECORD_EXISTS', cause: err });
+  return err;
+};
+const _ownerIsLive = (owner, now = Date.now()) =>
+  Boolean(owner?.ownerId) && Number.isFinite(Date.parse(owner?.leaseUntil ?? '')) && Date.parse(owner.leaseUntil) > now;
+const _assertSameFence = (stored, incoming) => {
+  const exp = stored?.owner ?? null;
+  const sup = incoming?.owner ?? null;
+  if ((exp?.fencingToken ?? null) !== (sup?.fencingToken ?? null) || (exp?.ownerId ?? null) !== (sup?.ownerId ?? null)) {
+    throw Object.assign(new Error('RUN_OWNERSHIP_STALE'), { code: 'RUN_OWNERSHIP_STALE', manifestId: stored?.manifestId ?? incoming?.manifestId });
+  }
+};
 
 // In-memory backend — same async surface as the IDB transaction helpers.
 // Used when IndexedDB is unavailable (tests, locked-down browsers).
@@ -185,6 +199,155 @@ export class ExperimentStore {
     });
   }
 
+  /**
+   * Atomic multi-op transaction (R02/R03). `work` receives {get,put,add,del}
+   * bound to ONE IndexedDB readwrite transaction — read-modify-write inside
+   * `work` is serialized against every other transaction touching the same
+   * stores, so ownership claims, fencing checks, and batch commits cannot
+   * interleave across tabs. On the memory backend the same surface is
+   * serialized through a per-store promise queue.
+   */
+  async _transact(storeNames, work) {
+    await this.open();
+    if (this.memory) {
+      const mem = this.memory;
+      const ops = {
+        get: (s, k) => mem.get(s, k),
+        put: (s, v, k) => mem.put(s, v, k),
+        add: async (s, v, k) => {
+          const existing = await mem.get(s, k ?? v?.[keyPathFor(s)]);
+          if (existing != null) throw Object.assign(new Error('EXPERIMENT_RECORD_EXISTS'), { code: 'EXPERIMENT_RECORD_EXISTS' });
+          return mem.put(s, v, k);
+        },
+        del: (s, k) => mem.del(s, k),
+      };
+      this._memTxQueue ??= Promise.resolve();
+      const run = this._memTxQueue.then(() => work(ops));
+      this._memTxQueue = run.then(() => {}, () => {});
+      return run;
+    }
+    const db = this.db;
+    return new Promise((resolve, reject) => {
+      let result;
+      let workError = null;
+      const tx = db.transaction(storeNames, 'readwrite');
+      const wrap = req => new Promise((res, rej) => {
+        req.onsuccess = () => res(req.result);
+        req.onerror = (event) => {
+          // Keep the transaction alive — the work() rejection decides whether
+          // to abort, so a recoverable request error doesn't force it.
+          event.preventDefault();
+          event.stopPropagation();
+          rej(req.error ?? new Error('EXPERIMENT_STORAGE_REQUEST_FAILED'));
+        };
+      });
+      const ops = {
+        get: (s, k) => wrap(tx.objectStore(s).get(k)),
+        put: (s, v, k) => wrap(tx.objectStore(s).put(v, k)),
+        add: (s, v, k) => wrap(tx.objectStore(s).add(v, k)),
+        del: (s, k) => wrap(tx.objectStore(s).delete(k)),
+      };
+      tx.oncomplete = () => resolve(result);
+      tx.onabort = () => reject(_normalizeTxError(workError ?? tx.error ?? new Error('EXPERIMENT_STORAGE_ABORTED')));
+      tx.onerror = () => {};
+      Promise.resolve()
+        .then(() => work(ops))
+        .then((r) => { result = r; }, (e) => { workError = e; try { tx.abort(); } catch { /* already finished */ } });
+    });
+  }
+
+  // ── Ownership fencing (R02) ───────────────────────────────────
+  /**
+   * Atomic run-allocation claim: writes the manifest iff its manifestId is
+   * unoccupied. Two controllers racing for the same run occurrence cannot
+   * both succeed — the loser gets EXPERIMENT_OCCURRENCE_CONFLICT and must
+   * recompute a fresh ordinal/runId before retrying.
+   */
+  async claimRunManifest(manifest) {
+    if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) {
+      throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
+    }
+    await this._transact([STORES.MANIFESTS], async (ops) => {
+      const existing = await ops.get(STORES.MANIFESTS, manifest.manifestId);
+      if (existing != null) {
+        throw Object.assign(new Error('EXPERIMENT_OCCURRENCE_CONFLICT'), { code: 'EXPERIMENT_OCCURRENCE_CONFLICT', manifestId: manifest.manifestId });
+      }
+      await ops.put(STORES.MANIFESTS, manifest);
+    });
+    return manifest.manifestId;
+  }
+
+  /**
+   * Acquire (or take over after lease expiry) durable ownership of a run
+   * manifest. Bumps the fencing token — every mutation that follows carries
+   * the new token, so a superseded owner's writes are rejected.
+   * Fails RUN_OWNERSHIP_HELD while a different owner's lease is live,
+   * RUN_ALREADY_SEALED once the run finalized.
+   */
+  async acquireManifestOwnership(manifestId, { ownerId, leaseMs = 30000 } = {}) {
+    if (!ownerId) throw Object.assign(new Error('RUN_OWNER_ID_REQUIRED'), { code: 'RUN_OWNER_ID_REQUIRED' });
+    const now = Date.now();
+    const leaseUntil = new Date(now + leaseMs).toISOString();
+    return this._transact([STORES.MANIFESTS], async (ops) => {
+      const cur = await ops.get(STORES.MANIFESTS, manifestId);
+      if (!cur) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING', manifestId });
+      if (cur.sealedRunId) throw Object.assign(new Error('RUN_ALREADY_SEALED'), { code: 'RUN_ALREADY_SEALED', manifestId });
+      const owner = cur.owner ?? null;
+      if (_ownerIsLive(owner, now) && owner.ownerId !== ownerId) {
+        throw Object.assign(new Error('RUN_OWNERSHIP_HELD'), { code: 'RUN_OWNERSHIP_HELD', manifestId, holder: owner.ownerId, leaseUntil: owner.leaseUntil });
+      }
+      const next = {
+        ...cur,
+        owner: {
+          ownerId,
+          fencingToken: (owner?.fencingToken ?? 0) + 1,
+          acquiredAt: new Date(now).toISOString(),
+          leaseUntil,
+        },
+        updatedAt: new Date(now).toISOString(),
+      };
+      await ops.put(STORES.MANIFESTS, next);
+      return next;
+    });
+  }
+
+  /**
+   * Fenced manifest write: the stored manifest's owner token must equal the
+   * writer's — a stale owner (superseded by takeover/expiry) is rejected
+   * with RUN_OWNERSHIP_STALE. Ownerless legacy manifests pass through.
+   */
+  async putManifestFenced(manifest) {
+    if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) {
+      throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
+    }
+    await this._transact([STORES.MANIFESTS], async (ops) => {
+      const cur = await ops.get(STORES.MANIFESTS, manifest.manifestId);
+      if (!cur) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING', manifestId: manifest.manifestId });
+      _assertSameFence(cur, manifest);
+      await ops.put(STORES.MANIFESTS, manifest);
+    });
+    return manifest.manifestId;
+  }
+
+  /** Heartbeat: extend the live owner's lease without touching content. */
+  async renewManifestLease(manifestId, { ownerId, fencingToken, leaseMs = 30000 } = {}) {
+    const now = Date.now();
+    return this._transact([STORES.MANIFESTS], async (ops) => {
+      const cur = await ops.get(STORES.MANIFESTS, manifestId);
+      if (!cur) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING', manifestId });
+      if (cur.owner?.ownerId !== ownerId || cur.owner?.fencingToken !== fencingToken) {
+        throw Object.assign(new Error('RUN_OWNERSHIP_STALE'), { code: 'RUN_OWNERSHIP_STALE', manifestId });
+      }
+      const next = {
+        ...cur,
+        owner: { ...cur.owner, leaseUntil: new Date(now + leaseMs).toISOString() },
+        updatedAt: new Date(now).toISOString(),
+      };
+      await ops.put(STORES.MANIFESTS, next);
+      return next;
+    });
+  }
+
   // ── Experiments ───────────────────────────────────────────────
   async putExperiment(experiment) {
     validateExperimentRecord(experiment);
@@ -270,14 +433,34 @@ export class ExperimentStore {
    * Atomic batch commit: batch record + manifest checkpoint land in one
    * transaction. A crash mid-transaction commits neither — the manifest
    * can never claim a batch the store does not hold.
+   *
+   * R02/R03 hardening: inside the same transaction the manifest's owner
+   * fence is checked (stale owners rejected with RUN_OWNERSHIP_STALE) and
+   * the batch id is deduplicated — an identical retry (same summariesHash)
+   * is accepted as a no-op receipt while a conflicting payload for an
+   * already-committed batch id fails with RUN_BATCH_CONFLICT.
    */
   async commitRunBatch({ manifest, batch }) {
     const size = byteSize(batch);
     if (size > EXPERIMENT_LIMITS.batchBytes) {
       throw Object.assign(new Error('RUN_BATCH_TOO_LARGE_FOR_BROWSER_ARCHIVE'), { code: 'RUN_BATCH_TOO_LARGE_FOR_BROWSER_ARCHIVE', artifactSize: size });
     }
-    await this._putAll([[STORES.RUN_BATCHES, batch], [STORES.MANIFESTS, manifest]]);
-    return batch.batchId;
+    return this._transact([STORES.RUN_BATCHES, STORES.MANIFESTS], async (ops) => {
+      const stored = await ops.get(STORES.MANIFESTS, manifest.manifestId);
+      if (!stored) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING', manifestId: manifest.manifestId });
+      _assertSameFence(stored, manifest);
+      const existing = await ops.get(STORES.RUN_BATCHES, batch.batchId);
+      if (existing != null) {
+        if (existing.summariesHash === batch.summariesHash) {
+          await ops.put(STORES.MANIFESTS, manifest);
+          return { batchId: batch.batchId, duplicate: true };
+        }
+        throw Object.assign(new Error('RUN_BATCH_CONFLICT'), { code: 'RUN_BATCH_CONFLICT', batchId: batch.batchId });
+      }
+      await ops.put(STORES.RUN_BATCHES, batch);
+      await ops.put(STORES.MANIFESTS, manifest);
+      return { batchId: batch.batchId, duplicate: false };
+    });
   }
   async getRunBatch(runId, batchIndex) { return (await this._get(STORES.RUN_BATCHES, `${runId}#${batchIndex}`)) ?? null; }
   async listRunBatches(runId) {
@@ -293,10 +476,19 @@ export class ExperimentStore {
     if (byteSize(run) > EXPERIMENT_LIMITS.metaBytes) {
       throw Object.assign(new Error('RUN_META_TOO_LARGE'), { code: 'RUN_META_TOO_LARGE' });
     }
-    const entries = [[STORES.RUNS, run], [STORES.MANIFESTS, manifest]];
-    if (payload) entries.push([STORES.PAYLOADS, { runId: run.runId, storedAt: new Date().toISOString(), ...payload }]);
-    await this._putAll(entries);
-    return run.runId;
+    return this._transact([STORES.RUNS, STORES.PAYLOADS, STORES.MANIFESTS], async (ops) => {
+      // Finalization is a manifest mutation — only the current fenced owner
+      // may seal. A stale owner's finalize is rejected (R02).
+      if (manifest) {
+        const stored = await ops.get(STORES.MANIFESTS, manifest.manifestId);
+        if (!stored) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING', manifestId: manifest.manifestId });
+        _assertSameFence(stored, manifest);
+      }
+      await ops.put(STORES.RUNS, run);
+      if (payload) await ops.put(STORES.PAYLOADS, { runId: run.runId, storedAt: new Date().toISOString(), ...payload });
+      if (manifest) await ops.put(STORES.MANIFESTS, manifest);
+      return run.runId;
+    });
   }
 
   /**

@@ -88,11 +88,19 @@ two actual IndexedDB connections. It reports that case as `KNOWN_FAILURE`, not
 PASS, alongside containment results. It uses isolated browser contexts and an
 ephemeral loopback server; it does not touch the user's browser data.
 
-The browser harness uses the existing built shell with current changed source
-modules overlaid, and loads the unbundled entry point so stale hashed bundles
-cannot hide the change. This is a source integration proof, not a complete
-production-bundle certification. The normal build copies the shared policy to
-the browser's portable domain directory.
+The browser harness bundles the current changed source modules in memory using
+the existing built engine and assets. Version-query imports resolve once, so
+stale hashed bundles and duplicate state modules cannot hide the change. This
+is a source integration proof, not a complete production-build certification.
+The normal build copies the shared policy to the browser's portable directory.
+
+Verification on the frozen Wave 0 source reproduces the allocation defect.
+The shared workspace subsequently received separate allocation, ownership,
+sample-identity and coverage changes. The current browser command includes
+their allocation assertion; its passing result belongs to that additional
+work. It does not certify those later tickets as part of Wave 0. Retain the
+baseline reproduction and run strict acceptance checks before reopening any
+restricted scientific capability.
 
 To enforce the deferred acceptance conditions as failing gates:
 

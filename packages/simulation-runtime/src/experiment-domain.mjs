@@ -549,7 +549,7 @@ export function planMigration({ experiments = [], runs = [], analysisSets = [], 
 //   sealedRunId       — set when the manifest is finalized into an
 //                       immutable Run; afterwards the manifest is history.
 
-export const MANIFEST_SCHEMA_VERSION = '1.0.0';
+export const MANIFEST_SCHEMA_VERSION = '1.1.0';
 export const MANIFEST_STATUS = Object.freeze({
   QUEUED: 'queued',
   RUNNING: 'running',
@@ -578,7 +578,7 @@ export function slimSummary(summary) {
   return slim ?? summary;
 }
 
-export function createRunManifest({ runId, experimentId = DEFAULT_EXPERIMENT_ID, ordinal = 0, config = {}, requestedMatches = null, batchSize = 0, segments = null, createdAt = null }) {
+export function createRunManifest({ runId, experimentId = DEFAULT_EXPERIMENT_ID, ordinal = 0, config = {}, requestedMatches = null, batchSize = 0, segments = null, createdAt = null, owner = null }) {
   if (!isStr(runId)) fail('RUN_MANIFEST_ID_REQUIRED');
   const at = createdAt ?? new Date().toISOString();
   const requested = requestedMatches ?? config.matchCount ?? 0;
@@ -609,6 +609,16 @@ export function createRunManifest({ runId, experimentId = DEFAULT_EXPERIMENT_ID,
     batchSize,
     segments: segs,
     committedBatches: [],
+    // Exact retained-evidence coverage (R03): ordinal → matchResultHash (or
+    // null for legacy descriptors without per-match hashes). Coverage is
+    // derived from this map — never from a frontier/largest ordinal.
+    retainedOrdinals: {},
+    // Durable ownership fence (R02): only the owner carrying this fencing
+    // token may mutate the run. null on legacy/ownerless manifests.
+    owner: owner ?? null,
+    // Recorded integrity failures (e.g. conflicting evidence for an already
+    // retained sample identity). Durable — corruption never disappears.
+    integrityFailures: [],
     headline: createManifestHeadline(),
     resumable: true,
     sealedRunId: null,
@@ -643,27 +653,138 @@ export function batchSummariesHash(summaries) {
 }
 
 /**
+ * Exact retained-evidence coverage (R03): Map<ordinal, matchResultHash|null>.
+ * Authoritative when `manifest.retainedOrdinals` is populated; reconstructed
+ * from committed-batch descriptors for legacy manifests (per-match hashes
+ * when present, else the descriptor's committed ordinal range with a null
+ * digest). Coverage and remaining-work computations use this — never the
+ * largest ordinal or a nextOrdinal frontier, so a failed middle batch stays
+ * pending even after later batches commit.
+ */
+export function manifestRetainedOrdinals(manifest) {
+  const map = new Map();
+  if (manifest?.retainedOrdinals && typeof manifest.retainedOrdinals === 'object') {
+    for (const [k, v] of Object.entries(manifest.retainedOrdinals)) {
+      const o = Number(k);
+      if (Number.isInteger(o)) map.set(o, v ?? null);
+    }
+  }
+  for (const d of manifest?.committedBatches ?? []) {
+    if (Array.isArray(d?.matchResultHashes) && d.matchResultHashes.length) {
+      for (const { o, h } of d.matchResultHashes) {
+        if (Number.isInteger(o) && !map.has(o)) map.set(o, h ?? null);
+      }
+    } else if (Number.isInteger(d?.ordinalStart) && Number.isInteger(d?.ordinalEnd)) {
+      for (let o = d.ordinalStart; o < d.ordinalEnd; o += 1) if (!map.has(o)) map.set(o, null);
+    }
+  }
+  return map;
+}
+
+/**
+ * Plan an idempotent batch commit (R03). Pure — returns `{ manifest, receipt }`:
+ *   receipt = { batchIndex, submitted, newlyRetained, duplicates, conflicts,
+ *               outOfScheduleOrdinals, accepted, duplicate }
+ * - A retry of identical evidence is `duplicate` — the manifest is returned
+ *   unchanged and committed counts do NOT increase.
+ * - Conflicting digests for an already-retained sample identity reject the
+ *   batch (`accepted: false`) and record a durable `integrityFailures` entry
+ *   on the returned manifest — the caller persists that mark and surfaces it.
+ * - Ordinals outside the scheduled segments are retained but flagged.
+ */
+export function planManifestBatchCommit(manifest, { batchIndex, segmentIndex = 0, ordinalStart, ordinalEnd, matchCount, summariesHash, matchResultHashes = [], committedAt = null } = {}) {
+  const at = committedAt ?? new Date().toISOString();
+  const retained = manifestRetainedOrdinals(manifest);
+  const items = matchResultHashes.length
+    ? matchResultHashes.map(({ o, h }) => ({ o, h: h ?? null }))
+    : (Number.isInteger(ordinalStart) && Number.isInteger(ordinalEnd)
+        ? Array.from({ length: Math.max(0, ordinalEnd - ordinalStart) }, (_, i) => ({ o: ordinalStart + i, h: null }))
+        : []);
+  const scheduled = new Set();
+  for (const s of manifest?.segments ?? []) {
+    for (let o = s.ordinalStart; o < s.ordinalEnd; o += 1) scheduled.add(o);
+  }
+  const conflicts = [], newOrdinals = [], dupOrdinals = [], outOfSchedule = [];
+  for (const { o, h } of items) {
+    if (!Number.isInteger(o)) { conflicts.push({ ordinal: o ?? null, reason: 'ORDINAL_INVALID' }); continue; }
+    if (!scheduled.has(o)) outOfSchedule.push(o);
+    if (!retained.has(o)) { newOrdinals.push(o); continue; }
+    const prev = retained.get(o);
+    if (prev != null && h != null && prev !== h) conflicts.push({ ordinal: o, retainedHash: prev, incomingHash: h });
+    else dupOrdinals.push(o);
+  }
+  const receipt = {
+    batchIndex, segmentIndex, ordinalStart, ordinalEnd,
+    submitted: items.length,
+    declaredMatchCount: matchCount ?? items.length,
+    newlyRetained: newOrdinals.length,
+    duplicates: dupOrdinals.length,
+    conflicts,
+    outOfScheduleOrdinals: outOfSchedule,
+    accepted: conflicts.length === 0,
+    duplicate: conflicts.length === 0 && newOrdinals.length === 0 && items.length > 0,
+  };
+  if (conflicts.length) {
+    return {
+      receipt,
+      manifest: {
+        ...manifest,
+        updatedAt: at,
+        integrityFailures: [...(manifest.integrityFailures ?? []), {
+          code: 'RUN_BATCH_SAMPLE_CONFLICT', ordinalStart, ordinalEnd, conflicts, at,
+        }],
+      },
+    };
+  }
+  if (receipt.duplicate) return { receipt, manifest };
+  const nextRetained = {};
+  for (const [o, h] of retained) nextRetained[String(o)] = h;
+  for (const { o, h } of items) {
+    const k = String(o);
+    if (nextRetained[k] === undefined || (nextRetained[k] == null && h != null)) nextRetained[k] = h ?? null;
+  }
+  const segments = (manifest.segments ?? []).map((s) => {
+    if (s.index !== segmentIndex) return s;
+    let firstOpen = s.ordinalEnd;
+    let committed = 0;
+    for (let o = s.ordinalStart; o < s.ordinalEnd; o += 1) {
+      const h = nextRetained[String(o)];
+      if (h !== undefined) committed += 1;
+      else if (firstOpen === s.ordinalEnd && o < firstOpen) firstOpen = o;
+    }
+    // nextOrdinal = first uncovered ordinal (progress hint only — coverage
+    // is always derived from retainedOrdinals, never from this frontier).
+    return { ...s, committed, nextOrdinal: firstOpen };
+  });
+  const next = {
+    ...manifest,
+    updatedAt: at,
+    committedMatches: Object.keys(nextRetained).length,
+    retainedOrdinals: nextRetained,
+    committedBatches: [...(manifest.committedBatches ?? []), {
+      batchIndex, segmentIndex, ordinalStart, ordinalEnd, matchCount: matchCount ?? items.length,
+      summariesHash, matchResultHashes, committedAt: at,
+      newlyRetained: newOrdinals.length, duplicates: dupOrdinals.length,
+      ...(outOfSchedule.length ? { outOfScheduleOrdinals: outOfSchedule } : {}),
+    }],
+    segments,
+  };
+  return { manifest: next, receipt };
+}
+
+/**
  * Record a successfully persisted batch on the manifest. Pure — returns the
  * updated manifest; the caller persists it atomically with the batch record.
  * The descriptor carries the batch's integrity hash and the per-match
  * result-hash index so a finalize can rebuild the canonical run hash and an
  * integrity check can verify evidence without touching run records.
+ *
+ * Idempotent (R03): retries of identical evidence are detected against the
+ * retained-ordinal map and do not double-count. Use planManifestBatchCommit
+ * when the caller needs the commit receipt (duplicate/conflict detail).
  */
-export function commitManifestBatch(manifest, { batchIndex, segmentIndex = 0, ordinalStart, ordinalEnd, matchCount, summariesHash, matchResultHashes = [], committedAt = null }) {
-  const at = committedAt ?? new Date().toISOString();
-  const segments = (manifest.segments ?? []).map(s => s.index === segmentIndex
-    ? { ...s, nextOrdinal: Math.max(s.nextOrdinal ?? s.ordinalStart, ordinalEnd), committed: (s.committed ?? 0) + matchCount }
-    : s);
-  return {
-    ...manifest,
-    updatedAt: at,
-    committedMatches: (manifest.committedMatches ?? 0) + matchCount,
-    committedBatches: [...(manifest.committedBatches ?? []), {
-      batchIndex, segmentIndex, ordinalStart, ordinalEnd, matchCount,
-      summariesHash, matchResultHashes, committedAt: at,
-    }],
-    segments,
-  };
+export function commitManifestBatch(manifest, descriptor) {
+  return planManifestBatchCommit(manifest, descriptor).manifest;
 }
 
 export function manifestTransition(manifest, status, { failure = null, completedAt = null } = {}) {
@@ -682,19 +803,41 @@ export function manifestIsActive(manifest) {
   return ACTIVE_MANIFEST_STATUSES.has(manifest?.status);
 }
 
-/** Segments (absolute ordinal ranges) still needing simulation. */
+/**
+ * Segments (absolute ordinal ranges) still needing simulation — derived from
+ * the retained-ordinal map, not the nextOrdinal frontier (R03). A failed
+ * middle batch stays pending even when later batches committed.
+ */
 export function manifestRemainingSegments(manifest) {
-  return (manifest?.segments ?? [])
-    .filter(s => (s.nextOrdinal ?? s.ordinalStart) < s.ordinalEnd)
-    .map(s => ({ index: s.index, ordinalStart: s.nextOrdinal ?? s.ordinalStart, ordinalEnd: s.ordinalEnd }));
+  const retained = manifestRetainedOrdinals(manifest);
+  const out = [];
+  for (const s of manifest?.segments ?? []) {
+    let cursor = null;
+    for (let o = s.ordinalStart; o < s.ordinalEnd; o += 1) {
+      if (!retained.has(o)) { if (cursor == null) cursor = o; }
+      else if (cursor != null) { out.push({ index: s.index, ordinalStart: cursor, ordinalEnd: o }); cursor = null; }
+    }
+    if (cursor != null) out.push({ index: s.index, ordinalStart: cursor, ordinalEnd: s.ordinalEnd });
+  }
+  return out;
 }
 
-/** Ordinal coverage committed so far — used for partial seals so the run
- * record honestly describes which ordinals produced evidence. */
+/** Ordinal coverage committed so far — contiguous ranges of RETAINED,
+ * validated ordinals (R03), used for partial seals so the run record
+ * honestly describes which ordinals produced evidence. */
 export function manifestCommittedCoverage(manifest) {
-  return (manifest?.segments ?? [])
-    .map(s => ({ start: s.ordinalStart, end: Math.min(s.nextOrdinal ?? s.ordinalStart, s.ordinalEnd) }))
-    .filter(c => c.end > c.start);
+  const ordinals = [...manifestRetainedOrdinals(manifest).keys()].sort((a, b) => a - b);
+  const ranges = [];
+  let start = null;
+  let prev = null;
+  for (const o of ordinals) {
+    if (start == null) { start = o; prev = o; continue; }
+    if (o === prev + 1) { prev = o; continue; }
+    ranges.push({ start, end: prev + 1 });
+    start = o; prev = o;
+  }
+  if (start != null) ranges.push({ start, end: prev + 1 });
+  return ranges;
 }
 
 export function manifestIsResumable(manifest) {

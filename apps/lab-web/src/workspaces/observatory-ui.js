@@ -100,7 +100,12 @@ export function segmentControl({ id, options, active, label } = {}) {
 /** Status chip for control-room modules: PASS / LIMITED / UNAVAILABLE / FAIL. */
 export function statusChip(status) {
   const s = String(status ?? 'UNAVAILABLE').toUpperCase();
-  const tone = s === 'PASS' ? 'supported' : s === 'FAIL' ? 'alert' : s === 'LIMITED' ? 'info' : 'muted';
+  // PASS is the only green status — INSUFFICIENT/WARN are qualifications,
+  // NOT_TESTED/NOT_APPLICABLE/UNAVAILABLE are neutral disclosures, FAIL is alert.
+  const tone = s === 'PASS' ? 'supported'
+    : s === 'FAIL' ? 'alert'
+      : s === 'WARN' || s === 'INSUFFICIENT' ? 'warning'
+        : s === 'LIMITED' ? 'info' : 'muted';
   return `<span class="badge badge-${tone} obs-status-chip">${esc(s)}</span>`;
 }
 

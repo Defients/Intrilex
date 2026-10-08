@@ -812,7 +812,10 @@ async function runPreparation(appEl, plan, signal) {
 
 // Build the CasterSession over verified frames. Omniscient only when
 // the replay actually authorizes hand identities — privacy-redacted
-// artifacts stay public (never fabricate identities).
+// artifacts stay public (never fabricate identities). OMNISCIENT here is
+// a REQUEST: CasterSession resolves authorization from the frame evidence
+// BEFORE constructing any viewer-scoped derived state (beats, event
+// index, commentary inputs), so a missing/redacted replay fails closed.
 async function buildCasterSession(matchResult, frames) {
   const { CasterSession, COMMENTARY_MODE, VIEWER_MODE } = await getCaster();
   const c = casterState.config;
@@ -825,6 +828,8 @@ async function buildCasterSession(matchResult, frames) {
   });
   session.loadCompletedMatch(matchResult, frames);
   session.setSpeed(c.speed);
+  // Defense in depth: the session already resolved viewerMode from
+  // evidence; this pin makes the PUBLIC outcome explicit at the boundary.
   if (!session.handsAuthorized) session.setViewerMode(VIEWER_MODE.PUBLIC);
   return session;
 }

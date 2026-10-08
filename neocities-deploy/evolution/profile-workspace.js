@@ -1,14 +1,14 @@
-import { esc } from '../state.js?v=7d7375aa53c1';
-import { LAB_IDENTITY } from './identity.mjs?v=7d7375aa53c1';
-import { LAB_PROFILES } from './evolution-domain.mjs?v=7d7375aa53c1';
-import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=7d7375aa53c1';
-import { EvolutionStore } from './evolution-store.mjs?v=7d7375aa53c1';
-import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=7d7375aa53c1';
-import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=7d7375aa53c1';
-import { LAB_TRUST_POLICY } from './lab-trust-policy.mjs?v=7d7375aa53c1';
-import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=7d7375aa53c1';
-import { buildDossier } from './profile-journal.mjs?v=7d7375aa53c1';
-import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, DEFAULT_ADAPTIVE_THRESHOLDS, ADAPTIVE_MODIFIER_BOUND, ADAPTIVE_MODIFIER_SCALE, createAdaptiveConfig } from './adaptive-strategy.mjs?v=7d7375aa53c1';
+import { esc } from '../state.js?v=a90b812f827b';
+import { LAB_IDENTITY } from './identity.mjs?v=a90b812f827b';
+import { LAB_PROFILES } from './evolution-domain.mjs?v=a90b812f827b';
+import { executeBrowserSeries } from './evolution-browser-runner.mjs?v=a90b812f827b';
+import { EvolutionStore } from './evolution-store.mjs?v=a90b812f827b';
+import { TRAIT_CATALOG, TEMPLATE_CATALOG, GENOME_DEFINITION, canExecuteCheckpoint, canCompareMeasurements, resolveEra, sameHead, CONTRACTS } from './profile-contracts.mjs?v=a90b812f827b';
+import { ProfileStore, IndexedDbBackend, promotionAuthority } from './profile-store.mjs?v=a90b812f827b';
+import { LAB_TRUST_POLICY } from './lab-trust-policy.mjs?v=a90b812f827b';
+import { startSeries, runSeries, cancelSeries, prepareHeldOut, runPlannedMeasurement, prepareChallenge, runChallenge, promoteChallenger } from './profile-science.mjs?v=a90b812f827b';
+import { buildDossier } from './profile-journal.mjs?v=a90b812f827b';
+import { MODIFIER_STATES, STRATEGIC_STATE_LABELS, DEFAULT_ADAPTIVE_THRESHOLDS, ADAPTIVE_MODIFIER_BOUND, ADAPTIVE_MODIFIER_SCALE, createAdaptiveConfig } from './adaptive-strategy.mjs?v=a90b812f827b';
 
 // Profile-centered Lab workflows. Presentation only: every scientific or
 // head-changing action goes through ProfileStore / profile-science.

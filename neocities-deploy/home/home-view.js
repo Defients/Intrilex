@@ -20,7 +20,7 @@
 // data-home-* hooks after render.
 // ═══════════════════════════════════════════════════════════════
 
-import { HERO_TRANSMISSIONS, renderHeroTransmissionHtml } from './hero-transmission.js?v=7d7375aa53c1';
+import { HERO_TRANSMISSIONS, renderHeroTransmissionHtml } from './hero-transmission.js?v=a90b812f827b';
 
 // Same escape semantics as state.js esc() — duplicated deliberately
 // so this module stays DOM-free and Node-testable.
