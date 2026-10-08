@@ -192,10 +192,7 @@ export async function initExperiments({ bootSummaries = [], bootAggregate = null
         const foreignLeaseLive = manifest?.owner?.ownerId && manifest.owner.ownerId !== _ownerId
           && Number.isFinite(Date.parse(manifest.owner.leaseUntil ?? '')) && Date.parse(manifest.owner.leaseUntil) > now;
         if (manifestIsActive(manifest) && !foreignLeaseLive) {
-          live = manifestTransition(manifest, MANIFEST_STATUS.INTERRUPTED, {
-            failure: { message: 'Execution interrupted (browser closed or reloaded before the run finished).', phase: 'execution' },
-          });
-          try { await _store.putManifest(live); }
+          try { live = await _store.recoverManifest(manifest.manifestId); }
           catch (error) { console.warn('[experiments] interrupted-manifest persist failed:', error); }
         }
         _manifests.set(live.manifestId, live);
@@ -481,7 +478,7 @@ function _releasedOwner(owner) {
 async function _persistManifest(manifest) {
   if (manifest?.owner) {
     _assertManifestOwner(manifest);
-    await _store.putManifestFenced(manifest);
+    manifest = await _store.putManifestFenced(manifest);
   } else {
     await _store.putManifest(manifest);
   }
@@ -511,36 +508,9 @@ export function registerRunExecutor(fn) { _runExecutor = fn; }
 export async function beginExperimentRun({ config = {}, segments = null, batchSize = 0 } = {}) {
   if (!_ready || !_experiment) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
   requirePersistentCampaign();
-  for (let attempt = 0; attempt < 32; attempt += 1) {
-    // Authoritative ordinal space: persisted runs + persisted manifests,
-    // merged with this controller's in-memory view (session-only records).
-    const taken = new Set();
-    const persistOrdinals = async () => {
-      for (const r of await _store.listRuns(_experiment.experimentId)) if (r.origin !== 'bundled') taken.add(r.ordinal ?? 0);
-      for (const m of await _store.listManifests(_experiment.experimentId)) taken.add(m.ordinal ?? 0);
-    };
-    try { await persistOrdinals(); }
-    catch (error) { console.warn('[experiments] ordinal scan failed — using local view only:', error); }
-    for (const r of _runs) if (r.origin !== 'bundled') taken.add(r.ordinal ?? 0);
-    for (const m of _manifests.values()) taken.add(m.ordinal ?? 0);
-    let ordinal = 0;
-    while (taken.has(ordinal)) ordinal += 1;
-    const runId = runIdFor(_experiment.experimentId, ordinal);
-    const manifest = createRunManifest({
-      runId, experimentId: _experiment.experimentId, ordinal,
-      config, requestedMatches: config.matchCount ?? 0, batchSize, segments,
-      owner: _newOwnerLease(),
-    });
-    try {
-      await _store.claimRunManifest(manifest);
-      _manifests.set(runId, manifest);
-      return { runId, manifest };
-    } catch (error) {
-      if (error?.code === 'EXPERIMENT_OCCURRENCE_CONFLICT' || error?.code === 'EXPERIMENT_RECORD_EXISTS') continue;
-      throw error;
-    }
-  }
-  throw Object.assign(new Error('EXPERIMENT_OCCURRENCE_EXHAUSTED'), { code: 'EXPERIMENT_OCCURRENCE_EXHAUSTED' });
+  const manifest = await _store.allocateRunManifest({ experimentId: _experiment.experimentId, config, segments, batchSize, owner: _newOwnerLease() });
+  _manifests.set(manifest.runId, manifest);
+  return { runId: manifest.runId, manifest };
 }
 
 /**
@@ -589,8 +559,8 @@ export async function commitExperimentBatch(runId, { segmentIndex = 0, ordinalSt
   }
   const next = { ...planned, owner: _renewedLease(planned.owner) };
   next.headline = foldSummariesIntoHeadline(manifest.headline ? { ...manifest.headline, seatWins: { ...manifest.headline.seatWins } } : createManifestHeadline(), summaries);
-  await _store.commitRunBatch({ manifest: next, batch });
-  _manifests.set(runId, next);
+  const committed = await _store.commitRunBatch({ manifest: next, batch });
+  _manifests.set(runId, committed.manifest ?? next);
   return { runId, batchIndex, committedMatches: next.committedMatches, requestedMatches: next.requestedMatches, receipt };
 }
 
@@ -730,8 +700,8 @@ export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
     { ...manifest, sealedRunId: run.runId, resumable: false },
     MANIFEST_STATUS.COMPLETED,
   );
-  await _store.finalizeRun({ run: sealed, payload, manifest: finalManifest });
-  _manifests.set(runId, finalManifest);
+  const finalized = await _store.finalizeRun({ run: sealed, payload, manifest: finalManifest });
+  _manifests.set(runId, finalized.manifest ?? finalManifest);
   const { compatibility: compat, included, setPersisted } = await _registerStoredRun(sealed, baseline);
   await applySelection({ fastPath: { aggregate, observatory } });
   return { run: sealed, compatibility: compat, included, persisted: _store.persisted === true, payloadSessionOnly: false, metaFailed: false, setPersisted, aggregate, observatory };
@@ -821,8 +791,7 @@ export async function resumeExperimentRun(manifestId) {
   // transfers with a bumped fencing token; a live foreign owner is refused.
   const acquired = await _store.acquireManifestOwnership(manifestId, { ownerId: _ownerId, leaseMs: OWNER_LEASE_MS });
   const running = manifestTransition(acquired, MANIFEST_STATUS.RUNNING, { failure: null });
-  await _store.putManifestFenced(running);
-  _manifests.set(manifestId, running);
+  _manifests.set(manifestId, await _store.putManifestFenced(running));
   const base = manifest.config?.ordinalStart ?? 0;
   const plan = {
     runId: manifestId,

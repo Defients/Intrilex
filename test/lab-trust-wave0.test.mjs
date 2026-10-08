@@ -136,7 +136,7 @@ test('R01: identity record distinguishes sample, executable subject, and occurre
     'occurrence identity must stay off the canonically hashable summary');
 });
 
-test('R05: concurrent challenge preparations cannot both claim automatic attempt 1', pending('R05'), async () => {
+test('R05: concurrent challenge preparations cannot both claim automatic attempt 1', async () => {
   const store = memoryStore(), created = await createGraveMaw(store), id = created.agentProfileId;
   const { nomination } = await fixtureSeries({ store, agentProfileId: id, commandId: 's' });
   const args = { store, agentProfileId: id, nominationId: nomination.id };

@@ -27,7 +27,7 @@ import {
   EXPERIMENT_LIMITS,
   validateExperimentRecord,
   validateRunRecord,
-  validateAnalysisSet,
+  validateAnalysisSet, createRunManifest, runIdFor,
 } from '../../../../packages/simulation-runtime/src/experiment-domain.mjs';
 
 const DB_NAME = 'intrilex-experiment-lab';
@@ -57,15 +57,22 @@ const _assertSameFence = (stored, incoming) => {
   if ((exp?.fencingToken ?? null) !== (sup?.fencingToken ?? null) || (exp?.ownerId ?? null) !== (sup?.ownerId ?? null)) {
     throw Object.assign(new Error('RUN_OWNERSHIP_STALE'), { code: 'RUN_OWNERSHIP_STALE', manifestId: stored?.manifestId ?? incoming?.manifestId });
   }
+  if (stored?.owner && (stored.storageRevision ?? 0) !== (incoming.storageRevision ?? 0)) {
+    throw Object.assign(new Error('RUN_MANIFEST_VERSION_CONFLICT'), { code: 'RUN_MANIFEST_VERSION_CONFLICT' });
+  }
+  if (stored?.sealedRunId || ['COMPLETED', 'FAILED', 'CANCELLED', 'INTERRUPTED'].includes(stored?.status)) {
+    throw Object.assign(new Error('RUN_MANIFEST_TERMINAL'), { code: 'RUN_MANIFEST_TERMINAL' });
+  }
 };
+const nextRevision = (stored, incoming) => ({ ...incoming, storageRevision: (stored?.storageRevision ?? 0) + 1 });
 
 // In-memory backend — same async surface as the IDB transaction helpers.
 // Used when IndexedDB is unavailable (tests, locked-down browsers).
 function createMemoryBackend() {
   const tables = { experiments: new Map(), runs: new Map(), analysisSets: new Map(), payloads: new Map(), manifests: new Map(), runBatches: new Map() };
   return {
-    persisted: false,
-    async get(store, key) { return tables[store]?.get(key) ?? undefined; },
+    tables, persisted: false,
+    async get(store, key) { return structuredClone(tables[store]?.get(key)); },
     async put(store, value, key) { tables[store]?.set(key ?? value[keyPathFor(store)], structuredClone(value)); },
     async del(store, key) { tables[store]?.delete(key); },
     async all(store) { return [...(tables[store]?.values() ?? [])]; },
@@ -86,6 +93,7 @@ export class ExperimentStore {
   }
 
   async open() {
+    if (this.superseded) throw Object.assign(new Error('EXPERIMENT_STORAGE_SUPERSEDED'), { code: 'EXPERIMENT_STORAGE_SUPERSEDED' });
     if (this.db || this.memory) return this;
     if (this.opening) return this.opening.promise;
     if (!this.factory) {
@@ -121,7 +129,7 @@ export class ExperimentStore {
         this.opening = null;
         db.onversionchange = () => {
           db.close();
-          if (this.db === db) { this.db = null; this.persisted = null; }
+          if (this.db === db) { this.db = null; this.persisted = false; this.superseded = true; }
         };
         resolve(this);
       };
@@ -130,7 +138,8 @@ export class ExperimentStore {
     });
     try {
       return await pending.promise;
-    } catch {
+    } catch (error) {
+      this.storageError = error;
       // IndexedDB present but refused (private mode, quota policy): degrade
       // to the session backend rather than failing the lab entirely.
       this.memory = createMemoryBackend();
@@ -213,6 +222,7 @@ export class ExperimentStore {
       const mem = this.memory;
       const ops = {
         get: (s, k) => mem.get(s, k),
+        all: s => mem.all(s),
         put: (s, v, k) => mem.put(s, v, k),
         add: async (s, v, k) => {
           const existing = await mem.get(s, k ?? v?.[keyPathFor(s)]);
@@ -222,7 +232,10 @@ export class ExperimentStore {
         del: (s, k) => mem.del(s, k),
       };
       this._memTxQueue ??= Promise.resolve();
-      const run = this._memTxQueue.then(() => work(ops));
+      const run = this._memTxQueue.then(async () => {
+        const before = structuredClone(mem.tables);
+        try { return await work(ops); } catch (error) { for (const [name, table] of Object.entries(before)) mem.tables[name] = table; throw error; }
+      });
       this._memTxQueue = run.then(() => {}, () => {});
       return run;
     }
@@ -243,6 +256,7 @@ export class ExperimentStore {
       });
       const ops = {
         get: (s, k) => wrap(tx.objectStore(s).get(k)),
+        all: s => wrap(tx.objectStore(s).getAll()),
         put: (s, v, k) => wrap(tx.objectStore(s).put(v, k)),
         add: (s, v, k) => wrap(tx.objectStore(s).add(v, k)),
         del: (s, k) => wrap(tx.objectStore(s).delete(k)),
@@ -263,11 +277,25 @@ export class ExperimentStore {
    * both succeed — the loser gets EXPERIMENT_OCCURRENCE_CONFLICT and must
    * recompute a fresh ordinal/runId before retrying.
    */
+  async allocateRunManifest({ experimentId, config, segments, batchSize, owner }) {
+    return this._transact([STORES.RUNS, STORES.MANIFESTS], async ops => {
+      const runs = await ops.all(STORES.RUNS), manifests = await ops.all(STORES.MANIFESTS);
+      const used = new Set([...runs, ...manifests].filter(r => r.experimentId === experimentId && r.origin !== 'bundled').map(r => r.ordinal));
+      let ordinal = 0; while (used.has(ordinal)) ordinal++;
+      const runId = runIdFor(experimentId, ordinal);
+      const manifest = { ...createRunManifest({ runId, experimentId, ordinal, config, requestedMatches: config.matchCount ?? 0, segments, batchSize, owner }), storageRevision: 0 };
+      if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
+      await ops.add(STORES.MANIFESTS, manifest);
+      return manifest;
+    });
+  }
+
   async claimRunManifest(manifest) {
     if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) {
       throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
     }
-    await this._transact([STORES.MANIFESTS], async (ops) => {
+    await this._transact([STORES.MANIFESTS, STORES.RUNS], async (ops) => {
+      if (await ops.get(STORES.RUNS, manifest.runId)) throw Object.assign(new Error('EXPERIMENT_OCCURRENCE_CONFLICT'), { code: 'EXPERIMENT_OCCURRENCE_CONFLICT' });
       const existing = await ops.get(STORES.MANIFESTS, manifest.manifestId);
       if (existing != null) {
         throw Object.assign(new Error('EXPERIMENT_OCCURRENCE_CONFLICT'), { code: 'EXPERIMENT_OCCURRENCE_CONFLICT', manifestId: manifest.manifestId });
@@ -286,18 +314,17 @@ export class ExperimentStore {
    */
   async acquireManifestOwnership(manifestId, { ownerId, leaseMs = 30000 } = {}) {
     if (!ownerId) throw Object.assign(new Error('RUN_OWNER_ID_REQUIRED'), { code: 'RUN_OWNER_ID_REQUIRED' });
-    const now = Date.now();
-    const leaseUntil = new Date(now + leaseMs).toISOString();
     return this._transact([STORES.MANIFESTS], async (ops) => {
       const cur = await ops.get(STORES.MANIFESTS, manifestId);
       if (!cur) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING', manifestId });
       if (cur.sealedRunId) throw Object.assign(new Error('RUN_ALREADY_SEALED'), { code: 'RUN_ALREADY_SEALED', manifestId });
+      const now = Date.now(), leaseUntil = new Date(now + leaseMs).toISOString();
       const owner = cur.owner ?? null;
       if (_ownerIsLive(owner, now) && owner.ownerId !== ownerId) {
         throw Object.assign(new Error('RUN_OWNERSHIP_HELD'), { code: 'RUN_OWNERSHIP_HELD', manifestId, holder: owner.ownerId, leaseUntil: owner.leaseUntil });
       }
       const next = {
-        ...cur,
+        ...cur, status: 'RUNNING', failure: null, storageRevision: (cur.storageRevision ?? 0) + 1,
         owner: {
           ownerId,
           fencingToken: (owner?.fencingToken ?? 0) + 1,
@@ -320,13 +347,25 @@ export class ExperimentStore {
     if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) {
       throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
     }
-    await this._transact([STORES.MANIFESTS], async (ops) => {
+    return this._transact([STORES.MANIFESTS], async (ops) => {
       const cur = await ops.get(STORES.MANIFESTS, manifest.manifestId);
       if (!cur) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING', manifestId: manifest.manifestId });
       _assertSameFence(cur, manifest);
-      await ops.put(STORES.MANIFESTS, manifest);
+      const next = nextRevision(cur, manifest);
+      await ops.put(STORES.MANIFESTS, next);
+      return next;
     });
-    return manifest.manifestId;
+  }
+
+  async recoverManifest(manifestId) {
+    return this._transact([STORES.MANIFESTS], async ops => {
+      const cur = await ops.get(STORES.MANIFESTS, manifestId);
+      if (!cur || cur.sealedRunId || !['RUNNING', 'PENDING'].includes(cur.status) || _ownerIsLive(cur.owner)) return cur;
+      const next = { ...cur, status: 'INTERRUPTED', storageRevision: (cur.storageRevision ?? 0) + 1,
+        owner: cur.owner ? { ...cur.owner, fencingToken: cur.owner.fencingToken + 1, leaseUntil: new Date(0).toISOString() } : null,
+        failure: { message: 'Execution interrupted; explicit resume is required.', phase: 'execution' } };
+      await ops.put(STORES.MANIFESTS, next); return next;
+    });
   }
 
   /** Heartbeat: extend the live owner's lease without touching content. */
@@ -338,6 +377,7 @@ export class ExperimentStore {
       if (cur.owner?.ownerId !== ownerId || cur.owner?.fencingToken !== fencingToken) {
         throw Object.assign(new Error('RUN_OWNERSHIP_STALE'), { code: 'RUN_OWNERSHIP_STALE', manifestId });
       }
+      if (cur.sealedRunId || cur.status !== 'RUNNING') throw Object.assign(new Error('RUN_MANIFEST_TERMINAL'), { code: 'RUN_MANIFEST_TERMINAL' });
       const next = {
         ...cur,
         owner: { ...cur.owner, leaseUntil: new Date(now + leaseMs).toISOString() },
@@ -452,14 +492,14 @@ export class ExperimentStore {
       const existing = await ops.get(STORES.RUN_BATCHES, batch.batchId);
       if (existing != null) {
         if (existing.summariesHash === batch.summariesHash) {
-          await ops.put(STORES.MANIFESTS, manifest);
-          return { batchId: batch.batchId, duplicate: true };
+          return { batchId: batch.batchId, duplicate: true, manifest: stored };
         }
         throw Object.assign(new Error('RUN_BATCH_CONFLICT'), { code: 'RUN_BATCH_CONFLICT', batchId: batch.batchId });
       }
       await ops.put(STORES.RUN_BATCHES, batch);
-      await ops.put(STORES.MANIFESTS, manifest);
-      return { batchId: batch.batchId, duplicate: false };
+      const next = nextRevision(stored, manifest);
+      await ops.put(STORES.MANIFESTS, next);
+      return { batchId: batch.batchId, duplicate: false, manifest: next };
     });
   }
   async getRunBatch(runId, batchIndex) { return (await this._get(STORES.RUN_BATCHES, `${runId}#${batchIndex}`)) ?? null; }
@@ -486,8 +526,9 @@ export class ExperimentStore {
       }
       await ops.put(STORES.RUNS, run);
       if (payload) await ops.put(STORES.PAYLOADS, { runId: run.runId, storedAt: new Date().toISOString(), ...payload });
-      if (manifest) await ops.put(STORES.MANIFESTS, manifest);
-      return run.runId;
+      const next = manifest ? nextRevision(await ops.get(STORES.MANIFESTS, manifest.manifestId), manifest) : null;
+      if (next) await ops.put(STORES.MANIFESTS, next);
+      return { runId: run.runId, manifest: next };
     });
   }
 
