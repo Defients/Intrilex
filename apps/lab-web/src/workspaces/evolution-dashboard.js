@@ -1,3 +1,4 @@
+import { admitSummaries, selectEvidence, analyticsSummaries, publishEvidenceSnapshot, markEvidenceSnapshotStale } from '../evolution/evidence-admission.mjs';
 import { acknowledgedSave, persistenceLabel } from '../evolution/persistence-state.mjs';
 import '../evolution/evolution-training-ui.js';
 import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js';
@@ -115,7 +116,7 @@ export function renderEvolutionLab() {
       <div id="evo-replay-list">${replayList()}</div><div id="evo-inspection" aria-live="polite">${inspectionHtml()}</div></section>
     <section class="evo-section" data-evo-ledger><h3>Runs & artifacts</h3><p>IndexedDB on this browser origin. Saves occur every 250 games, and on pause, stop, completion or bookmarks. Export for portable evidence.</p>
       <div class="toolbar"><button id="evo-export" class="secondary-button" ${run() ? '' : 'disabled'}>Export artifact</button>
-      <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json" ${active() ? 'disabled' : ''}></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button><button id="evo-propagate" class="secondary-button" ${disabled}>Propagate → Observatory</button>${state.observatory?.datasetOrigin === 'EVOLUTION_LAB' ? '<button id="evo-observatory-restore" class="ghost-button">Restore certified analytics</button>' : ''}</div>
+      <label class="secondary-button">Inspect historical artifact<input id="evo-archive-import" type="file" accept="application/json,.json" ${active() ? 'disabled' : ''}></label><label class="secondary-button">Import artifact<input id="evo-import" type="file" accept="application/json,.json" ${disabled}></label><button id="evo-history-refresh" class="ghost-button">Refresh history</button>${view.evidenceCohorts?.length ? `<label>Compatible evidence group<select id="evo-evidence-cohort"><option value="">Choose a group</option>${view.evidenceCohorts.map((c,i)=>`<option value="${esc(c)}">Group ${i+1}</option>`).join('')}</select></label>` : ''}<button id="evo-propagate" class="secondary-button" ${disabled}>Propagate → Observatory</button>${state.observatory?.datasetOrigin === 'EVOLUTION_LAB' ? '<button id="evo-observatory-restore" class="ghost-button">Restore certified analytics</button>' : ''}</div>
       <p id="evo-propagate-status" role="status">${esc(view.propagateStatus ?? '')}</p>
       ${view.archive ? `<details open><summary>Read-only historical implementation</summary><p>Identity ${esc(view.archive.identity.fingerprint)}. Original checkpoint IDs and artifact content are preserved. This implementation is not admitted for current execution; imported outcomes remain unverified.</p><pre>${esc(JSON.stringify(view.archive.checkpoints,null,2))}</pre></details>` : ''}
       <p id="evo-storage" role="status">${esc(view.storageError || storageSummary())}</p><p id="evo-strategy-evidence" role="status">${esc(run()?strategyEvidenceNote():'')}</p><div id="evo-history">${historyHtml()}</div>
@@ -205,30 +206,27 @@ async function refreshHistory() {
 // imported artifacts) into the campaign-style summary contract and rebuilds
 // the Observatory dataset over it. Replaces the certified corpus for the
 // session — cohorts are never mixed — and is reversible via bootState.
-async function propagateToObservatory() {
-  const rows = await store.list();
-  const runs = [];
-  let skipped = 0, historical = 0;
-  for (const row of rows) {
-    // loadForInspection admits foreign-fingerprint artifacts under their own
-    // identity — propagated summaries carry evidenceOrigin/fingerprint either way.
-    try { const entry = await store.loadForInspection(row.runId); runs.push(entry.run); if (entry.historical) historical += 1; }
-    catch { skipped += 1; }
-  }
-  const summaries = [...new Map(runs.flatMap(observatorySummariesForRun).map(s => [s.matchId, s])).values()];
-  if (!summaries.length) { view.propagateStatus = 'No saved lab runs to propagate — run, save or import evidence first.'; renderEvolutionLab(); return; }
+async function propagateToObservatory({cohort=document.getElementById('evo-evidence-cohort')?.value || null}={}) {
   try {
-    const { campaignAggregate, buildObservatoryAnalytics } = await import('../browser-analytics.js');
-    const aggregate = campaignAggregate(summaries, { profileId: null });
-    const obs = buildObservatoryAnalytics({ summaries, aggregate });
-    state.observatory = { ...obs, summaries, datasetOrigin: 'EVOLUTION_LAB' };
-    state.aggregate = aggregate;
-    state.rankPower = obs.rankPower ?? null;
-    state.swapMatrix = obs.swapMatrix ?? null;
-    state.variantAnalytics = obs.variantAnalytics ?? null;
-    const cov = observatoryCoverage(summaries);
-    view.propagateStatus = `Propagated ${summaries.length} games from ${runs.length} run(s)${cov.imported ? ` (${cov.imported} imported)` : ''}${historical ? ` · ${historical} historical-fingerprint run(s)` : ''}${skipped ? ` · ${skipped} run(s) skipped — unreadable` : ''}. Telemetry coverage: ${cov.withRankDecisions}/${cov.matches} rank decisions · ${cov.withOpportunityCounts}/${cov.matches} opportunity counts. Session-scoped — reload or restore returns the certified dataset.`;
-  } catch (error) { view.propagateStatus = `Propagation failed: ${error.message}`; }
+    const entries=[],rows=await store.list();
+    for(const row of rows){
+      try {
+        const {run}=await store.loadForInspection(row.runId);
+        const summaries=observatorySummariesForRun(run);
+        entries.push({id:run.runId,summaries,admission:admitSummaries(summaries,{expectedCount:run.records.length})});
+      } catch(error){entries.push({id:row.runId,summaries:[],admission:{eligible:false,classification:'INVALID_QUARANTINED',reasons:[error.code ?? 'EVIDENCE_UNREADABLE'],evidenceDigest:null}});}
+    }
+    const selected=selectEvidence(entries,{cohort});
+    if(!selected.summaries.length)throw new Error('EVIDENCE_NO_ADMISSIBLE_SAMPLES');
+    const {campaignAggregate,buildObservatoryAnalytics}=await import('../browser-analytics.js');
+    const analytical=analyticsSummaries(selected.summaries),aggregate=campaignAggregate(analytical,{profileId:null});
+    const observatory=buildObservatoryAnalytics({summaries:analytical,aggregate});
+    const ids=entries.filter(e=>e.admission.eligible && e.admission.cohorts.includes(selected.selection.cohort)).map(e=>e.id);
+    publishEvidenceSnapshot(state,{aggregate,observatory:{...observatory,summaries:selected.summaries},basis:{includedRunIds:ids,includedRunCount:ids.length,includedGames:selected.summaries.length,
+      effectiveSampleCount:selected.summaries.length,repeatCount:selected.selection.repeatCount,selection:selected.selection},selection:selected.selection,origin:'EVOLUTION_LAB'});
+    const cov=observatoryCoverage(selected.summaries);
+    view.propagateStatus=`Propagated ${selected.summaries.length} distinct samples from ${ids.length} run(s); ${selected.selection.repeatCount} repeats counted once, ${selected.selection.rejected.length} restricted runs excluded. Telemetry coverage: ${cov.withRankDecisions}/${cov.matches} rank decisions. Session-scoped.`;
+  }catch(error){if(error.cohorts)view.evidenceCohorts=error.cohorts;markEvidenceSnapshotStale(state,error);view.propagateStatus=`Propagation failed: ${error.message}. Previous coherent view retained.`;}
   renderEvolutionLab();
 }
 function restoreCertifiedObservatory() {
@@ -239,6 +237,8 @@ function restoreCertifiedObservatory() {
     state.rankPower = structuredClone(boot.rankPower);
     state.swapMatrix = structuredClone(boot.swapMatrix);
     state.variantAnalytics = structuredClone(boot.variantAnalytics);
+    state.evidenceBasis = structuredClone(boot.evidenceBasis ?? null);
+    state.evidenceSnapshot = null; state.evidenceViewStatus = {stale:false,error:null};
   }
   view.propagateStatus = 'Certified observatory dataset restored.';
   renderEvolutionLab();

@@ -1,4 +1,6 @@
 import { hashCanonical } from '../shared-browser.js';
+import { admitSummaries } from './evidence-admission.mjs';
+import { observatorySummariesForRun } from './observatory-bridge.mjs';
 import { validateResearchProject, researchEnvelope } from './evolution-research.mjs';
 import { artifactEnvelope, validateArtifact, inspectHistoricalArtifact, LAB_LIMITS } from './evolution-domain.mjs';
 import { batchMatrixManifest, validateBatchMatrixManifest } from './batch-matrix.mjs';
@@ -250,7 +252,8 @@ export class EvolutionStore {
     if (!envelope) throw new Error('LAB_RUN_NOT_FOUND');
     const historical = envelope.payload?.identity?.fingerprint !== this.identity.fingerprint;
     const run = historical ? inspectHistoricalArtifact(envelope) : validateArtifact(envelope, this.identity);
-    return {run, historical, envelope};
+    const admission=admitSummaries(observatorySummariesForRun(run),{expectedCount:run.records.length});
+    return {run, historical, envelope, admission};
   }
   close() {
     const pending = this.opening;

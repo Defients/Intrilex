@@ -1,8 +1,8 @@
-import { canonicalClone } from "./canonical-json.js?v=8951e2c35a42";
-import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=8951e2c35a42";
-import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=8951e2c35a42";
-import { revalidateAttachments } from "./interactions.js?v=8951e2c35a42";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=8951e2c35a42";
+import { canonicalClone } from "./canonical-json.js?v=f576f69f79ad";
+import { applyAegis, applyTap, armFoundationActionRestriction, foundationActionRestricted, hasAegis, markExileBound, miniTurnHardCap, releaseNineTapsForScoring, revealUntilStart } from "./lifecycle.js?v=f576f69f79ad";
+import { resolveRuleFlag, resolveRuleNumber } from "./rule-parameters.js?v=f576f69f79ad";
+import { revalidateAttachments } from "./interactions.js?v=f576f69f79ad";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=f576f69f79ad";
 export const RANK_REGISTRY = Object.freeze({
     A: { rank: "A", prPoints: 4, scuttleOrder: 1, modes: ["base-counter", "purge", "anchor-counter", "spade-exile-counter", "super-counter"], prScuttleImmune: true, notes: ["A♠ and ⭐A use expanded counter authority."] },
     "2": { rank: "2", prPoints: 2, scuttleOrder: 2, modes: ["quick-score-discard", "wild-catalyst", "solo-wild-copy", "commandeer"], notes: ["⭐2 bypasses Guard and rank control protection, never Aegis.", "Solo Wild copies a same-suit rank 3-7 Base effect; wild for effect only, not points."] },

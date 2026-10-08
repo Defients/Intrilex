@@ -56,6 +56,7 @@ export function observatorySummaryForRecord(record, run, { pairId = null } = {})
   const summary = {
     schemaVersion: '4.1.0', analyticsSchemaVersion: '4.2.0',
     matchId: record.matchId, matchOrdinal: record.ordinal, seed: record.seed,
+    ...(record.evidenceIdentity ? {identity:structuredClone(record.evidenceIdentity),checkpointIds:record.checkpointIds} : {}),
     profileId, seatOrder: ['P1', 'P2'], policyIds: [...(record.policyIds ?? [])],
     ...(pairId ? { pairedRunId: pairId, pairedLeg: record.swapped === true ? 'BA' : 'AB' } : {}),
     seatSwapped: record.swapped === true,

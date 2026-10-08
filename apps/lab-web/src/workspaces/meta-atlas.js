@@ -1,3 +1,4 @@
+import { evidenceDigest, analyticsSummaries } from '../evolution/evidence-admission.mjs';
 // ═══════════════════════════════════════════════════════════════
 // workspaces/meta-atlas.js — /atlas workspace (Meta Atlas V1)
 //
@@ -65,11 +66,10 @@ let _cache = { sig: null, model: null };
 function atlasModel() {
   const p = prefs();
   const summaries = state.observatory?.summaries ?? [];
-  // Cheap data fingerprint: identity isn't reliable, so key on endpoints+length.
-  const dataFp = `${summaries.length}|${summaries[0]?.matchId ?? ''}|${summaries[summaries.length - 1]?.matchId ?? ''}`;
+  const dataFp = evidenceDigest({selection:state.observatory?.evidenceSelectionDigest ?? null,summaries});
   const sig = `${dataFp}|${p.x}|${p.y}|${p.minGames}|${p.cohort}|${state.observatory?.datasetOrigin ?? ''}`;
   if (_cache.sig !== sig) {
-    _cache = { sig, model: buildAtlasModel({ summaries, xMetricId: p.x, yMetricId: p.y, minGames: p.minGames, cohort: p.cohort }) };
+    _cache = { sig, model: buildAtlasModel({ summaries: state.evidenceSnapshot ? analyticsSummaries(summaries) : summaries, xMetricId: p.x, yMetricId: p.y, minGames: p.minGames, cohort: p.cohort }) };
   }
   return _cache.model;
 }

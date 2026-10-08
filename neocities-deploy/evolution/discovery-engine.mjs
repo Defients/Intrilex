@@ -367,7 +367,17 @@ export async function runDiscovery(run, deps = {}) {
     run.status = 'RUNNING';
     // ── Evidence scan → candidates ──
     const eligible = evidenceRuns.filter((r) => run.evidence.runIds.includes(r.runId));
-    const { index, candidates, rowCount } = scanEvidence(eligible, run.evidence, { detectedAt: now(), estGames: config.confirmGames });
+    const auditorTargets=run.mode==='auditor' && priorDiscoveries.length>0;
+    if(eligible.length<run.evidence.runIds.length && !auditorTargets){
+      warn(run,'EVIDENCE_RUNS_MISSING','Snapshot-referenced source runs could not be loaded.');
+      warn(run,'EVIDENCE_RESOLUTION_FAILED',eligible.length?'Some frozen source runs are missing; partial rescanning is blocked.':'Source runs exist in the snapshot but none could be loaded.');
+      run.status='BLOCKED';run.completedAt=now();return run;
+    }
+    let scan;
+    try{scan=scanEvidence(auditorTargets && eligible.length<run.evidence.runIds.length?[]:eligible,
+      auditorTargets && eligible.length<run.evidence.runIds.length?{runIds:[]}:run.evidence,{detectedAt:now(),estGames:config.confirmGames});}
+    catch(error){warn(run,'EVIDENCE_RESOLUTION_FAILED',error.message);run.status='BLOCKED';run.completedAt=now();return run;}
+    const {index,candidates,rowCount}=scan;
     evidenceIndex = index;
     const exclusionText = () => Object.entries(run.evidence.exclusionReasons ?? {}).map(([k, v]) => `${v}× ${k.toLowerCase().replaceAll('_', ' ')}`).join(', ');
     note('evidence-resolution', `Evidence resolution: ${run.evidence.selectedGameCount ?? run.evidence.gameCount} selected game(s) in ${run.evidence.selectedRunCount ?? run.evidence.runCount} stored run(s) → ${run.evidence.gameCount} admissible games in ${run.evidence.runCount} source run(s)${run.evidence.excludedCount ? ` · ${run.evidence.excludedCount} excluded (${exclusionText() || 'inadmissible'})` : ''}`, run.evidence.snapshotId);

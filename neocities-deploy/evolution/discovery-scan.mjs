@@ -1,3 +1,5 @@
+import { admitSummaries, selectEvidence } from './evidence-admission.mjs';
+import { observatorySummariesForRun } from './observatory-bridge.mjs';
 import { differenceInProportions } from '../shared-analytics/estimators.mjs';
 import { CLEAN_REASONS } from './evolution-domain.mjs';
 import { createCandidate, DISCOVERY_LIMITS } from './discovery-domain.mjs';
@@ -38,6 +40,7 @@ export function projectGameRow(run, record) {
   };
   return {
     runId: run.runId, ordinal: record.ordinal, seed: record.seed, swapped,
+    evidenceIdentity: record.evidenceIdentity ?? null, checkpointIds: record.checkpointIds ?? null,
     policyA: botA, policyB: botB, seat1Policy, seat2Policy: swapped ? botA : botB,
     clean, draw: winner === 'DRAW', winner,
     terminationReason: record.terminationReason,
@@ -383,10 +386,17 @@ export function detectCandidates(index, { detectedAt = new Date().toISOString(),
  */
 export function scanEvidence(runs, snapshot, options = {}) {
   const wanted = new Set(snapshot.runIds);
-  const rows = [];
-  for (const run of runs) {
-    if (!wanted.has(run.runId)) continue;
-    for (const record of run.records ?? []) rows.push(projectGameRow(run, record));
+  const entries=runs.filter(run=>wanted.has(run.runId)).map(run=>({id:run.runId,summaries:observatorySummariesForRun(run),admission:admitSummaries(observatorySummariesForRun(run))}));
+  const selected=selectEvidence(entries);
+  if(snapshot.selectionDigest && selected.selection.digest!==snapshot.selectionDigest)throw new Error('EVIDENCE_SNAPSHOT_CHANGED');
+  const samples=new Set(selected.selection.sampleIds),seen=new Set(),rows=[];
+  for(const run of runs){
+    if(!wanted.has(run.runId))continue;
+    for(const record of run.records ?? []){
+      const id=record.evidenceIdentity?.deterministicSampleId;
+      if(!samples.has(id) || seen.has(id))continue;
+      seen.add(id);rows.push(projectGameRow(run,record));
+    }
   }
   const index = buildEvidenceIndex(rows);
   const candidates = detectCandidates(index, options);

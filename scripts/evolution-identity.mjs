@@ -11,7 +11,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const IDENTITY_DEPENDENCIES = Object.freeze({
   execution: ['packages/simulation-runtime/src/runtime.mjs', 'apps/lab-web/src/autonomy-runtime.js',
     'packages/simulation-runtime/src/campaign.mjs', 'packages/simulation-runtime/src/evidence-identity.mjs', 'scripts/build.mjs', 'scripts/bundle.mjs'],
-  analysis: ['packages/simulation-runtime/src/profile-science.mjs', 'packages/simulation-runtime/src/profile-contracts.mjs',
+  analysis: ['packages/simulation-runtime/src/evidence-admission.mjs', 'packages/simulation-runtime/src/observatory-bridge.mjs', 'packages/simulation-runtime/src/experiment-portability.mjs', 'packages/simulation-runtime/src/profile-science.mjs', 'packages/simulation-runtime/src/profile-contracts.mjs',
     'packages/simulation-runtime/src/evolution-lab.mjs', 'packages/simulation-runtime/src/evolution-session.mjs',
     'packages/simulation-runtime/src/evolution-node-worker.mjs', 'apps/lab-web/src/worker.js',
     'packages/simulation-runtime/src/profile-arena.mjs', 'packages/simulation-runtime/src/campaign-execution.mjs', 'packages/simulation-runtime/src/experiment-domain.mjs',
@@ -77,7 +77,7 @@ export async function evolutionIdentity({ readSource = name => readFile(path.joi
   const analysis = await closure([...IDENTITY_DEPENDENCIES.analysis, ...instrumentation]);
   // Reviewed orchestration leaves: their scientific dependencies are already
   // in the closure; UI/router imports do not define the experiment protocol.
-  for(const name of ['apps/lab-web/src/experiment-controls.js','apps/lab-web/src/experiments/experiment-controller.mjs'])analysis.push([name,hashCanonical((await readSource(name)).replace(/\r\n/g,'\n'))]);
+  for(const name of ['apps/lab-web/src/experiment-controls.js','apps/lab-web/src/experiments/experiment-controller.mjs','apps/lab-web/src/workspaces/evolution-dashboard.js','apps/lab-web/src/workspaces/meta-atlas.js'])analysis.push([name,hashCanonical((await readSource(name)).replace(/\r\n/g,'\n'))]);
   analysis.sort(([a],[b])=>a.localeCompare(b));
   const engineHash = hashCanonical(execution.filter(([n]) => n.startsWith('runtime/autonomy-engine-dist/')));
   const policyImplementationHash = hashCanonical(execution.filter(([n]) => /^packages\/(policies|game-ai|policy-sdk)\//.test(n)));

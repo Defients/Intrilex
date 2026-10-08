@@ -29,14 +29,15 @@ function bindSegmentControls(stateKeys) {
 // corpus — either the experiment analysis set (Experiment panel runs) or
 // propagated Evolution Lab run artifacts.
 export function labDatasetBanner() {
+  const stale=state.evidenceViewStatus?.stale ? '<div class="notice warn" role="status"><strong>Previous evidence view.</strong> Recalculation did not complete. Charts and their evidence basis still show the previous accepted selection.</div>' : '';
   const origin = state.observatory?.datasetOrigin;
   const n = state.observatory?.summaries?.length ?? 0;
   if (origin === 'EXPERIMENT_RUNS') {
     const basis = state.evidenceBasis;
-    return `<div class="notice info" style="margin-bottom:12px"><strong>Experiment analysis set.</strong> Analytics reflect ${n} game(s) from ${basis?.includedRunCount ?? '?'} included run(s) under ${esc(basis?.experimentId ?? 'the experiment')} — ${basis?.excludedRunCount ?? 0} recorded run(s) excluded. Manage runs in the Experiment panel, or press Baseline to restore the certified corpus.</div>`;
+    return `${stale}<div class="notice info" style="margin-bottom:12px"><strong>Experiment analysis set.</strong> Analytics reflect ${n} game(s) from ${basis?.includedRunCount ?? '?'} included run(s) under ${esc(basis?.experimentId ?? 'the experiment')} — ${basis?.excludedRunCount ?? 0} recorded run(s) excluded. Manage runs in the Experiment panel, or press Baseline to restore the certified corpus.</div>`;
   }
-  if (origin !== 'EVOLUTION_LAB') return '';
-  return `<div class="notice info" style="margin-bottom:12px"><strong>Evolution Lab dataset.</strong> Analytics reflect ${n} propagated lab game(s), not the certified corpus. Imported rows are unverified; telemetry coverage may be partial. Restore via Evolution Lab → Runs &amp; artifacts → "Restore certified analytics".</div>`;
+  if (origin !== 'EVOLUTION_LAB') return stale;
+  return `${stale}<div class="notice info" style="margin-bottom:12px"><strong>Evolution Lab dataset.</strong> Analytics reflect ${n} propagated lab game(s), not the certified corpus. Imported rows are unverified; telemetry coverage may be partial. Restore via Evolution Lab → Runs &amp; artifacts → "Restore certified analytics".</div>`;
 }
 
 // ── /compare ──────────────────────────────────────────────────────

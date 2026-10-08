@@ -20,6 +20,10 @@ const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 
 /** Display label for a policy identity (matches router policyOptions casing). */
 export function policyLabel(id) {
+  if(String(id).includes('::SUB2-')){
+    const [policy,subject]=String(id).split('::');
+    return `${policyLabel(policy)} · ${subject.slice(5,13)}`;
+  }
   return String(id ?? '').replaceAll('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 

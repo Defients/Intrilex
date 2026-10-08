@@ -421,7 +421,7 @@ export function runIntegrityState(run) {
 
 /** Analytically eligible — the inverse of every integrity exclusion. */
 export function runAnalyticallyEligible(run) {
-  return runIntegrityState(run) === 'ok';
+  return runIntegrityState(run) === 'ok' && run.lifecycle?.admission?.eligible !== false;
 }
 
 // ── Evidence basis ──────────────────────────────────────────────
@@ -462,6 +462,8 @@ export function evidenceBasis(runs, set, { baselineRun = null } = {}) {
     includedRunIds: [...contributingIds],
     includedRunCount: contributing.filter(r => r.runId !== BUNDLED_RUN_ID).length,
     includedGames: contributing.reduce((n, r) => n + (r.metrics?.matchCount ?? 0), 0),
+    restrictedCount:runs.filter(r=>r.lifecycle?.admission?.classification==='RESTRICTED_LEGACY').length,
+    admissionFailures:runs.filter(r=>r.lifecycle?.admission?.eligible===false).map(r=>({runId:r.runId,...r.lifecycle.admission})),
     excludedRunCount: excludedRuns.length,
     excludedGames: excludedGameCount,
     // Integrity disclosure — never folded silently into "excluded".
@@ -963,8 +965,9 @@ export function reconcileRunBatches(manifest, batches) {
     if(b.runId!==manifest.runId || b.batchIndex!==d.batchIndex || batchSummariesHash(b.summaries)!==b.summariesHash || b.summariesHash!==d.summariesHash)bad('RUN_BATCH_HASH_MISMATCH');
     if(b.matchCount!==b.summaries.length || b.matchCount!==d.matchCount || b.ordinalStart!==d.ordinalStart || b.ordinalEnd!==d.ordinalEnd || b.ordinalEnd-b.ordinalStart!==b.matchCount || !b.matchCount)bad('RUN_COVERAGE_MISMATCH');
     const ordinals=b.summaries.map(s=>s.matchOrdinal ?? s.ordinal).sort((a,b)=>a-b);
+    if(d.receiptHash && b.receipt?.receiptHash!==d.receiptHash)bad('RUN_BATCH_RECEIPT_MISMATCH');
     if(b.receipt){const {receiptHash,...body}=b.receipt;
-      if(receiptHash!==hashCanonical(body) || body.contract!=='intrilex-batch-receipt@1' || body.runId!==manifest.runId || body.batchId!==b.batchId || body.payloadDigest!==b.summariesHash || hashCanonical(body.ordinals)!==hashCanonical(ordinals))bad('RUN_BATCH_RECEIPT_MISMATCH');
+      if((d.receiptHash && receiptHash!==d.receiptHash) || receiptHash!==hashCanonical(body) || body.contract!=='intrilex-batch-receipt@1' || body.runId!==manifest.runId || body.batchId!==b.batchId || body.payloadDigest!==b.summariesHash || hashCanonical(body.ordinals)!==hashCanonical(ordinals))bad('RUN_BATCH_RECEIPT_MISMATCH');
     }
     for(let i=0;i<ordinals.length;i++)if(ordinals[i]!==b.ordinalStart+i || !scheduled.has(ordinals[i]) || retained.has(ordinals[i]))bad('RUN_COVERAGE_MISMATCH');
     for(const summary of b.summaries){

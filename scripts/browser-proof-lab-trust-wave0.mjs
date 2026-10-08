@@ -2,7 +2,7 @@ import { runPolicyMatch } from '../packages/simulation-runtime/src/runtime.mjs';
 import { baselinePolicyState, WEIGHTED_POLICY_ID } from '../packages/policies/src/weighted-heuristic.mjs';
 import { evolutionIdentity } from './evolution-identity.mjs';
 import { memoryStore, createGraveMaw, fixtureSeries } from '../test/fixtures/agent-profile-fixtures.mjs';
-/* global document, DOMException, indexedDB */
+/* global document, DOMException, indexedDB, IDBObjectStore, Worker, queueMicrotask */
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import path from 'node:path';
@@ -13,7 +13,7 @@ import { build } from 'esbuild';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'apps/lab-web/dist');
-const mirrors = new Set(['campaign-execution.mjs', 'lab-trust-policy.mjs', 'profile-store.mjs', 'profile-contracts.mjs', 'discovery-domain.mjs', 'experiment-domain.mjs', 'experiment-portability.mjs', 'profile-science.mjs', 'profile-journal.mjs', 'evolution-domain.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'adaptive-strategy.mjs', 'evidence-identity.mjs', 'persistence-state.mjs', 'identity.mjs']);
+const mirrors = new Set(['evidence-admission.mjs','experiment-portability.mjs','observatory-bridge.mjs','campaign-execution.mjs', 'lab-trust-policy.mjs', 'profile-store.mjs', 'profile-contracts.mjs', 'discovery-domain.mjs', 'experiment-domain.mjs', 'experiment-portability.mjs', 'profile-science.mjs', 'profile-journal.mjs', 'evolution-domain.mjs', 'evolution-research.mjs', 'evolution-evaluation.mjs', 'evolution-training.mjs', 'adaptive-strategy.mjs', 'evidence-identity.mjs', 'persistence-state.mjs', 'identity.mjs']);
 const sourceFiles = new Set(['/experiment-controls.js', '/experiments/experiment-controller.mjs', '/experiments/experiment-store.mjs', '/evolution/profile-workspace.js', '/workspaces/discover.js', '/autonomy-runtime.js', '/workspaces/evolution-dashboard.js', '/worker.js']);
 // Bundle current source in memory using the existing built engine/assets.
 // Resolve version-query imports once so state modules are not duplicated.
@@ -95,7 +95,8 @@ try {
     const src = (await (await fetch('/source/controller.txt')).text()).replace(/import\s[^;]*?from\s*'[^']*';/gs, '').replace(/^export /gm, '');
     async function make(store) {
       const { LAB_IDENTITY } = await import('/evolution/identity.mjs');
-      const deps = { ...domain, LAB_IDENTITY, ExperimentStore, hashCanonical, summariesCarryDecisionEvidence: () => false, console, structuredClone, TextEncoder,
+      const admission=await import('/evolution/evidence-admission.mjs');
+      const deps = { ...domain, ...admission, LAB_IDENTITY, ExperimentStore, hashCanonical, summariesCarryDecisionEvidence: () => false, console, structuredClone, TextEncoder,
         state: { bootState: null, observatory: {}, aggregate: {} }, showToast() {}, updateRailContext() {}, rerender() {}, RULES_VERSION: '4.3.1', ENGINE_VERSION: '4.2.6', LAB_VERSION: 'wave0', Worker: class { constructor() { throw Error('disabled'); } } };
       const api = new Function('deps', 'with(deps){' + src + ';return {initExperiments,beginExperimentRun};}')(deps);
       await api.initExperiments({ store }); return api;
@@ -229,7 +230,7 @@ try {
   assert.equal(stopped.status,'failed');assert.equal(stopped.count,2);assert.deepEqual(stopped.ordinals,[0,1]);assert.equal(stopped.run,null);
   assert.deepEqual(stopped.holes,[{index:0,ordinalStart:2,ordinalEnd:6}]);assert.deepEqual(stopped.receipts,['intrilex-batch-receipt@1']);
   // Reload keeps the partial receipt, then UI resume fills only the holes.
-  await recovery.clearCookies();await rp.reload({waitUntil:'domcontentloaded'});
+  await rp.reload({waitUntil:'domcontentloaded'});
   await rp.waitForSelector('#experiment-button',{timeout:45000});await rp.click('#experiment-button');
   await rp.evaluate(()=>{globalThis.__wave2Quota=true;});
   await rp.click('#exp-runs-toggle');await rp.click('[data-manifest-action="resume"]');
@@ -243,6 +244,40 @@ try {
   report.containment.push({status:'PASS',name:'Wave 2 actual UI/worker quota stop, queued callback rejection and reload/resume holes',stopped,resumed});
   await recovery.close();
 
+  const admissionContext=await browser.newContext(),ap=await admissionContext.newPage();
+  ap.on('pageerror',e=>report.pageErrors.push(e.message));await ap.goto(base+'/proof.html');
+  const admitted=await ap.evaluate(async sourceRows=>{
+    const domain=await import('/source/domain.mjs'),contract=await import('/evolution/evidence-admission.mjs'),portable=await import('/evolution/experiment-portability.mjs');
+    const {ExperimentStore}=await import('/source/store.mjs'),{LAB_IDENTITY}=await import('/evolution/identity.mjs'),{hashCanonical}=await import('/shared-browser.js');
+    const src=(await (await fetch('/source/controller.txt')).text()).replace(/import\s[^;]*?from\s*'[^']*';/gs,'').replace(/^export /gm,'');
+    let injected=false;
+    const selectedState={bootState:null,observatory:{},aggregate:{},evidenceBasis:null};
+    class FaultWorker extends Worker{postMessage(message){if(injected && message.type==='run-autonomy-aggregate-finish'){queueMicrotask(()=>this.onerror?.({message:'INJECTED_AGGREGATE_FAILURE'}));return;}super.postMessage(message);}}
+    const deps={...domain,...contract,...portable,LAB_IDENTITY,ExperimentStore,hashCanonical,state:selectedState,console,structuredClone,TextEncoder,setTimeout:globalThis.setTimeout.bind(globalThis),clearTimeout:globalThis.clearTimeout.bind(globalThis),Worker:FaultWorker,
+      showToast(){},updateRailContext(){},rerender(){},RULES_VERSION:'4.3.1',ENGINE_VERSION:'4.2.6',LAB_VERSION:'wave3-proof'};
+    const api=new Function('deps','with(deps){'+src+';return {initExperiments,importRunArtifact,exportRunArtifactText,applySelection,getEvidenceBasis,getExperimentRuns};}')(deps);
+    const store=new ExperimentStore();await api.initExperiments({store});
+    const rows=sourceRows.map((row,i)=>({...row,matchOrdinal:i,matchId:'historical-display-collision'}));
+    const headline=domain.foldSummariesIntoHeadline(domain.createManifestHeadline(),rows),payload={summaries:rows,aggregate:null};
+    const run=domain.createRunRecord({experimentId:'EXP-LAB',ordinal:1,config:{matchCount:2,profileId:rows[0].profileId,policyIds:rows[0].policyIds},
+      metrics:{...headline,seat1Wins:headline.seatWins['1'],seat2Wins:headline.seatWins['2']},payloadKind:'indexeddb',payloadHash:domain.payloadEvidenceHash(payload)});
+    await api.importRunArtifact(portable.experimentRunArtifact({run,evidence:{kind:'summaries',...payload}}));
+    await api.applySelection();
+    const before=JSON.stringify({aggregate:selectedState.aggregate,observatory:selectedState.observatory,basis:selectedState.evidenceBasis,snapshot:selectedState.evidenceSnapshot});
+    const digest=selectedState.evidenceSnapshot?.digest;
+    if(!digest)throw new Error('NATIVE_ADMISSION_DID_NOT_PUBLISH:'+JSON.stringify({status:selectedState.evidenceViewStatus,runs:api.getExperimentRuns().map(r=>({id:r.runId,admission:r.lifecycle?.admission}))}));
+    injected=true;const failed=await api.applySelection();
+    const after=JSON.stringify({aggregate:selectedState.aggregate,observatory:selectedState.observatory,basis:selectedState.evidenceBasis,snapshot:selectedState.evidenceSnapshot});
+    const invalidPayload={summaries:[rows[0],rows[0]],aggregate:null};
+    const invalid=domain.createRunRecord({experimentId:'EXP-LAB',ordinal:2,config:{matchCount:999},metrics:{matchCount:999,completedMatchCount:999},payloadKind:'indexeddb',payloadHash:domain.payloadEvidenceHash(invalidPayload)});
+    let invalidCode;try{await api.importRunArtifact(portable.experimentRunArtifact({run:invalid,evidence:{kind:'summaries',...invalidPayload}}));}catch(error){invalidCode=error.code;}
+    return {native:store.persisted,count:selectedState.evidenceSnapshot.selection.retainedSampleCount,subjects:rows.map(r=>r.identity.subjectDigests[0]),digest,
+      failed:failed.code,stale:selectedState.evidenceViewStatus.stale,coherent:before===after,invalidCode,retained:(await store.listRuns()).filter(r=>r.origin!=='bundled').length};
+  },parityResults);
+  assert.equal(admitted.native,true);assert.equal(admitted.count,2);assert.notEqual(admitted.subjects[0],admitted.subjects[1]);assert.equal(admitted.coherent,true);assert.equal(admitted.stale,true);
+  assert.equal(admitted.failed,'INJECTED_AGGREGATE_FAILURE');assert.equal(admitted.invalidCode,'RUN_ARTIFACT_DUPLICATE_ORDINAL');assert.equal(admitted.retained,1);
+  report.containment.push({status:'PASS',name:'Wave 3 native admission, distinct executable subjects and coherent failed recomputation',...admitted});
+  await admissionContext.close();
   const blocked = await browser.newContext();
   await blocked.addInitScript(() => Object.defineProperty(globalThis, 'indexedDB', { value: undefined, configurable: true }));
   const ui = await blocked.newPage(); ui.on('pageerror', error => report.pageErrors.push(error.message));

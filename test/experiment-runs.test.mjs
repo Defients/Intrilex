@@ -1,3 +1,6 @@
+import { AggregateWorker } from './fixtures/aggregate-worker.mjs';
+import { trustedSummary } from './fixtures/admission-fixtures.mjs';
+import * as admissionContract from '../packages/simulation-runtime/src/evidence-admission.mjs';
 import { evolutionIdentity } from '../scripts/evolution-identity.mjs';
 const LAB_IDENTITY = await evolutionIdentity();
 // experiment-runs.test.mjs — Persistent Experiment Runs & Analysis Sets
@@ -108,7 +111,7 @@ const mkRun = (ordinal, { config = {}, provenance = {}, metrics = {}, ...rest } 
   metrics: { matchCount: config.matchCount ?? 4, seat1Wins: 2, seat2Wins: 2, ...metrics },
   ...rest,
 });
-const fakeSummary = (ordinal, { winningSeat = 1, terminationReason = 'NORMAL_VICTORY' } = {}) => ({
+const fakeSummary = (ordinal, { winningSeat = 1, terminationReason = 'NORMAL_VICTORY' } = {}) => trustedSummary({
   matchId: `T-${ordinal}`, ordinal, terminationReason,
   policyIds: ['score-rush', 'control'], seatOrder: ['P1', 'P2'],
   winner: winningSeat === 1 ? 'P1' : winningSeat === 2 ? 'P2' : null,
@@ -467,9 +470,9 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     .replace(/^export /gm, '');
   const state = { bootState: null, observatory: {}, aggregate: {}, evidenceBasis: null, ...stateOverrides };
   const toasts = [];
-  const sandbox = {
-    console, structuredClone, TextEncoder, setTimeout, queueMicrotask: globalThis.queueMicrotask,
-    Worker: class { constructor() { throw new Error('no workers in tests'); } },
+  const sandbox = { ...admissionContract,
+    console, structuredClone, TextEncoder, setTimeout, clearTimeout, queueMicrotask: globalThis.queueMicrotask,
+    Worker: AggregateWorker,
     state, showToast: (msg, opts) => toasts.push({ msg, ...opts }),
     updateRailContext() {}, rerender() {},
     RULES_VERSION: '4.3.1', LAB_VERSION: '0.29.0', ENGINE_VERSION: '4.2.6',
@@ -559,7 +562,7 @@ test('P2 — tampered stored payload is detected at load: run is quarantined, st
 
   const second = await experimentController();
   await second.api.initExperiments({ bootSummaries: [fakeSummary(100)], store: new ExperimentStore(idb) });
-  assert.equal(second.api.getIncludedRuns().some(r => r.runId === rec.run.runId), true, 'record itself is clean — it is still included');
+  assert.equal(second.api.getIncludedRuns().some(r => r.runId === rec.run.runId), false, 'reload admission rejects the corrupt payload before inclusion');
   await second.api.applySelection();
   const marked = second.api.getExperimentRuns().find(r => r.runId === rec.run.runId);
   assert.ok(marked, 'quarantined run remains inspectable in the library');

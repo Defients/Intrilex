@@ -1,4 +1,5 @@
 import { hashCanonical } from '@intrilex/shared';
+import { admitPairedEvidence } from './evidence-admission.mjs';
 import { createTrainableCheckpoint, summarizeRecords, CLEAN_REASONS, labConfig } from './evolution-domain.mjs';
 import { createBaselineSuite, behaviorFingerprint } from './evolution-research.mjs';
 import { mutatePolicyState, selectCandidate } from './evolution-training.mjs';
@@ -116,6 +117,7 @@ export function admitMeasurement(measurement, manifest, { purpose, subjectCheckp
   for (const m of b.matchups) {
     if (m.status === 'COMPLETE' && (m.metrics.games !== m.plannedGames || m.blocks.length * 2 !== m.plannedGames)) fail('INCOMPLETE_BLOCKS', measurement.id);
   }
+  admitPairedEvidence(measurement,manifest);
   return measurement;
 }
 

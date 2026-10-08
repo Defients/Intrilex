@@ -17,11 +17,11 @@
 //
 // This file is isomorphic: it runs in Node (tests import it from src/) and in
 // the browser (build.mjs rewrites the two packages/ imports to dist shims).
-import { canonicalize, hashCanonical } from './shared-browser.js?v=8951e2c35a42';
-import { arenaAnalytics, researchAnalytics } from './evolution/evolution-analytics-model.mjs?v=8951e2c35a42';
-import { summarizeRecords, LAB_SCHEMA } from './evolution/evolution-domain.mjs?v=8951e2c35a42';
-import { observatorySummariesForRun, observatoryCoverage } from './evolution/observatory-bridge.mjs?v=8951e2c35a42';
-import { batchMatrixView } from './evolution/batch-matrix.mjs?v=8951e2c35a42';
+import { canonicalize, hashCanonical } from './shared-browser.js?v=f576f69f79ad';
+import { arenaAnalytics, researchAnalytics } from './evolution/evolution-analytics-model.mjs?v=f576f69f79ad';
+import { summarizeRecords, LAB_SCHEMA } from './evolution/evolution-domain.mjs?v=f576f69f79ad';
+import { observatorySummariesForRun, observatoryCoverage } from './evolution/observatory-bridge.mjs?v=f576f69f79ad';
+import { batchMatrixView } from './evolution/batch-matrix.mjs?v=f576f69f79ad';
 
 export const DOSSIER_FORMAT = 'intrilex-analysis-dossier';
 export const DOSSIER_VERSION = '1.1.0';

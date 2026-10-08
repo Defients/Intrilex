@@ -1,3 +1,4 @@
+import { evidenceDigest, analyticsSummaries } from '../evolution/evidence-admission.mjs?v=f576f69f79ad';
 // ═══════════════════════════════════════════════════════════════
 // workspaces/meta-atlas.js — /atlas workspace (Meta Atlas V1)
 //
@@ -7,19 +8,19 @@
 // (pure string builders). This file owns DOM wiring only.
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, persistSetting, showToast } from '../state.js?v=8951e2c35a42';
-import { rerender } from '../rerender.js?v=8951e2c35a42';
-import { chartTableAlternative } from '../chart-toolkit.js?v=8951e2c35a42';
+import { state, app, esc, persistSetting, showToast } from '../state.js?v=f576f69f79ad';
+import { rerender } from '../rerender.js?v=f576f69f79ad';
+import { chartTableAlternative } from '../chart-toolkit.js?v=f576f69f79ad';
 import {
   buildAtlasModel, atlasMetric, atlasCohortLabel,
   ATLAS_DEFAULT_X, ATLAS_DEFAULT_Y, EVIDENCE_TIER_LABELS,
-} from '../shared-analytics/meta-atlas.mjs?v=8951e2c35a42';
+} from '../shared-analytics/meta-atlas.mjs?v=f576f69f79ad';
 import {
   renderAtlasSvg, atlasSummaryHtml, atlasLegendHtml, atlasInspectorHtml,
   atlasTooltipHtml, atlasViewport, atlasScales, policyLabel, ATLAS_CANVAS,
-} from '../atlas/atlas-render.mjs?v=8951e2c35a42';
-import { labDatasetBanner } from './observatory.js?v=8951e2c35a42';
-import { obsContextStrip } from './observatory-ui.js?v=8951e2c35a42';
+} from '../atlas/atlas-render.mjs?v=f576f69f79ad';
+import { labDatasetBanner } from './observatory.js?v=f576f69f79ad';
+import { obsContextStrip } from './observatory-ui.js?v=f576f69f79ad';
 
 const MIN_GAMES_OPTIONS = [1, 6, 12, 24];
 const COLOR_OPTIONS = [['winRate', 'Win rate'], ['evidence', 'Evidence tier'], ['identity', 'Policy identity'], ['uniform', 'Uniform']];
@@ -65,11 +66,10 @@ let _cache = { sig: null, model: null };
 function atlasModel() {
   const p = prefs();
   const summaries = state.observatory?.summaries ?? [];
-  // Cheap data fingerprint: identity isn't reliable, so key on endpoints+length.
-  const dataFp = `${summaries.length}|${summaries[0]?.matchId ?? ''}|${summaries[summaries.length - 1]?.matchId ?? ''}`;
+  const dataFp = evidenceDigest({selection:state.observatory?.evidenceSelectionDigest ?? null,summaries});
   const sig = `${dataFp}|${p.x}|${p.y}|${p.minGames}|${p.cohort}|${state.observatory?.datasetOrigin ?? ''}`;
   if (_cache.sig !== sig) {
-    _cache = { sig, model: buildAtlasModel({ summaries, xMetricId: p.x, yMetricId: p.y, minGames: p.minGames, cohort: p.cohort }) };
+    _cache = { sig, model: buildAtlasModel({ summaries: state.evidenceSnapshot ? analyticsSummaries(summaries) : summaries, xMetricId: p.x, yMetricId: p.y, minGames: p.minGames, cohort: p.cohort }) };
   }
   return _cache.model;
 }

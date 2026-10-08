@@ -586,8 +586,9 @@ export class ExperimentStore {
         fencingToken:stored.owner?.fencingToken ?? null,ownerId:stored.owner?.ownerId ?? null,
         payloadDigest:batch.summariesHash,ordinals:items.map(i=>i.o).sort((a,b)=>a-b),
         executionFingerprint:stored.config?.implementation?.fingerprint ?? null,analysisFingerprint:stored.config?.implementation?.analysisFingerprint ?? null,
-        manifestSchema:stored.schemaVersion,sampleSchema:'2.0.0'};
+        manifestSchema:stored.schemaVersion,sampleSchema:new Set((batch.summaries ?? []).map(s=>s.identity?.schemaVersion ?? null)).size===1 ? (batch.summaries[0]?.identity?.schemaVersion ?? null) : 'MIXED'};
       const immutableReceipt={...body,receiptHash:hashCanonical(body)};
+      next.committedBatches[next.committedBatches.length-1].receiptHash=immutableReceipt.receiptHash;
       await ops.put(STORES.RUN_BATCHES, {...batch,receipt:immutableReceipt});
       await ops.put(STORES.MANIFESTS, next);
       return { batchId: batch.batchId, duplicate: false, accepted: true, receipt: immutableReceipt, manifest: next };
@@ -625,8 +626,9 @@ export class ExperimentStore {
         _assertSameFence(stored, manifest, { sealing: true });
         const rows=(await ops.all(STORES.RUN_BATCHES)).filter(b=>b.runId===stored.runId);
         const proof=reconcileRunBatches(stored,rows);
+        for(const [key,value] of Object.entries({completedMatchCount:proof.headline.completedMatchCount,abortCount:proof.headline.abortCount,drawCount:proof.headline.drawCount,seat1Wins:proof.headline.seatWins['1'],seat2Wins:proof.headline.seatWins['2']}))if(run.metrics?.[key]!==value)throw Object.assign(new Error('RUN_COUNTS_MISMATCH'),{code:'RUN_COUNTS_MISMATCH'});
         const descriptorView=d=>({batchIndex:d.batchIndex,ordinalStart:d.ordinalStart,ordinalEnd:d.ordinalEnd,matchCount:d.matchCount,summariesHash:d.summariesHash});
-        if(hashCanonical(manifest.committedBatches)!==hashCanonical(stored.committedBatches) || manifest.committedMatches!==stored.committedMatches || run.runId!==stored.runId || run.metrics?.matchCount!==proof.retained.size || run.config?.matchCount!==proof.retained.size || run.provenance?.canonicalResultHash!==proof.canonicalResultHash || hashCanonical(payload?.batches)!==hashCanonical(proof.descriptors.map(descriptorView)) || run.payloadHash!==payloadEvidenceHash(payload))throw Object.assign(new Error('RUN_SEAL_RECONCILIATION_FAILED'),{code:'RUN_SEAL_RECONCILIATION_FAILED'});
+        if(hashCanonical(manifest.committedBatches)!==hashCanonical(stored.committedBatches) || manifest.committedMatches!==stored.committedMatches || hashCanonical(manifest.headline)!==hashCanonical(stored.headline) || run.runId!==stored.runId || run.metrics?.matchCount!==proof.retained.size || run.config?.matchCount!==proof.retained.size || run.provenance?.canonicalResultHash!==proof.canonicalResultHash || hashCanonical(payload?.batches)!==hashCanonical(proof.descriptors.map(descriptorView)) || run.payloadHash!==payloadEvidenceHash(payload))throw Object.assign(new Error('RUN_SEAL_RECONCILIATION_FAILED'),{code:'RUN_SEAL_RECONCILIATION_FAILED'});
         if(!proof.complete && (run.config?.requestedMatchCount!==stored.requestedMatches || hashCanonical(run.config?.ordinalCoverage)!==hashCanonical(manifestCommittedCoverage(stored))))throw Object.assign(new Error('RUN_PARTIAL_DISCLOSURE_REQUIRED'),{code:'RUN_PARTIAL_DISCLOSURE_REQUIRED'});
 
         // Exact-coverage guard (R3): retained sets must be subsets of the

@@ -362,3 +362,36 @@ test('R04: actual controls ignore an old completion after cancel-then-start',asy
   workers[1].onmessage({data:{type:'autonomy-segment-result',ok:true,workerIndex:0,execution:workers[1].request.execution}});
   await current;assert.deepEqual(sealed,['new']);assert.equal(state.phase,'complete');
 });
+
+
+test('R03: abort after every seal write rolls back run, payload and terminal manifest together',async()=>{
+  const store=await diagnosticStore(),api=await controller(store),{runId}=await api.beginExperimentRun({config});
+  await api.commitExperimentBatch(runId,{ordinalStart:0,ordinalEnd:6,summaries:summaries(0,6)});
+  const before=await store.getManifest(runId),original=store._transact.bind(store);let armed=true;
+  store._transact=(names,body)=>original(names,ops=>body({...ops,put:async(name,row)=>{
+    await ops.put(name,row);
+    if(armed && name==='manifests' && row.sealedRunId)throw new Error('INJECTED_SEAL_ABORT');
+  }}));
+  await assert.rejects(()=>api.finalizeExperimentRun(runId),/INJECTED_SEAL_ABORT/);
+  assert.equal(await store.getRun(runId),null);assert.equal(await store.getRunPayload(runId),null);
+  assert.deepEqual(await store.getManifest(runId),before);assert.equal((await store.listRunBatches(runId)).length,1);
+  armed=false;await api.finalizeExperimentRun(runId);assert.equal((await store.getRun(runId)).metrics.matchCount,6);
+});
+
+test('R04: resume blocks changed protocol identity and edited frozen subjects before taking ownership',async()=>{
+  for(const kind of ['protocol','subject']){
+    const store=await diagnosticStore(),api=await controller(store),{runId}=await api.beginExperimentRun({config:{...config,subjectSnapshots:[{snapshotDigest:'frozen-subject'},null]}});
+    await api.cancelExperimentRun(runId);
+    await store._transact(['manifests'],async ops=>{
+      const m=await ops.get('manifests',runId);
+      if(kind==='subject')m.config.subjectSnapshots[0].snapshotDigest='edited';
+      else{
+        m.config.implementation.analysisFingerprint='0'.repeat(64);
+        const {manifestInputDigest}=await import('../packages/simulation-runtime/src/experiment-domain.mjs');m.inputDigest=manifestInputDigest(m);
+      }
+      await ops.put('manifests',m);
+    });
+    await assert.rejects(()=>api.resumeExperimentRun(runId),{code:kind==='subject'?'RUN_INPUTS_CHANGED':'RUN_PROTOCOL_IDENTITY_MISMATCH'});
+    assert.equal((await store.getManifest(runId)).owner.fencingToken,1);
+  }
+});

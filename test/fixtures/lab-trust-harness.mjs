@@ -1,3 +1,4 @@
+import { trustedSummary } from './admission-fixtures.mjs';
 import { evolutionIdentity } from '../../scripts/evolution-identity.mjs';
 const LAB_IDENTITY = await evolutionIdentity();
 /* global queueMicrotask */
@@ -9,7 +10,7 @@ import { ExperimentStore } from '../../apps/lab-web/src/experiments/experiment-s
 import { hashCanonical } from '../../packages/shared/src/canonical.mjs';
 
 export const config = { profileId: 'core-advanced-authority', policyIds: ['control', 'tempo'], matchCount: 6, ordinalStart: 0, ordinalEnd: 6, ordinalBase: 0, seedStrategy: 'ordinal-hash' };
-export const summaries = (start, n) => Array.from({ length: n }, (_, i) => ({ identity: { schemaVersion: '2.0.0', executionFingerprint: LAB_IDENTITY.fingerprint, analysisFingerprint: LAB_IDENTITY.analysisFingerprint }, matchId: `trust-${start + i}`, matchOrdinal: start + i, matchResultHash: hashCanonical({ ordinal: start + i }), terminationReason: 'NORMAL_VICTORY', winningSeat: 1, policyIds: config.policyIds }));
+export const summaries = (start, n) => Array.from({ length: n }, (_, i) => trustedSummary({ identity: { schemaVersion: '2.0.0', executionFingerprint: LAB_IDENTITY.fingerprint, analysisFingerprint: LAB_IDENTITY.analysisFingerprint }, matchId: `trust-${start + i}`, matchOrdinal: start + i, matchResultHash: hashCanonical({ ordinal: start + i }), terminationReason: 'NORMAL_VICTORY', winningSeat: 1, policyIds: config.policyIds }));
 
 // Only UI/worker dependencies are stubbed. Domain, storage and controller
 // logic are real. Native IndexedDB proof is a separate browser command.

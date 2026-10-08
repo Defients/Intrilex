@@ -12,9 +12,7 @@ import { prepareChallenge, promoteChallenger } from '../packages/simulation-runt
 import { promotionAuthority } from '../packages/simulation-runtime/src/profile-store.mjs';
 import { memoryStore, createGraveMaw, fixtureSeries, fixtureChallenge } from './fixtures/agent-profile-fixtures.mjs';
 
-// These are executable FUTURE acceptance assertions, not claims of repair.
-// Strict mode removes TODO so the open defects produce a nonzero exit code.
-const pending = ticket => ({ todo: process.env.INTRILEX_TRUST_STRICT === '1' ? false : `${ticket}: deferred beyond Wave 0; unresolved audit regression` });
+// Captured audit regressions are now ordinary passing acceptance assertions.
 
 test('Wave 0 blocks durable campaign start on memory fallback before a manifest is written', async () => {
   const store = new ExperimentStore(null), api = await controller(store);
@@ -146,7 +144,7 @@ test('R05: concurrent challenge preparations cannot both claim automatic attempt
   assert.ok(results.filter(m => m.body.attempt.automaticEligible).length <= 1);
 });
 
-test('R06: hash-valid legacy artifact cannot admit duplicate rows and contradictory counts', pending('R06'), () => {
+test('R06: hash-valid legacy artifact cannot admit duplicate rows and contradictory counts', () => {
   const sample = { matchOrdinal: 3, seed: 42, matchId: 'duplicate', terminationReason: 'NORMAL_VICTORY', winningSeat: 1 };
   const payload = { summaries: [sample, sample], aggregate: null };
   const run = createRunRecord({ experimentId: 'PROBE', ordinal: 1, config: { matchCount: 999 }, metrics: { matchCount: 999, completedMatchCount: 999 }, payloadHash: payloadEvidenceHash(payload) });

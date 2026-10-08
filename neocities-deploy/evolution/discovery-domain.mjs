@@ -1,6 +1,8 @@
+import { admitSummaries, selectEvidence } from './evidence-admission.mjs';
+import { observatorySummariesForRun } from './observatory-bridge.mjs';
 import { hashCanonical } from '../shared-browser.js';
 import { evidenceGradeDetailed, normalCdf, benjaminiHochberg, Z95 } from '../shared-analytics/estimators.mjs';
-import { assertIdentity, labConfig, LAB_PROFILES, LAB_LIMITS } from './evolution-domain.mjs';
+import { assertIdentity, labConfig, LAB_PROFILES, STATIC_POLICIES, LAB_LIMITS } from './evolution-domain.mjs';
 import { LAB_TRUST_POLICY } from './lab-trust-policy.mjs';
 
 export const GRADE_RANK = Object.freeze({ INSUFFICIENT: 0, EXPLORATORY: 1, SUPPORTED: 2, ROBUST: 3 });
@@ -108,6 +110,8 @@ export const EVIDENCE_EXCLUSION = Object.freeze({
   IMPORTED_UNVERIFIED: 'IMPORTED_UNVERIFIED',
   MISSING_RECORDS: 'MISSING_RECORDS',
   UNREADABLE: 'UNREADABLE',
+  RESTRICTED: 'EVIDENCE_RESTRICTED',
+  SUBJECT: 'EVIDENCE_SUBJECT_NOT_EXECUTABLE',
 });
 
 /**
@@ -138,15 +142,23 @@ export function createEvidenceSnapshot(runs, identity, { unreadableRunIds = [], 
     if (run?.identity?.fingerprint !== identity.fingerprint) exclude(run?.runId ?? 'unknown', EVIDENCE_EXCLUSION.FOREIGN_FINGERPRINT);
     else if (run.evidenceOrigin === 'IMPORTED_UNVERIFIED') exclude(run.runId, EVIDENCE_EXCLUSION.IMPORTED_UNVERIFIED);
     else if (!Array.isArray(run.records)) exclude(run.runId, EVIDENCE_EXCLUSION.MISSING_RECORDS);
-    else eligible.push(run);
+    else {
+      try {
+        const summaries=observatorySummariesForRun(run),admission=admitSummaries(summaries,{expectedCount:run.records.length});
+        if(!admission.eligible)exclude(run.runId,EVIDENCE_EXCLUSION.RESTRICTED);
+        else if(!STATIC_POLICIES.includes(run.config.botA) || !STATIC_POLICIES.includes(run.config.botB))exclude(run.runId,EVIDENCE_EXCLUSION.SUBJECT);
+        else eligible.push(run);
+      }catch{exclude(run.runId,EVIDENCE_EXCLUSION.RESTRICTED);}
+    }
   }
   for (const runId of unreadableRunIds ?? []) exclude(runId ?? 'unknown', EVIDENCE_EXCLUSION.UNREADABLE);
   eligible.sort((a, b) => a.runId.localeCompare(b.runId));
   const runIds = eligible.map((r) => r.runId);
-  const gameCount = eligible.reduce((n, r) => n + r.records.length, 0);
-  const snapshotId = `ES-${hashCanonical({ runIds, gameCount, fingerprint: identity.fingerprint })}`;
+  const selected=selectEvidence(eligible.map(run=>({id:run.runId,summaries:observatorySummariesForRun(run)})));
+  const gameCount=selected.summaries.length;
+  const snapshotId = `ES-${selected.selection.digest}`;
   return {
-    snapshotId, runIds, runCount: runIds.length, gameCount, fingerprint: identity.fingerprint,
+    snapshotId, selectionDigest:selected.selection.digest, sampleIds:selected.selection.sampleIds, repeatCount:selected.selection.repeatCount, runIds, runCount: runIds.length, gameCount, fingerprint: identity.fingerprint,
     selectedRunCount: (runs?.length ?? 0) + (unreadableRunIds?.length ?? 0), selectedGameCount,
     excludedCount: excluded.length, excludedRunIds: excluded.slice(0, 32), exclusionReasons,
     ...(historyRunCount != null ? { historyRunCount } : {}),

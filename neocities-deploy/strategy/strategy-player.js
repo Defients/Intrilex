@@ -1,11 +1,11 @@
-import { createStrategyCapture, strategyDigest, sealStrategy, STRATEGY_CONTRACTS } from '../evolution/strategy-contracts.mjs?v=8951e2c35a42';
+import { createStrategyCapture, strategyDigest, sealStrategy, STRATEGY_CONTRACTS } from '../evolution/strategy-contracts.mjs?v=f576f69f79ad';
 
 /** Observation is subordinate to gameplay. Capture failure is disclosed, never a game fault. */
 export async function captureLocalDecision(session,actorId,legalActions,selectedActionId,decisionOrdinal){
   try {
-    const auto=await import('../autonomy-runtime.js?v=8951e2c35a42');
+    const auto=await import('../autonomy-runtime.js?v=f576f69f79ad');
     if(!session._strategyCapture){
-      const {LAB_IDENTITY}=await import('../evolution/identity.mjs?v=8951e2c35a42');
+      const {LAB_IDENTITY}=await import('../evolution/identity.mjs?v=f576f69f79ad');
       const agent=session._agent;
       session._strategyCapture=createStrategyCapture(['P1','P2'].map(actor=>({runId:session.sessionId,gameOrdinal:0,masterSeed:session.setup.seed,derivedSeed:session.setup.seed>>>0||1,
         rulesProfile:session.setup.profileId,fingerprint:LAB_IDENTITY.fingerprint,eraId:LAB_IDENTITY.fingerprint,purpose:'NORMAL_PLAY',
@@ -20,7 +20,7 @@ export async function captureLocalDecision(session,actorId,legalActions,selected
 }
 export async function captureLocalOutcome(session,draft){
   if(!draft)return;
-  try{const auto=await import('../autonomy-runtime.js?v=8951e2c35a42');session._strategyCapture.after(draft,auto.strictView(session.state,draft.actorId));}
+  try{const auto=await import('../autonomy-runtime.js?v=f576f69f79ad');session._strategyCapture.after(draft,auto.strictView(session.state,draft.actorId));}
   catch(error){session._strategyCaptureError=error.message;}
 }
 export function finishLocalStrategy(session,certifiedReplay){
@@ -35,7 +35,7 @@ export function finishLocalStrategy(session,certifiedReplay){
   }catch(error){return {strategyFidelity:'SUMMARY_ONLY',strategyCaptureError:error.message};}
 }
 export async function ingestLocalPlayerEvidence(store){
-  const {listReplays}=await import('../play/persistence.js?v=8951e2c35a42'),records=await listReplays();
+  const {listReplays}=await import('../play/persistence.js?v=f576f69f79ad'),records=await listReplays();
   for(const record of records){
     const events=record.strategyDecisions??[],first=events[0];
     if(events.length && strategyDigest(events)!==record.strategyTelemetryDigest)throw new Error('STRATEGY_PLAYER_DIGEST_MISMATCH');

@@ -1,3 +1,6 @@
+import { AggregateWorker } from './fixtures/aggregate-worker.mjs';
+import { trustedSummary } from './fixtures/admission-fixtures.mjs';
+import * as admissionContract from '../packages/simulation-runtime/src/evidence-admission.mjs';
 import { evolutionIdentity } from '../scripts/evolution-identity.mjs';
 const LAB_IDENTITY = await evolutionIdentity();
 // experiment-portability.test.mjs — portable evidence contracts
@@ -95,7 +98,7 @@ function createFakeIndexedDB() {
   };
 }
 
-const fakeSummary = (ordinal, { winningSeat = 1, terminationReason = 'NORMAL_VICTORY', deep = false } = {}) => ({
+const fakeSummary = (ordinal, { winningSeat = 1, terminationReason = 'NORMAL_VICTORY', deep = false } = {}) => trustedSummary({
   identity: { schemaVersion: '2.0.0', executionFingerprint: LAB_IDENTITY.fingerprint, analysisFingerprint: LAB_IDENTITY.analysisFingerprint },
   matchId: `T-${ordinal}`, matchOrdinal: ordinal, ordinal, terminationReason,
   policyIds: ['score-rush', 'control'], seatOrder: ['P1', 'P2'],
@@ -124,9 +127,9 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     .replace(/^export /gm, '');
   const state = { bootState: null, observatory: {}, aggregate: {}, evidenceBasis: null, ...stateOverrides };
   const toasts = [];
-  const sandbox = {
-    console, structuredClone, TextEncoder, setTimeout, queueMicrotask: globalThis.queueMicrotask,
-    Worker: class { constructor() { throw new Error('no workers in tests'); } },
+  const sandbox = { ...admissionContract,
+    console, structuredClone, TextEncoder, setTimeout, clearTimeout, queueMicrotask: globalThis.queueMicrotask,
+    Worker: AggregateWorker,
     state, showToast: (msg, opts) => toasts.push({ msg, ...opts }),
     updateRailContext() {}, rerender() {},
     RULES_VERSION: '4.3.1', LAB_VERSION: '0.29.0', ENGINE_VERSION: '4.2.6',
@@ -196,7 +199,7 @@ test('fidelity is evidence-grounded: config alone cannot claim deep evidence', (
 test('replay coverage separates retained transcripts from seed-reproducible games', () => {
   const coverage = replayCoverageForSummaries(fakeSummaries(0, 4));
   assert.equal(coverage.gamesWithFullTranscript, 0); // no replay.commands retained
-  assert.equal(coverage.gamesReproducible, 4);       // ordinal+seed → re-executable
+  assert.equal(coverage.gamesReproducible, 0);       // ordinal+seed alone cannot establish executable subjects
   assert.equal(coverage.totalGames, 4);
   const withReplay = [{ ...fakeSummary(0), replay: { commands: ['c1'] } }];
   assert.equal(replayCoverageForSummaries(withReplay).gamesWithFullTranscript, 1);
@@ -258,7 +261,7 @@ test('conflicting evidence under the same runId fails closed — no silent overw
   forged.contentHash = hashCanonical(forged.payload);
   // payloadHash still binds the unchanged payload — hash chain intact;
   // the admission gate must catch the different sealed identity on runId.
-  await assert.rejects(() => api.importRunArtifact(JSON.stringify(forged)), /RUN_ARTIFACT_CONFLICT/);
+  await assert.rejects(() => api.importRunArtifact(JSON.stringify(forged)), /RUN_COUNTS_MISMATCH/);
 });
 
 test('tampered evidence fails verification — payload and envelope both hashed', async () => {

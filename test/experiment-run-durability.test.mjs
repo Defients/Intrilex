@@ -1,3 +1,6 @@
+import { AggregateWorker } from './fixtures/aggregate-worker.mjs';
+import { trustedSummary } from './fixtures/admission-fixtures.mjs';
+import * as admissionContract from '../packages/simulation-runtime/src/evidence-admission.mjs';
 import { evolutionIdentity } from '../scripts/evolution-identity.mjs';
 const LAB_IDENTITY = await evolutionIdentity();
 // experiment-run-durability.test.mjs — Incremental durability for chunked runs
@@ -86,7 +89,7 @@ function createFakeIndexedDB() {
   };
 }
 
-const fakeSummary = (ordinal, { winningSeat = 1, terminationReason = 'NORMAL_VICTORY', heavy = false } = {}) => ({
+const fakeSummary = (ordinal, { winningSeat = 1, terminationReason = 'NORMAL_VICTORY', heavy = false } = {}) => trustedSummary({
   identity: { schemaVersion: '2.0.0', executionFingerprint: LAB_IDENTITY.fingerprint, analysisFingerprint: LAB_IDENTITY.analysisFingerprint },
   matchId: `T-${ordinal}`, matchOrdinal: ordinal, ordinal, terminationReason,
   policyIds: ['score-rush', 'control'], seatOrder: ['P1', 'P2'],
@@ -107,9 +110,9 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     .replace(/^export /gm, '');
   const state = { bootState: null, observatory: {}, aggregate: {}, evidenceBasis: null, ...stateOverrides };
   const toasts = [];
-  const sandbox = {
-    console, structuredClone, TextEncoder, setTimeout, queueMicrotask: globalThis.queueMicrotask,
-    Worker: class { constructor() { throw new Error('no workers in tests'); } },
+  const sandbox = { ...admissionContract,
+    console, structuredClone, TextEncoder, setTimeout, clearTimeout, queueMicrotask: globalThis.queueMicrotask,
+    Worker: AggregateWorker,
     state, showToast: (msg, opts) => toasts.push({ msg, ...opts }),
     updateRailContext() {}, rerender() {},
     RULES_VERSION: '4.3.1', LAB_VERSION: '0.29.0', ENGINE_VERSION: '4.2.6',
@@ -387,7 +390,7 @@ test('three stacked runs: manifests coexist, all seal, all contribute', async ()
 
 test('a corrupted committed batch quarantines the run — it contributes zero games', async () => {
   const idb = createFakeIndexedDB();
-  const { api, store } = await initApi(idb);
+  const { api, store, state } = await initApi(idb);
   const { runId } = await api.beginExperimentRun({ config: { ...RUN_CFG, matchCount: 50 }, segments: [{ index: 0, ordinalStart: 0, ordinalEnd: 50 }], batchSize: 50 });
   await api.commitExperimentBatch(runId, { segmentIndex: 0, ordinalStart: 0, ordinalEnd: 50, summaries: fakeSummaries(0, 50) });
   await api.finalizeExperimentRun(runId);
@@ -398,7 +401,8 @@ test('a corrupted committed batch quarantines the run — it contributes zero ga
   const marked = api.getExperimentRuns().find(r => r.runId === runId);
   assert.equal(runIntegrityState(marked), RUN_INTEGRITY.QUARANTINED);
   assert.equal(api.getIncludedRuns().some(r => r.runId === runId), false, 'corrupt batch evidence contributes nothing');
-  assert.equal(api.getEvidenceBasis().quarantinedCount, 1);
+  assert.equal(api.getExperimentRuns().filter(r=>runIntegrityState(r)===RUN_INTEGRITY.QUARANTINED).length,1);
+  assert.equal(state.evidenceViewStatus.stale,true);
   // "Include anyway" can never resurrect corrupted evidence.
   await assert.rejects(() => api.setRunIncluded(runId, { force: true }), /RUN_CORRUPTED/);
 });

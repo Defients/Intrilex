@@ -10,12 +10,12 @@
 // (evolution/discovery-*.mjs). This workspace renders state and forwards
 // intents — it never judges evidence itself.
 
-import { app, esc, fmt, state } from '../state.js?v=8951e2c35a42';
-import { LAB_IDENTITY } from '../evolution/identity.mjs?v=8951e2c35a42';
-import { EvolutionStore } from '../evolution/evolution-store.mjs?v=8951e2c35a42';
-import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs?v=8951e2c35a42';
-import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs?v=8951e2c35a42';
-import { LAB_TRUST_POLICY } from '../evolution/lab-trust-policy.mjs?v=8951e2c35a42';
+import { app, esc, fmt, state } from '../state.js?v=f576f69f79ad';
+import { LAB_IDENTITY } from '../evolution/identity.mjs?v=f576f69f79ad';
+import { EvolutionStore } from '../evolution/evolution-store.mjs?v=f576f69f79ad';
+import { executeDiscoveryRun, prepareDiscoveryRun, resolveEvidenceScope } from '../evolution/discovery-runner.mjs?v=f576f69f79ad';
+import { DISCOVERY_MODES, DISCOVERY_LIMITS, PROMOTION_GATES, discoveryRunSummary } from '../evolution/discovery-domain.mjs?v=f576f69f79ad';
+import { LAB_TRUST_POLICY } from '../evolution/lab-trust-policy.mjs?v=f576f69f79ad';
 
 const store = new EvolutionStore(LAB_IDENTITY);
 const pp = (n) => Number.isFinite(n) ? `${n >= 0 ? '+' : ''}${(n * 100).toFixed(1)}pp` : '—';

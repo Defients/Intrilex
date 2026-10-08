@@ -1,3 +1,4 @@
+import { sampleIdentity, outcomeIdentity, commandStreamStart } from '../packages/simulation-runtime/src/evidence-identity.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runInNewContext } from 'node:vm';
@@ -23,8 +24,10 @@ import { identity as REAL_IDENTITY } from './fixtures/agent-profile-fixtures.mjs
 // controls exactly which anomaly (if any) the evidence contains.
 
 const IDENT = (() => {
-  const parts = { engineHash: 'a'.repeat(64), policyImplementationHash: 'b'.repeat(64), runtimeHash: 'c'.repeat(64), engineVersion: 'test-engine', rulesVersion: 'test-rules' };
-  return { schemaVersion: 1, fingerprint: hashCanonical(parts), ...parts };
+  const dependencyManifest={execution:[['synthetic-fixture','c'.repeat(64)]],analysis:[['synthetic-protocol','d'.repeat(64)]]};
+  const parts = {engineHash:'a'.repeat(64),policyImplementationHash:'b'.repeat(64),runtimeHash:hashCanonical(dependencyManifest.execution),engineVersion:'test-engine',rulesVersion:'test-rules'};
+  const fingerprint=hashCanonical(parts),analysisHash=hashCanonical(dependencyManifest.analysis);
+  return {schemaVersion:1,identityContract:'intrilex-implementation@2',dependencyManifest,analysisHash,analysisFingerprint:hashCanonical({fingerprint,analysisHash}),fingerprint,...parts};
 })();
 
 const pairKey = (a, b) => [a, b].sort().join('|');
@@ -64,6 +67,13 @@ function fakeRun(botA, botB, { games = 100, pA = 0.5, seatBias = 0, drawRate = 0
       { playerId: 'P2', mechanicCounts: !seat1UsesTag && mech && useA ? { [mech.tag]: 1 } : {} },
     ];
     records.push({ ...base, winner, terminationReason: 'NORMAL_VICTORY', turns: t, miniTurns: Math.floor(t / 4), seatBehavior });
+  }
+  for(const record of records){
+    record.policyIds=record.swapped?[botB,botA]:[botA,botB];
+    record.finalStateHash=hashCanonical({seed:record.seed,winner:record.winner});
+    record.winningSeat=record.winner==='P1'?1:record.winner==='P2'?2:null;
+    record.evidenceIdentity={...sampleIdentity({seed:record.seed,profileId,policyIds:record.policyIds},IDENT),
+      ...outcomeIdentity({profileId,terminationReason:record.terminationReason,winner:record.winner,finalStateHash:record.finalStateHash,finalScores:{P1:record.scoreP1,P2:record.scoreP2}},commandStreamStart())};
   }
   return {
     schemaVersion: 1, contract: 'intrilex-evolution-lab', kind: 'SERIES',
@@ -699,6 +709,7 @@ test('integrity baseline excludes the focal cell — a zero external fault rate 
   // With external faults present, the expected rate is the leave-one-out share.
   const runs2 = [...flatCorpus({ games: 60 }), fakeRun('tempo-tactical', 'value-tactical', { games: 60, faultRate: 0.4, seed: 66 })];
   runs2[0].records = runs2[0].records.map((r, i) => i < 12 ? { ...r, winner: 'ABORTED', terminationReason: 'DECISION_LIMIT' } : r);
+  for(const record of runs2[0].records){record.winningSeat=record.winner==='P1'?1:record.winner==='P2'?2:null;record.evidenceIdentity={...record.evidenceIdentity,...outcomeIdentity({profileId:runs2[0].config.profileId,winner:record.winner,terminationReason:record.terminationReason,finalStateHash:record.finalStateHash,finalScores:{P1:record.scoreP1,P2:record.scoreP2}},commandStreamStart())};}
   const snap2 = createEvidenceSnapshot(runs2, IDENT);
   const { candidates: cands2 } = scanEvidence(runs2, snap2, { detectedAt: NOW });
   const c2 = cands2.find((x) => x.category === 'integrity' && x.subjectKey === 'integrity:tempo-tactical|value-tactical');

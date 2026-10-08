@@ -12,7 +12,7 @@
 //   - accessibility labels
 // ═══════════════════════════════════════════════════════════════
 
-import { validateSnapshotPrivacy } from '../play-privacy.js?v=8951e2c35a42';
+import { validateSnapshotPrivacy } from '../play-privacy.js?v=f576f69f79ad';
 
 /**
  * Visibility profiles for different contexts.

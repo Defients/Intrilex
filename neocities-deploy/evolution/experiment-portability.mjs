@@ -29,6 +29,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { hashCanonical } from '../shared-browser.js';
+import { createEvidenceAdmission, admitSummaries, hasDecisionEvidence, validateEvidenceBatch } from './evidence-admission.mjs';
+export { createEvidenceAdmission, admitSummaries, validateEvidenceBatch, selectEvidence, analyticsSummaries, publishEvidenceSnapshot, markEvidenceSnapshotStale, evidenceDigest } from './evidence-admission.mjs';
 import {
   validateRunRecord, verifyRunPayload,
   batchSummariesHash, RUN_STATUS,
@@ -63,10 +65,7 @@ const fail = code => { throw Object.assign(new Error(code), { code }); };
  * every surface applies the identical evidence test.
  */
 export function summariesCarryDecisionEvidence(summaries) {
-  return (summaries ?? []).some(s =>
-    Array.isArray(s?.decisions) && s.decisions.some(d => Array.isArray(d?.candidateScores) && d.candidateScores.length > 0)
-    || s?.strategicTelemetry != null
-    || (Array.isArray(s?.strategyDecisions) && s.strategyDecisions.length > 0));
+  return !!summaries?.length && summaries.every(hasDecisionEvidence);
 }
 
 /**
@@ -83,8 +82,8 @@ export function summariesCarryDecisionEvidence(summaries) {
 export function runDecisionFidelity(run, { sampleSummaries = null } = {}) {
   if (Array.isArray(sampleSummaries)) {
     if (!sampleSummaries.length) return DECISION_FIDELITY.NONE;
-    return summariesCarryDecisionEvidence(sampleSummaries)
-      ? DECISION_FIDELITY.FULL : DECISION_FIDELITY.SUMMARY;
+    const covered = sampleSummaries.filter(hasDecisionEvidence).length;
+    return covered === sampleSummaries.length ? DECISION_FIDELITY.FULL : covered ? DECISION_FIDELITY.MIXED : DECISION_FIDELITY.SUMMARY;
   }
   void run;
   return DECISION_FIDELITY.UNRESOLVED;
@@ -95,11 +94,17 @@ export function runDecisionFidelity(run, { sampleSummaries = null } = {}) {
  * command transcripts; every accepted match is re-executable from
  * seed+ordinal+configuration, which is reproducibility, not a replay.
  */
-export function replayCoverageForSummaries(summaries) {
+export function replayCoverageForSummaries(summaries, { run = null, implementation = null } = {}) {
   const list = summaries ?? [];
   return {
     gamesWithFullTranscript: list.filter(s => Array.isArray(s?.replay?.commands)).length,
-    gamesReproducible: list.filter(s => s?.seed != null || s?.matchOrdinal != null).length,
+    gamesReproducible: list.filter(s => {
+      const id = s.identity;
+      const cfg = run?.config;
+      return s.seed != null && id?.sampleInputs && id.subjectDigests?.length === 2 && cfg?.policyIds?.length === 2 &&
+        implementation?.fingerprint === id.executionFingerprint && implementation?.analysisFingerprint === id.analysisFingerprint &&
+        (!cfg.policyIds.includes('weighted-heuristic') || cfg.policyStates?.some(Boolean));
+    }).length,
     totalGames: list.length,
   };
 }
@@ -130,6 +135,7 @@ export function artifactEvidenceForRun(run, payload, batches = null) {
         matchCount: d.matchCount, summariesHash: d.summariesHash,
         committedAt: batch.committedAt ?? d.committedAt ?? null,
         summaries: batch.summaries,
+        ...(batch.receipt?{receipt:batch.receipt}:{}),
       };
     });
     return { kind: 'batches', batches: full, aggregate: payload?.aggregate ?? null };
@@ -190,9 +196,18 @@ export function validateExperimentRunArtifact(envelope) {
     const descriptors = [];
     const batches = [];
     const seenOrdinals = new Set();
+    const seenIndexes = new Set();
+    const admission = createEvidenceAdmission({ run, aggregate: evidence.aggregate });
     for (const b of evidence.batches) {
+      if (!Number.isInteger(b.batchIndex) || seenIndexes.has(b.batchIndex)) fail('RUN_DESCRIPTOR_DUPLICATE');
+      seenIndexes.add(b.batchIndex);
       if (!Array.isArray(b.summaries)) fail('RUN_CHUNK_MISSING');
       if (batchSummariesHash(b.summaries) !== b.summariesHash) fail('RUN_PAYLOAD_HASH_MISMATCH');
+      validateEvidenceBatch(b,{...b,matchCount:b.matchCount ?? b.summaries.length},run.runId);
+      if (!Number.isInteger(b.ordinalStart) || !Number.isInteger(b.ordinalEnd) || b.ordinalEnd <= b.ordinalStart ||
+          b.ordinalEnd - b.ordinalStart !== b.summaries.length || (b.matchCount != null && b.matchCount !== b.summaries.length) ||
+          b.summaries.some(s => !Number.isInteger(s.matchOrdinal) || s.matchOrdinal < b.ordinalStart || s.matchOrdinal >= b.ordinalEnd)) fail('RUN_DESCRIPTOR_MISMATCH');
+      admission.add(b.summaries);
       for (const s of b.summaries) {
         const o = s?.matchOrdinal;
         if (o != null) {
@@ -210,18 +225,19 @@ export function validateExperimentRunArtifact(envelope) {
         ordinalStart: b.ordinalStart, ordinalEnd: b.ordinalEnd,
         matchCount: b.matchCount ?? b.summaries.length, summariesHash: b.summariesHash,
         committedAt: b.committedAt ?? null, summaries: b.summaries,
+        ...(b.receipt?{receipt:b.receipt}:{}),
       });
     }
     const payload = { kind: 'batches', batches: descriptors, aggregate: evidence.aggregate ?? null };
     const verdict = verifyRunPayload(run, payload);
     if (!verdict.ok) fail(verdict.code);
-    return { run, payload, batches };
+    return { run, payload, batches, admission: admission.finish() };
   }
   if (evidence.kind === 'summaries') {
     const payload = { summaries: evidence.summaries ?? [], aggregate: evidence.aggregate ?? null };
     const verdict = verifyRunPayload(run, payload);
     if (!verdict.ok) fail(verdict.code);
-    return { run, payload, batches: null };
+    return { run, payload, batches: null, admission: admitSummaries(payload.summaries, { run, aggregate: payload.aggregate }) };
   }
   if (evidence.kind === 'none') {
     return { run, payload: null, batches: null };

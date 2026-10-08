@@ -1,3 +1,6 @@
+import { AggregateWorker } from './fixtures/aggregate-worker.mjs';
+import { trustedSummary } from './fixtures/admission-fixtures.mjs';
+import * as admissionContract from '../packages/simulation-runtime/src/evidence-admission.mjs';
 // experiment-run-retention.test.mjs — Evidence-integrity regression tests for
 // the run-registration failure class that made a completed 1000-match run
 // vanish from MANAGE RUNS and silently revert the Observatory to the bundled
@@ -58,7 +61,7 @@ const domain = await import('../packages/simulation-runtime/src/experiment-domai
 // Execute current controller source with its generated build identity supplied
 // explicitly; the checkout does not contain a generated identity source file.
 const source=(await readFile(new URL('../apps/lab-web/src/experiments/experiment-controller.mjs',import.meta.url),'utf8')).replace(/import\s[^;]*?from\s*'[^']*';/gs,'').replace(/^export /gm,'');
-const controller=runInNewContext(source+';({initExperiments,recordCampaignRun,recordFailedRun,applySelection,getExperimentRuns,getIncludedRuns,getEvidenceBasis,runsWithCompatibility,experimentsReady})',{...domain,...portability,LAB_IDENTITY:await evolutionIdentity(),ExperimentStore,hashCanonical,state,structuredClone,TextEncoder,setTimeout,queueMicrotask:globalThis.queueMicrotask,console,RULES_VERSION:'4.3.1',ENGINE_VERSION:'4.2.6',LAB_VERSION:'1.0.0',showToast(){},updateRailContext(){},rerender(){}});
+const controller=runInNewContext(source+';({initExperiments,recordCampaignRun,recordFailedRun,applySelection,getExperimentRuns,getIncludedRuns,getEvidenceBasis,runsWithCompatibility,experimentsReady})',{...domain,...portability,...admissionContract,LAB_IDENTITY:await evolutionIdentity(),ExperimentStore,hashCanonical,state,structuredClone,TextEncoder,setTimeout,clearTimeout,Worker:AggregateWorker,queueMicrotask:globalThis.queueMicrotask,console,RULES_VERSION:'4.3.1',ENGINE_VERSION:'4.2.6',LAB_VERSION:'1.0.0',showToast(){},updateRailContext(){},rerender(){}});
 const {
   initExperiments, recordCampaignRun, recordFailedRun, applySelection,
   getExperimentRuns, getIncludedRuns, getEvidenceBasis, runsWithCompatibility,
@@ -105,16 +108,16 @@ function createFakeIndexedDB() {
 }
 
 // ── Fixtures ──────────────────────────────────────────────────────
-const fakeSummary = ordinal => ({
+const fakeSummary = ordinal => trustedSummary({
   matchId: `RT-${ordinal}`, ordinal, terminationReason: 'NORMAL_VICTORY',
   policyIds: ['score-rush', 'control'], seatOrder: ['P1', 'P2'],
   winner: ordinal % 2 ? 'P2' : 'P1', winningSeat: (ordinal % 2) + 1,
   completedFullTurns: 6, scoreMargin: 3, matchResultHash: `rh-${ordinal}`,
 });
 const summaries1000 = () => Array.from({ length: 1000 }, (_, i) => fakeSummary(i));
-const aggregate1000 = () => ({
-  matchCount: 1000, completedMatchCount: 1000, abortCount: 0, drawCount: 0,
-  seatWins: { '1': 500, '2': 500 }, seat1WinRate: 0.5,
+const aggregate1000 = (count=1000) => ({
+  matchCount: count, completedMatchCount: count, abortCount: 0, drawCount: 0,
+  seatWins: { '1': count/2, '2': count/2 }, seat1WinRate: 0.5,
   rulesVersion: '4.3.1', engineVersion: '4.2.6', labVersion: '1.0.0',
   canonicalResultHash: 'crh-1000', aggregateHash: 'ah-1000', profileId: 'core-advanced-authority',
 });
@@ -154,7 +157,7 @@ test('A: a normal run persists, lists, is included, and drives the analysis', as
   const summaries = [fakeSummary(0), fakeSummary(1), fakeSummary(2), fakeSummary(3)];
   const rec = await recordCampaignRun({
     config: runConfig(4), result: { durationMs: 12 },
-    summaries, aggregate: { ...aggregate1000(), matchCount: 4, completedMatchCount: 4 },
+    summaries, aggregate: aggregate1000(4),
   });
   assert.ok(rec?.run, 'run was recorded');
   assert.equal(rec.persisted, true);
@@ -224,7 +227,7 @@ test('C: QuotaExceededError on the payload write produces the same session fallb
   const rec = await recordCampaignRun({
     config: runConfig(50), result: {},
     summaries: Array.from({ length: 50 }, (_, i) => fakeSummary(i)),
-    aggregate: { ...aggregate1000(), matchCount: 50, completedMatchCount: 50 },
+    aggregate: aggregate1000(50),
   });
   assert.equal(rec.payloadSessionOnly, true);
   assert.equal(rec.run.payloadKind, 'session');
@@ -316,7 +319,7 @@ test('F1: a persisted run and its set membership survive a store reopen', async 
   const summaries = [fakeSummary(0), fakeSummary(1)];
   const rec = await recordCampaignRun({
     config: runConfig(2), result: {},
-    summaries, aggregate: { ...aggregate1000(), matchCount: 2, completedMatchCount: 2 },
+    summaries, aggregate: aggregate1000(2),
   });
   assert.equal(rec.persisted, true);
 
@@ -343,7 +346,7 @@ test('F2: a session-payload run degrades disclosed after reload — record kept,
   const rec = await recordCampaignRun({
     config: runConfig(8), result: {},
     summaries: Array.from({ length: 8 }, (_, i) => fakeSummary(i)),
-    aggregate: { ...aggregate1000(), matchCount: 8, completedMatchCount: 8 },
+    aggregate: aggregate1000(8),
   });
   assert.equal(rec.run.payloadKind, 'session');
 
@@ -365,7 +368,7 @@ test('F3: a memory-only run honestly disappears on reload (it was never durable)
   const rec = await recordCampaignRun({
     config: runConfig(6), result: {},
     summaries: Array.from({ length: 6 }, (_, i) => fakeSummary(i)),
-    aggregate: { ...aggregate1000(), matchCount: 6, completedMatchCount: 6 },
+    aggregate: aggregate1000(6),
   });
   assert.equal(rec.metaFailed, true);
   await bootController({ idb });

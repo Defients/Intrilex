@@ -2,12 +2,12 @@
 // workspaces/tournament.js — /tournament workspace: AI tournament mode
 // ═══════════════════════════════════════════════════════════════
 
-import { state, app, esc, pct, showToast, clamp } from '../state.js?v=8951e2c35a42';
-import { rerender } from '../rerender.js?v=8951e2c35a42';
-import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=8951e2c35a42';
-import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=8951e2c35a42';
-import { retainLabReplay } from '../play/replay-library.js?v=8951e2c35a42';
-import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=8951e2c35a42';
+import { state, app, esc, pct, showToast, clamp } from '../state.js?v=f576f69f79ad';
+import { rerender } from '../rerender.js?v=f576f69f79ad';
+import { createTournament, recordMatchResult, getNextMatch, getTournamentSummary, getTournamentAnalytics } from './tournament-scheduler.js?v=f576f69f79ad';
+import { isIndexedDBAvailable, saveTournament, loadTournament, listTournaments, deleteTournament } from '../play/persistence.js?v=f576f69f79ad';
+import { retainLabReplay } from '../play/replay-library.js?v=f576f69f79ad';
+import { donutChart, barChart, sparkline, chartTableAlternative } from '../chart-toolkit.js?v=f576f69f79ad';
 
 const ALL_POLICIES = [
   'random-legal','score-rush','control','tempo','value',
@@ -500,7 +500,7 @@ function liveSemanticLabel(command) {
 // ── Frame reconstruction from replay ────────────────────────────
 
 async function reconstructFrames(replay) {
-  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=8951e2c35a42');
+  const { IntrilexEngine } = await import('../engine/browser-entry.js?v=f576f69f79ad');
   const engine = new IntrilexEngine();
   let s = structuredClone(replay.initialState);
   const frames = [{ state: s, events: [], command: null, commandIndex: -1 }];
@@ -603,7 +603,7 @@ async function openLiveReplayInWatch() {
   state.tournamentRunning = false;
   state.tournamentAutoPlaying = false;
   state.tournamentLiveView = null;
-  const { openReplay } = await import('../data-loader.js?v=8951e2c35a42');
+  const { openReplay } = await import('../data-loader.js?v=f576f69f79ad');
   await openReplay({ kind: 'object', replay, id, label });
 }
 

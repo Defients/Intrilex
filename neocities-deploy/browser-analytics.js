@@ -5,9 +5,9 @@
 // Rank attribution extracted to rank-attribution-browser.js (P4.3).
 // Rank power model extracted to rank-power-model.js (P4.3).
 
-import './engine/ranks.js?v=8951e2c35a42';
-import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=8951e2c35a42';
-import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=8951e2c35a42';
+import './engine/ranks.js?v=f576f69f79ad';
+import { hashCanonical, sha256Text } from './engine/browser-entry.js?v=f576f69f79ad';
+import { RULES_VERSION, ENGINE_VERSION } from './version.js?v=f576f69f79ad';
 import {
   CANONICAL_RANKS,
   classifyPlayForm,
@@ -15,7 +15,7 @@ import {
   buildSourceCards,
   attributeRankAction,
   attributeAction,
-} from './rank-attribution-browser.js?v=8951e2c35a42';
+} from './rank-attribution-browser.js?v=f576f69f79ad';
 import {
   RANK_POWER_SCHEMA_VERSION,
   RPI_AXIS_WEIGHTS,
@@ -26,7 +26,7 @@ import {
   computeDecisionPower,
   buildBalanceWatchlist,
   buildRankPowerModel,
-} from './rank-power-model.js?v=8951e2c35a42';
+} from './rank-power-model.js?v=f576f69f79ad';
 import {
   ANALYTICS_SCHEMA_VERSION,
   buildMechanicsAtlas,
@@ -35,14 +35,14 @@ import {
   buildPolicyFingerprints,
   detectAnomalies,
   buildPairedABBAAnalysis,
-} from './observatory-analytics-browser.js?v=8951e2c35a42';
-import { mechanicRegistryHash, quarantineUnknownTags, taxonomyCoverage } from './mechanic-registry-browser.js?v=8951e2c35a42';
-import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=8951e2c35a42';
-import { winRateRecord } from './shared-analytics/estimators.mjs?v=8951e2c35a42';
-import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=8951e2c35a42';
-import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=8951e2c35a42';
-import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=8951e2c35a42';
-import { buildExperimentIntegrity, analyzeEarlyVictories, analyzeDecisiveness } from './shared-analytics/experiment-integrity.mjs?v=8951e2c35a42';
+} from './observatory-analytics-browser.js?v=f576f69f79ad';
+import { mechanicRegistryHash, quarantineUnknownTags, taxonomyCoverage } from './mechanic-registry-browser.js?v=f576f69f79ad';
+import { metricRegistryWithHashesUsing } from './shared-analytics/metric-registry.mjs?v=f576f69f79ad';
+import { winRateRecord } from './shared-analytics/estimators.mjs?v=f576f69f79ad';
+import { applyRankBalanceQualification } from './shared-analytics/observatory-integrity.mjs?v=f576f69f79ad';
+import { buildChoiceAnalysis, decisionChoices } from './shared-analytics/choice-analysis.mjs?v=f576f69f79ad';
+import { buildComboAtlas } from './shared-analytics/combo-analytics.mjs?v=f576f69f79ad';
+import { buildExperimentIntegrity, analyzeEarlyVictories, analyzeDecisiveness } from './shared-analytics/experiment-integrity.mjs?v=f576f69f79ad';
 
 // Re-export for backward compatibility (other modules import from browser-analytics)
 export {

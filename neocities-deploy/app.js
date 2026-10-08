@@ -1,2 +1,2 @@
 // Re-export from the real bundled app (defense-in-depth for stale SWs)
-export { render, showExtract, stop, togglePlay } from './app.8951e2c35a42.js';
+export { render, showExtract, stop, togglePlay } from './app.f576f69f79ad.js';
