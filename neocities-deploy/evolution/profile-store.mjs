@@ -195,6 +195,29 @@ export class ProfileStore {
   read(names, body) { return this.backend.transaction(names, 'readonly', body); }
   write(names, body) { return this.backend.transaction(names, 'readwrite', body); }
 
+  /** A reservation consumes an attempt even if execution never starts. The
+   * receipt, frozen inputs and seed exposure commit in the same transaction. */
+  reserveChallenge({ commandId, agentProfileId, nominationId, build }) {
+    if (!commandId) fail('COMMAND_ID_REQUIRED');
+    const commandDigest = digest({ type: 'RESERVE_CHALLENGE_V1', agentProfileId, nominationId });
+    const clock = this.clock();
+    return this.write(['profiles', 'heads', 'artifacts', 'checkpoints', 'receipts'], function* (tx) {
+      const receipt = yield op.get('receipts', commandId);
+      if (receipt) {
+        if (receipt.commandDigest !== commandDigest) fail('COMMAND_ID_REUSED');
+        return yield* requireArtifact(receipt.result.challengeId, 'CHALLENGE_MANIFEST', agentProfileId);
+      }
+      const profile = yield op.get('profiles', agentProfileId), head = yield op.get('heads', agentProfileId);
+      if (!profile || !head) fail('PROFILE_NOT_FOUND', agentProfileId);
+      const artifacts = yield op.all('artifacts'), checkpoints = yield op.all('checkpoints');
+      const prepared = build({ profile, head, artifacts, checkpoints });
+      for (const artifact of prepared.artifacts) yield* putImmutable(tx, artifact);
+      tx.put('receipts', { commandId, agentProfileId, commandDigest, recordedAt: clock,
+        result: { challengeId: prepared.manifest.id }, type: 'RESERVE_CHALLENGE_V1' });
+      return prepared.manifest;
+    });
+  }
+
   // ── Reads ──
   async getHead(agentProfileId) { return this.read(['heads'], function* () { return yield op.get('heads', agentProfileId); }); }
   async getArtifact(id) { return this.read(['artifacts'], function* () { return yield op.get('artifacts', id); }); }
@@ -446,6 +469,11 @@ export class ProfileStore {
     const command = { commandId, type: 'PROMOTE', agentProfileId, expectedHead, payload: { decisionId } };
     return this.#command(command, function* (_tx, head, transitionId) {
       const d = yield* requireArtifact(decisionId, 'CHALLENGE_DECISION', agentProfileId), m = yield* requireArtifact(d.body.challengeId, 'CHALLENGE_MANIFEST', agentProfileId);
+      const reservation = m.body.reservation;
+      const receipt = reservation ? yield op.get('receipts', reservation.commandId) : null;
+      const history = (yield op.index('artifacts', 'scope', agentProfileId)).filter(a => a.kind === 'CHALLENGE_MANIFEST' && a.body.attempt.key === m.body.attempt.key);
+      const reserved = challengeReservationAuthority(m, receipt, history);
+      if (!reserved.ok) fail('PROMOTION_NOT_AUTHORIZED', reserved.reasons);
       const verdict = promotionAuthority({ decision: d, manifest: m, head });
       if (!verdict.ok) fail('PROMOTION_NOT_AUTHORIZED', verdict.reasons);
       for (const id of [d.body.challengerMeasurementId, d.body.incumbentMeasurementId]) { const mm = yield* requireArtifact(id, 'MEASUREMENT_RESULT', agentProfileId); if (mm.meta?.origin !== 'LOCAL' && !mm.meta?.locallyReproduced) fail('PROMOTION_NOT_AUTHORIZED', 'IMPORTED_EVIDENCE'); }
@@ -668,12 +696,24 @@ export function previewAuthoredEdit({ source, next, checkpointsById }) {
   return genomeDelta(source, next).map(row => ({ ...row, currentProvenance: provenance[row.parameter], replacesLearnedValue: row.changed && provenance[row.parameter].startsWith('LEARNED') }));
 }
 /** Pure authority check for automatic promotion (canPromoteInContext). */
+export function challengeReservationAuthority(manifest, receipt, history) {
+  const reasons = [], b = manifest.body, reservation = b.reservation;
+  if (reservation?.contract !== 'intrilex-challenge-reservation@1' || receipt?.type !== 'RESERVE_CHALLENGE_V1' ||
+      receipt?.result?.challengeId !== manifest.id || receipt?.agentProfileId !== manifest.scope ||
+      receipt?.commandId !== reservation?.commandId || receipt?.commandDigest !== digest({ type: 'RESERVE_CHALLENGE_V1', agentProfileId: manifest.scope, nominationId: b.nominationId })) reasons.push('CHALLENGE_RESERVATION_REQUIRED');
+  const prior = b.attempt.priorAttemptIds;
+  if (b.attempt.number !== prior.length + 1 || prior.some(id => !history.some(m => m.id === id && m.body.attempt.key === b.attempt.key)) ||
+      history.some(m => m.id !== manifest.id && m.body.attempt.number === b.attempt.number)) reasons.push('CHALLENGE_ATTEMPT_HISTORY_INVALID');
+  if (!b.attempt.automaticEligible || b.attempt.number !== 1 || prior.length) reasons.push('REPEAT_ATTEMPT_NOT_AUTOMATICALLY_ELIGIBLE');
+  return deepFreeze({ ok: reasons.length === 0, reasons });
+}
 export function promotionAuthority({ decision, manifest, head }) {
   const reasons = [];
   if (!LAB_TRUST_POLICY.automaticPromotion) reasons.push(LAB_TRUST_POLICY.promotionReason);
   if (decision.body.decision !== 'APPROVE') reasons.push(`DECISION_${decision.body.decision}`);
   if (decision.body.challengeId !== manifest.id) reasons.push('DECISION_MANIFEST_MISMATCH');
   if (!manifest.body.attempt.automaticEligible) reasons.push('REPEAT_ATTEMPT_NOT_AUTOMATICALLY_ELIGIBLE');
+  if (manifest.body.reservation?.contract !== 'intrilex-challenge-reservation@1') reasons.push('CHALLENGE_RESERVATION_REQUIRED');
   if (!sameHead(head, manifest.body.expectedHead)) reasons.push('STALE_CHALLENGE_HEAD');
   if (head.championCheckpointId !== manifest.body.incumbentCheckpointId) reasons.push('INCUMBENT_CHANGED');
   if (head.requiredEvaluationEraId !== manifest.body.eraId) reasons.push('ERA_CHANGED');

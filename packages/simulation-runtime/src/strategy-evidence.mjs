@@ -57,7 +57,7 @@ export function chunkStrategyEvidence(evidence,maxBytes=8*1024*1024) {
   if(!Number.isSafeInteger(maxBytes)||maxBytes<1024)strategyFail('STRATEGY_CHUNK_BUDGET_INVALID');
   if(evidenceBytes(evidence)<=maxBytes)return [evidence];
   if(!evidence.events.length)strategyFail('STRATEGY_EVIDENCE_CHUNK_BUDGET');
-  const {artifactId:_id,...body}=evidence,overhead=evidenceBytes({...body,events:[]});
+  const {artifactId:_id,...body}=evidence,overhead=evidenceBytes({...evidence,events:[]});
   const groups=[];let batch=[],size=overhead;
   for(const event of evidence.events) {
     // +1 accounts for the array separator so the emitted chunk never exceeds

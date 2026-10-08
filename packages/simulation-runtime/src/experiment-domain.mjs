@@ -225,6 +225,30 @@ export function nextOrdinalStart(runs) {
   }, 0);
 }
 
+/**
+ * Upper bound of the reserved sample-ordinal stream across run records AND
+ * run manifests — the authoritative allocation frontier (R03). Counts every
+ * recorded reservation: sealed runs (`config.ordinalEnd` or
+ * start+matchCount), live/interrupted manifests (segment ends and config
+ * range), failed/cancelled manifests whose committed evidence must keep its
+ * pinned ordinals, and imported artifacts. A store that reserves new ranges
+ * above this frontier can never hand two executions the same deterministic
+ * samples — regardless of what a caller's stale local computation believed.
+ */
+export function ordinalReservationEnd(records) {
+  return (records ?? []).reduce((max, r) => {
+    const cfg = r?.config ?? {};
+    let end = Number.isInteger(cfg.ordinalEnd) ? cfg.ordinalEnd : 0;
+    for (const s of r?.segments ?? []) {
+      if (Number.isInteger(s?.ordinalEnd)) end = Math.max(end, s.ordinalEnd);
+    }
+    if (!end && Number.isInteger(cfg.ordinalStart)) {
+      end = cfg.ordinalStart + (r?.metrics?.matchCount ?? cfg.matchCount ?? cfg.requestedMatchCount ?? r?.requestedMatches ?? 0);
+    }
+    return Math.max(max, end);
+  }, 0);
+}
+
 // ── Validation ──────────────────────────────────────────────────
 
 export function validateRunRecord(run) {
@@ -609,10 +633,12 @@ export function createRunManifest({ runId, experimentId = DEFAULT_EXPERIMENT_ID,
     batchSize,
     segments: segs,
     committedBatches: [],
-    // Exact retained-evidence coverage (R03): ordinal → matchResultHash (or
-    // null for legacy descriptors without per-match hashes). Coverage is
-    // derived from this map — never from a frontier/largest ordinal.
-    retainedOrdinals: {},
+    // Exact retained-evidence coverage (R03) is derived from the committedBatches
+    // descriptor ranges — strict admission guarantees each descriptor's
+    // [ordinalStart, ordinalEnd) equals the ordinals its batch carried, so
+    // ranges ARE the coverage and no per-ordinal index is duplicated here.
+    // Legacy manifests may still carry a populated `retainedOrdinals` map;
+    // manifestRetainedOrdinals() reads both representations.
     // Durable ownership fence (R02): only the owner carrying this fencing
     // token may mutate the run. null on legacy/ownerless manifests.
     owner: owner ?? null,
@@ -628,6 +654,14 @@ export function createRunManifest({ runId, experimentId = DEFAULT_EXPERIMENT_ID,
 
 export function createManifestHeadline() {
   return { matchCount: 0, completedMatchCount: 0, abortCount: 0, drawCount: 0, seatWins: { '1': 0, '2': 0 }, durationMs: 0 };
+}
+
+/** Scientific inputs are frozen at allocation; progress and leases may change. */
+export function manifestInputDigest(manifest) {
+  return hashCanonical({ runId: manifest.runId, experimentId: manifest.experimentId, ordinal: manifest.ordinal,
+    config: manifest.config, requestedMatches: manifest.requestedMatches, batchSize: manifest.batchSize,
+    executionOccurrenceId: manifest.executionOccurrenceId ?? null,
+    segments: manifest.segments.map(s => ({ index: s.index, ordinalStart: s.ordinalStart, ordinalEnd: s.ordinalEnd })) });
 }
 
 const MANIFEST_COMPLETE_REASONS = new Set(['NORMAL_VICTORY', 'EXHAUSTED_RESOLUTION', 'CANONICAL_DRAW']);
@@ -682,17 +716,33 @@ export function manifestRetainedOrdinals(manifest) {
 }
 
 /**
- * Plan an idempotent batch commit (R03). Pure — returns `{ manifest, receipt }`:
+ * Plan an idempotent batch commit with STRICT admission (R03 hardening).
+ * Pure — returns `{ manifest, receipt }`:
  *   receipt = { batchIndex, submitted, newlyRetained, duplicates, conflicts,
- *               outOfScheduleOrdinals, accepted, duplicate }
- * - A retry of identical evidence is `duplicate` — the manifest is returned
- *   unchanged and committed counts do NOT increase.
- * - Conflicting digests for an already-retained sample identity reject the
- *   batch (`accepted: false`) and record a durable `integrityFailures` entry
- *   on the returned manifest — the caller persists that mark and surfaces it.
- * - Ordinals outside the scheduled segments are retained but flagged.
+ *               violations, outOfScheduleOrdinals, accepted, duplicate, code }
+ *
+ * Admission rules — every rule must pass before any evidence is retained:
+ * - Every carried ordinal is a non-negative integer inside the run's reserved
+ *   segment schedule. Out-of-schedule ordinals are REJECTED, not flagged.
+ * - No ordinal appears twice inside one batch.
+ * - Declared `ordinalStart`/`ordinalEnd` (when present) must equal the exact
+ *   contiguous span the batch carries; `matchCount` must equal the carried
+ *   summary count.
+ * - Cross-batch overlap: an identical whole-batch retry (all ordinals retained,
+ *   all digests matching) is an idempotent no-op (`duplicate: true`). PARTIAL
+ *   overlap is rejected with RUN_BATCH_PARTIAL_OVERLAP; overlap whose retained
+ *   digest cannot be resolved is rejected with RUN_BATCH_OVERLAP_UNVERIFIED;
+ *   a digest mismatch is RUN_BATCH_SAMPLE_CONFLICT.
+ * `priorDigests` (optional Map<ordinal, digest>) supplies retained digests
+ * resolved by the store from committed batch rows — needed for manifests
+ * whose compact descriptors carry ranges but no per-ordinal hashes.
+ *
+ * Rejection semantics: the returned manifest carries a durable
+ * `integrityFailures` mark (bounded to the latest 50) but does NOT advance
+ * committed coverage, descriptor list, or counts — the caller persists the
+ * mark and surfaces the rejection; committed evidence is untouched.
  */
-export function planManifestBatchCommit(manifest, { batchIndex, segmentIndex = 0, ordinalStart, ordinalEnd, matchCount, summariesHash, matchResultHashes = [], committedAt = null } = {}) {
+export function planManifestBatchCommit(manifest, { batchIndex, segmentIndex = 0, ordinalStart, ordinalEnd, matchCount, summariesHash, matchResultHashes = [], committedAt = null } = {}, { priorDigests = null } = {}) {
   const at = committedAt ?? new Date().toISOString();
   const retained = manifestRetainedOrdinals(manifest);
   const items = matchResultHashes.length
@@ -704,68 +754,116 @@ export function planManifestBatchCommit(manifest, { batchIndex, segmentIndex = 0
   for (const s of manifest?.segments ?? []) {
     for (let o = s.ordinalStart; o < s.ordinalEnd; o += 1) scheduled.add(o);
   }
-  const conflicts = [], newOrdinals = [], dupOrdinals = [], outOfSchedule = [];
+  // ── Structural admission ──────────────────────────────────────
+  const violations = [], outOfSchedule = [];
+  const seenInBatch = new Set();
+  for (const { o } of items) {
+    if (!Number.isInteger(o) || o < 0) { violations.push({ code: 'ORDINAL_INVALID', ordinal: o ?? null }); continue; }
+    if (seenInBatch.has(o)) violations.push({ code: 'ORDINAL_DUPLICATE_IN_BATCH', ordinal: o });
+    else seenInBatch.add(o);
+    if (!scheduled.has(o)) { violations.push({ code: 'ORDINAL_OUT_OF_SCHEDULE', ordinal: o }); outOfSchedule.push(o); }
+  }
+  if (!items.length) violations.push({ code: 'EMPTY', declared: matchCount ?? null });
+  if (matchCount != null && matchCount !== items.length) {
+    violations.push({ code: 'MATCH_COUNT_MISMATCH', declared: matchCount, actual: items.length });
+  }
+  if (Number.isInteger(ordinalStart) && Number.isInteger(ordinalEnd) && items.length) {
+    const sorted = [...seenInBatch].sort((a, b) => a - b);
+    if (sorted.length !== ordinalEnd - ordinalStart || sorted[0] !== ordinalStart || sorted[sorted.length - 1] !== ordinalEnd - 1) {
+      violations.push({ code: 'ORDINAL_RANGE_MISMATCH', declaredStart: ordinalStart, declaredEnd: ordinalEnd,
+        actualStart: sorted[0] ?? null, actualEnd: sorted.length ? sorted[sorted.length - 1] + 1 : null });
+    }
+  }
+  // ── Retained-evidence reconciliation ──────────────────────────
+  const conflicts = [], overlaps = [], dupOrdinals = [], unverifiable = [];
   for (const { o, h } of items) {
-    if (!Number.isInteger(o)) { conflicts.push({ ordinal: o ?? null, reason: 'ORDINAL_INVALID' }); continue; }
-    if (!scheduled.has(o)) outOfSchedule.push(o);
-    if (!retained.has(o)) { newOrdinals.push(o); continue; }
-    const prev = retained.get(o);
-    if (prev != null && h != null && prev !== h) conflicts.push({ ordinal: o, retainedHash: prev, incomingHash: h });
+    if (!Number.isInteger(o) || o < 0 || !retained.has(o)) continue;
+    overlaps.push(o);
+    const manifestDigest = retained.get(o);
+    const prior = manifestDigest != null ? manifestDigest
+      : (priorDigests?.has(o) ? priorDigests.get(o) : undefined);
+    if (prior == null) {
+      // No resolvable retained digest: only a digest-free incoming ordinal can
+      // stand as a verifiable identical retry of a digest-free commitment.
+      if (h == null) dupOrdinals.push(o); else unverifiable.push(o);
+      continue;
+    }
+    if (h == null) { unverifiable.push(o); continue; }
+    if (prior !== h) conflicts.push({ ordinal: o, retainedHash: prior, incomingHash: h });
     else dupOrdinals.push(o);
   }
   const receipt = {
     batchIndex, segmentIndex, ordinalStart, ordinalEnd,
     submitted: items.length,
     declaredMatchCount: matchCount ?? items.length,
-    newlyRetained: newOrdinals.length,
+    newlyRetained: 0,
     duplicates: dupOrdinals.length,
     conflicts,
     outOfScheduleOrdinals: outOfSchedule,
-    accepted: conflicts.length === 0,
-    duplicate: conflicts.length === 0 && newOrdinals.length === 0 && items.length > 0,
+    violations,
+    accepted: false,
+    duplicate: false,
+    code: null,
   };
-  if (conflicts.length) {
-    return {
-      receipt,
-      manifest: {
-        ...manifest,
-        updatedAt: at,
-        integrityFailures: [...(manifest.integrityFailures ?? []), {
-          code: 'RUN_BATCH_SAMPLE_CONFLICT', ordinalStart, ordinalEnd, conflicts, at,
-        }],
-      },
-    };
+  const reject = code => ({
+    receipt: { ...receipt, code },
+    manifest: {
+      ...manifest,
+      updatedAt: at,
+      integrityFailures: [...(manifest.integrityFailures ?? []), {
+        code, batchIndex, segmentIndex, ordinalStart, ordinalEnd,
+        ...(violations.length ? { violations: violations.slice(0, 25) } : {}),
+        ...(conflicts.length ? { conflicts } : {}),
+        ...(unverifiable.length ? { unverifiableOrdinals: unverifiable.slice(0, 50) } : {}),
+        at,
+      }].slice(-50),
+    },
+  });
+  if (violations.length) return reject(`RUN_BATCH_${violations[0].code}`);
+  if (conflicts.length) return reject('RUN_BATCH_SAMPLE_CONFLICT');
+  if (unverifiable.length) return reject('RUN_BATCH_OVERLAP_UNVERIFIED');
+  const allDuplicate = items.length > 0 && dupOrdinals.length === items.length;
+  if (overlaps.length && !allDuplicate) return reject('RUN_BATCH_PARTIAL_OVERLAP');
+  if (allDuplicate) {
+    receipt.accepted = true;
+    receipt.duplicate = true;
+    return { receipt, manifest };
   }
-  if (receipt.duplicate) return { receipt, manifest };
-  const nextRetained = {};
-  for (const [o, h] of retained) nextRetained[String(o)] = h;
-  for (const { o, h } of items) {
-    const k = String(o);
-    if (nextRetained[k] === undefined || (nextRetained[k] == null && h != null)) nextRetained[k] = h ?? null;
-  }
+  receipt.accepted = true;
+  receipt.newlyRetained = items.length;
+  // Coverage after admission — retained ordinals plus this batch (overlap is
+  // empty here, so the union is just the sum of distinct ordinals).
+  const covered = new Set(retained.keys());
+  for (const { o } of items) covered.add(o);
+  // Legacy manifests that already carry a populated retainedOrdinals map
+  // keep maintaining it — its per-ordinal digests remain forensic evidence.
+  // Compact manifests derive coverage from descriptor ranges instead.
+  const maintainOrdinalMap = manifest.retainedOrdinals != null && typeof manifest.retainedOrdinals === 'object' && Object.keys(manifest.retainedOrdinals).length > 0;
+  const nextRetained = maintainOrdinalMap
+    ? Object.fromEntries([...covered].map(o => [String(o), retained.get(o) ?? items.find(i => i.o === o)?.h ?? null]))
+    : null;
   const segments = (manifest.segments ?? []).map((s) => {
-    if (s.index !== segmentIndex) return s;
     let firstOpen = s.ordinalEnd;
     let committed = 0;
     for (let o = s.ordinalStart; o < s.ordinalEnd; o += 1) {
-      const h = nextRetained[String(o)];
-      if (h !== undefined) committed += 1;
-      else if (firstOpen === s.ordinalEnd && o < firstOpen) firstOpen = o;
+      if (covered.has(o)) committed += 1;
+      else if (o < firstOpen) firstOpen = o;
     }
     // nextOrdinal = first uncovered ordinal (progress hint only — coverage
-    // is always derived from retainedOrdinals, never from this frontier).
+    // is always derived from committed evidence, never from this frontier).
     return { ...s, committed, nextOrdinal: firstOpen };
   });
   const next = {
     ...manifest,
     updatedAt: at,
-    committedMatches: Object.keys(nextRetained).length,
-    retainedOrdinals: nextRetained,
+    committedMatches: covered.size,
+    ...(nextRetained ? { retainedOrdinals: nextRetained } : {}),
+    // Compact descriptor (R03-scale): range + batch-level content hash only.
+    // Per-match digests live once, in the committed batch row — the manifest
+    // must not double-store them (10k-match runs would exceed metaBytes).
     committedBatches: [...(manifest.committedBatches ?? []), {
       batchIndex, segmentIndex, ordinalStart, ordinalEnd, matchCount: matchCount ?? items.length,
-      summariesHash, matchResultHashes, committedAt: at,
-      newlyRetained: newOrdinals.length, duplicates: dupOrdinals.length,
-      ...(outOfSchedule.length ? { outOfScheduleOrdinals: outOfSchedule } : {}),
+      summariesHash, committedAt: at, newlyRetained: items.length, duplicates: 0,
     }],
     segments,
   };
@@ -844,4 +942,44 @@ export function manifestIsResumable(manifest) {
   return manifest?.resumable === true && !manifest?.sealedRunId
     && RESUMABLE_MANIFEST_STATUSES.has(manifest?.status)
     && manifestRemainingSegments(manifest).length > 0;
+}
+
+/** Validate the run's committed rows, not a cached frontier or descriptor claim.
+ * Historical rows without a receipt retain their original format and must
+ * still prove their bytes and exact ordinal coverage. */
+export function reconcileRunBatches(manifest, batches) {
+  const bad=code=>fail(code), scheduled=new Set(), retained=new Map();
+  for(const segment of manifest.segments ?? [])for(let o=segment.ordinalStart;o<segment.ordinalEnd;o++){
+    if(scheduled.has(o))bad('RUN_SCHEDULE_OVERLAP'); scheduled.add(o);
+  }
+  if(scheduled.size!==manifest.requestedMatches)bad('RUN_COVERAGE_MISMATCH');
+  const rows=new Map(batches.map(b=>[b.batchId,b])), seen=new Set(), headline=createManifestHeadline(), samples=new Map();
+  const descriptors=[...(manifest.committedBatches ?? [])].sort((a,b)=>a.ordinalStart-b.ordinalStart || a.batchIndex-b.batchIndex);
+  for(const d of descriptors){
+    if(seen.has(d.batchIndex))bad('RUN_BATCH_DESCRIPTOR_DUPLICATE');seen.add(d.batchIndex);
+    for(let o=d.ordinalStart;o<d.ordinalEnd;o++)if(!scheduled.has(o))bad('RUN_COVERAGE_MISMATCH');
+    const b=rows.get(`${manifest.runId}#${d.batchIndex}`);
+    if(!b)bad('RUN_BATCH_MISSING');
+    if(b.runId!==manifest.runId || b.batchIndex!==d.batchIndex || batchSummariesHash(b.summaries)!==b.summariesHash || b.summariesHash!==d.summariesHash)bad('RUN_BATCH_HASH_MISMATCH');
+    if(b.matchCount!==b.summaries.length || b.matchCount!==d.matchCount || b.ordinalStart!==d.ordinalStart || b.ordinalEnd!==d.ordinalEnd || b.ordinalEnd-b.ordinalStart!==b.matchCount || !b.matchCount)bad('RUN_COVERAGE_MISMATCH');
+    const ordinals=b.summaries.map(s=>s.matchOrdinal ?? s.ordinal).sort((a,b)=>a-b);
+    if(b.receipt){const {receiptHash,...body}=b.receipt;
+      if(receiptHash!==hashCanonical(body) || body.contract!=='intrilex-batch-receipt@1' || body.runId!==manifest.runId || body.batchId!==b.batchId || body.payloadDigest!==b.summariesHash || hashCanonical(body.ordinals)!==hashCanonical(ordinals))bad('RUN_BATCH_RECEIPT_MISMATCH');
+    }
+    for(let i=0;i<ordinals.length;i++)if(ordinals[i]!==b.ordinalStart+i || !scheduled.has(ordinals[i]) || retained.has(ordinals[i]))bad('RUN_COVERAGE_MISMATCH');
+    for(const summary of b.summaries){
+      const id=summary.identity,implementation=manifest.config?.implementation;
+      if(implementation?.identityContract==='intrilex-implementation@2' && (id?.schemaVersion!=='2.0.0' || id.executionFingerprint!==implementation.fingerprint || id.analysisFingerprint!==implementation.analysisFingerprint))bad('RUN_SAMPLE_IDENTITY_MISMATCH');
+      if(id?.deterministicSampleId){
+        if(samples.has(id.deterministicSampleId) && samples.get(id.deterministicSampleId)!==id.outcomeDigest)bad('RUN_SAMPLE_OUTCOME_CONFLICT');
+        samples.set(id.deterministicSampleId,id.outcomeDigest);
+      }
+      retained.set(summary.matchOrdinal ?? summary.ordinal,summary.matchResultHash ?? id?.outcomeDigest ?? null);
+    }
+    foldSummariesIntoHeadline(headline,b.summaries);
+  }
+  if(batches.length!==descriptors.length || retained.size!==manifest.committedMatches || hashCanonical([...retained.keys()].sort((a,b)=>a-b))!==hashCanonical([...manifestRetainedOrdinals(manifest).keys()].sort((a,b)=>a-b)))bad('RUN_COVERAGE_MISMATCH');
+  for(const key of ['matchCount','completedMatchCount','abortCount','drawCount'])if(manifest.headline?.[key]!==headline[key])bad('RUN_COUNTS_MISMATCH');
+  if(hashCanonical(manifest.headline?.seatWins)!==hashCanonical(headline.seatWins))bad('RUN_COUNTS_MISMATCH');
+  return {descriptors,retained,headline,canonicalResultHash:hashCanonical([...retained].sort(([a],[b])=>a-b).map(([,h])=>h)),complete:retained.size===scheduled.size};
 }

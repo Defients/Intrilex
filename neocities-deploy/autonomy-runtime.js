@@ -1,4 +1,6 @@
-import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=a90b812f827b';
+import { LAB_IDENTITY } from './evolution/identity.mjs?v=8951e2c35a42';
+import { sampleIdentity, commandStreamStart, nextCommandDigest, outcomeIdentity } from './evolution/evidence-identity.mjs?v=8951e2c35a42';
+import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs?v=8951e2c35a42';
 import {
   IntrilexEngine,
   createMatchState,
@@ -9,19 +11,19 @@ import {
   toAuthorizedCoreAction,
   deriveSecuredPoints,
   hashCanonical
-} from './engine/browser-entry.js?v=a90b812f827b';
+} from './engine/browser-entry.js?v=8951e2c35a42';
 import { actionComposition } from "./engine-adapter/action-composition.mjs";
 import { actionSemantics } from './engine-adapter/action-semantics.mjs';
-import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=a90b812f827b';
-import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=a90b812f827b';
-import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame, effectiveAdaptiveMode } from './evolution/adaptive-strategy.mjs?v=a90b812f827b';
-import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=a90b812f827b';
-import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=a90b812f827b';
-import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=a90b812f827b';
-import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=a90b812f827b';
-import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=a90b812f827b';
+import { rankPolicyActions, recordActionCoverage, decomposePolicyScore } from './policy-scoring.js?v=8951e2c35a42';
+import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './evolution/strategic-telemetry.mjs?v=8951e2c35a42';
+import { resolveAdaptiveControllers, buildAdaptiveTelemetry, compactAdaptiveFrame, effectiveAdaptiveMode } from './evolution/adaptive-strategy.mjs?v=8951e2c35a42';
+import { createComboTracker, comboClassOf } from './evolution/combo-telemetry.mjs?v=8951e2c35a42';
+import { createStrategyCapture } from './evolution/strategy-contracts.mjs?v=8951e2c35a42';
+import { HYBRIX_POLICY_IDS, chooseHybrixPolicy } from './hybrix/policy-adapter.js?v=8951e2c35a42';
+import { attributeAction, isNoAttributionAction, classifyVariantEntity } from './browser-analytics.js?v=8951e2c35a42';
+import { LAB_VERSION as _LAB_VERSION, ENGINE_VERSION as _ENGINE_VERSION, RULES_VERSION as _RULES_VERSION } from './version.js?v=8951e2c35a42';
 
-export { createAdaptiveController, resolveAdaptiveControllers, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=a90b812f827b';
+export { createAdaptiveController, resolveAdaptiveControllers, STRATEGIC_STATE_LABELS, ADAPTIVE_MODE_LABELS } from './evolution/adaptive-strategy.mjs?v=8951e2c35a42';
 
 const BASELINE_POLICY_IDS = ['random-legal','score-rush','control','tempo','value','score-rush-tactical','control-tactical','tempo-tactical','value-tactical','control-conversion-tactical'];
 export const POLICY_IDS = [...BASELINE_POLICY_IDS, ...HYBRIX_POLICY_IDS];
@@ -119,10 +121,12 @@ function buildRuleCompliance({decisions,events,state}){
   return{status:violationCount===0?'PASS':'FAIL',violationCount,...checks,authorizedFullTurnSkips,consumedFullTurnSkips,pendingFullTurnSkips};
 }
 
-export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,pairedLeg=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[],adaptiveConfigs=[],strategicTelemetryEnabled=false,strategicTrace=false,strategyIdentities=null,ruleOverrides=null}){
+export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,pairedLeg=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[],adaptiveConfigs=[],strategicTelemetryEnabled=false,strategicTrace=false,strategyIdentities=null,ruleOverrides=null,checkpointIds=null,revisionIds=null,subjectSnapshots=null,seedStreamVersion,seedCatalogVersion}){
   if(policyIds.length!==2||policyIds.some((id,i)=>!POLICY_IDS.includes(id) && !(id===WEIGHTED_POLICY_ID && validatePolicyState(policyStates[i]))))throw new Error('INVALID_POLICY_PAIR');
   const seats=seatOrder??['P1','P2'];const setup={profileId,playerIds:seats,enabledModules:[],eventApprovedModules:[],seed:(seed>>>0)||1,seatOrder:seats,...(ruleOverrides?{ruleOverrides}:{})};
   let state=initialState?structuredClone(initialState):createState(setup);const engine=new IntrilexEngine();
+  let commandDigest=commandStreamStart();
+  const captureCommands=items=>{for(const command of items)commandDigest=nextCommandDigest(commandDigest,command);if(replayCommands)replayCommands.push(...items);};
   const replayCommands=recordReplay?[]:null;const replayInitialState=recordReplay?structuredClone(state):null;
   const rngByPlayer=Object.fromEntries(seats.map((playerId,index)=>[playerId,new PolicyRng(uint32FromHash({seed:setup.seed,playerId,policyId:policyIds[index],stream:'POLICY_V4'}))]));
   // Adaptive Strategy layer: per-seat deterministic controllers over the
@@ -154,7 +158,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   for(let decisionIndex=0;decisionIndex<decisionLimit;decisionIndex+=1){
     const advanced=advance(state,orchestrationCommandLimit);state=advanced.state;commands+=advanced.executedCommands.length;capture(advanced.events);comboTracker.observe(advanced.events,state);
     strategy?.observe(seats.map(id=>deriveSecuredPoints(state,id)),decisionIndex);
-    if(replayCommands)replayCommands.push(...advanced.executedCommands);
+    captureCommands(advanced.executedCommands);
     if(advanced.status==='TERMINAL'){terminationReason=advanced.reasonCode==='CANONICAL_DRAW'?'CANONICAL_DRAW':advanced.reasonCode==='EXHAUSTED_RESOLUTION'?'EXHAUSTED_RESOLUTION':'NORMAL_VICTORY';break;}
     if(advanced.status!=='PLAYER_DECISION_REQUIRED'||!advanced.legalActionFrame){terminationReason='UNSUPPORTED_CONFIGURATION';errorCode=advanced.reasonCode??'UNKNOWN';break;}
     const actorId=advanced.decisionActorId,seat=seats.indexOf(actorId),engineActions=advanced.legalActionFrame.actions,policyActions=engineActions.map(a=>actionView(a,profileId)),vault=new Map(engineActions.map(action=>[action.actionId,action.command]));
@@ -171,7 +175,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
     const strategyDraft=fieldManual?.before({actorId,seat:seat+1,decisionOrdinal:decisionIndex,authorizedView,legalActions:policyActions,selectedActionId:selected.actionId,policyScores:(observation?.policyScores??[]).map(s=>({...s,decomposition:decomposePolicyScore(policyIds[seat],policyActions.find(a=>a.actionId===s.actionId),{actorId,authorizedView})})),replayAnchor:{commandIndex:replayCommands?.length??commands,stateHash:hashCanonical(state)}});
     const beforeStateHash=hashCanonical(state);
     const comboPreScores=comboClassOf(selected)?Object.fromEntries(seats.map(id=>[id,deriveSecuredPoints(state,id)])):null;const comboPreTurn=state.fullTurnSequence,comboPrePhase=state.phase;
-    const result=engine.execute(state,command);if(replayCommands)replayCommands.push(command);commands+=1;capture(result.events);if(!result.accepted){terminationReason='ENGINE_REJECTION';errorCode=result.error?.code??'UNKNOWN';break;}
+    const result=engine.execute(state,command);captureCommands([command]);commands+=1;capture(result.events);if(!result.accepted){terminationReason='ENGINE_REJECTION';errorCode=result.error?.code??'UNKNOWN';break;}
     // Canonical Caster decision transcript — recorded at the legality
     // boundary where actor, policy, selected action, and the replay
     // command anchor are known exactly. The replay also contains engine
@@ -239,7 +243,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   // hash and deterministic sample id are enumerable/canonical; the execution
   // occurrence is a lifecycle token — non-enumerable so it is readable for
   // this session but never serialized into evidence or hashed surfaces.
-  const identity={schemaVersion:'1.0.0',matchIdVersion:executableParts?2:1,deterministicSampleId:matchId,executableHash:executableParts?hashCanonical(executableParts):null,displayOrdinal:ordinal};
+  const identity={...sampleIdentity({seed:setup.seed,profileId,seatOrder:seats,policyIds,policyStates,adaptiveConfigs,checkpointIds,revisionIds,subjectSnapshots,seedStreamVersion,seedCatalogVersion,decisionLimit,orchestrationCommandLimit,ruleOverrides,initialState},LAB_IDENTITY),legacyMatchId:matchId,...outcomeIdentity(_matchResult,commandDigest),displayOrdinal:ordinal};
   Object.defineProperty(identity,'executionOccurrenceId',{value:executionInstanceToken,enumerable:false});
   _matchResult.identity=identity;
   if(recordReplay)_matchResult.replay={initialState:replayInitialState,commands:replayCommands};
@@ -300,7 +304,7 @@ export function buildCampaignCore(summaries,{profileId=DEFAULT_PROFILE_ID,policy
   return{...collector.finish({profileId,policyIds,matchCount,engineVersion}),summaries};
 }
 
-export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null,ordinalBase=0,strategicTrace=false,batchSize=0,onBatch=null},onProgress=()=>{}){
+export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','random-legal'],seedCatalogId='browser-v5',profileId=DEFAULT_PROFILE_ID,seedStrategy='ordinal-hash',fixedSeed=12345,ordinalStart=0,ordinalEnd=null,ordinalBase=0,strategicTrace=false,batchSize=0,onBatch=null,policyStates=[],adaptiveConfigs=[],checkpointIds=[],revisionIds=[],subjectSnapshots=[],ruleOverrides=null,decisionLimit=1800,orchestrationCommandLimit=16,seedStreamVersion,seedCatalogVersion},onProgress=()=>{}){
   const requestedMatchCount=validateMatchCount(matchCount);
   const count=requestedMatchCount;
   // ordinalBase shifts the absolute ordinal space so consecutive experiment
@@ -338,7 +342,8 @@ export function runBrowserCampaign({matchCount=100,policyIds=['random-legal','ra
     const legPolicyIds=seatSwapped?[policyIds[1],policyIds[0]]:[policyIds[0],policyIds[1]];
     const seed=seedStrategy==='fixed'?(Number(fixedSeed)>>>0)||1:uint32FromHash({seedCatalogId,ordinal,policyIds,profileId,engineVersion:ENGINE_VERSION});
     const pairedRunId=`PR-browser-${policyIds[0]}-${policyIds[1]}-block-${Math.floor(ordinal/2)}`;
-    const summary=runBrowserPolicyMatch({seed,policyIds:legPolicyIds,ordinal,profileId,seatOrder,seatSwapped,pairedRunId,pairedLeg:seatSwapped?'BA':'AB',strategicTelemetryEnabled:strategicTrace===true,strategicTrace:strategicTrace===true});
+    const ordered=values=>seatSwapped?[...values].reverse():values;
+    const summary=runBrowserPolicyMatch({seed,policyIds:legPolicyIds,policyStates:ordered(policyStates),adaptiveConfigs:ordered(adaptiveConfigs),checkpointIds:ordered(checkpointIds),revisionIds:ordered(revisionIds),subjectSnapshots:ordered(subjectSnapshots),ruleOverrides,decisionLimit,orchestrationCommandLimit,seedStreamVersion,seedCatalogVersion,ordinal,profileId,seatOrder,seatSwapped,pairedRunId,pairedLeg:seatSwapped?'BA':'AB',strategicTelemetryEnabled:strategicTrace===true,strategicTrace:strategicTrace===true});
     if(collector)collector.add(summary);
     summaries.push(summary);
     if(chunkSize&&summaries.length>=chunkSize){

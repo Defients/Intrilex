@@ -1,8 +1,8 @@
-import { canonicalClone } from "./canonical-json.js?v=a90b812f827b";
-import { markExileBound, miniTurnHardCap, processFoundationActionRestriction } from "./lifecycle.js?v=a90b812f827b";
-import { cardPointValue, parseIdentity } from "./ranks.js?v=a90b812f827b";
-import { resolveRuleNumber } from "./rule-parameters.js?v=a90b812f827b";
-import { deriveSecuredPoints, moveCard } from "./state.js?v=a90b812f827b";
+import { canonicalClone } from "./canonical-json.js?v=8951e2c35a42";
+import { markExileBound, miniTurnHardCap, processFoundationActionRestriction } from "./lifecycle.js?v=8951e2c35a42";
+import { cardPointValue, parseIdentity } from "./ranks.js?v=8951e2c35a42";
+import { resolveRuleNumber } from "./rule-parameters.js?v=8951e2c35a42";
+import { deriveSecuredPoints, moveCard } from "./state.js?v=8951e2c35a42";
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };
 }

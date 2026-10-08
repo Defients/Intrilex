@@ -12,7 +12,12 @@ import { identity, memoryStore, createGraveMaw, fixtureSeries, fixtureChallenge,
 const code = async fn => { try { await fn(); } catch (error) { return error.code ?? error.message; } return 'NO_ERROR'; };
 const cloneData = data => new Map([...data].map(([k, v]) => [k, new Map([...v].map(([kk, vv]) => [kk, structuredClone(vv)]))]));
 const dataDigest = data => hashCanonical([...data].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, [...v].sort(([a], [b]) => a.localeCompare(b))]));
-const alternateIdentity = () => { const runtimeHash = 'c'.repeat(64), { engineHash, policyImplementationHash, engineVersion, rulesVersion } = identity; return { ...identity, runtimeHash, fingerprint: hashCanonical({ engineHash, policyImplementationHash, runtimeHash, engineVersion, rulesVersion }) }; };
+const alternateIdentity = () => {
+  // A labeled historical v1 fixture has no v2 dependency attestation.
+  const { identityContract: _contract, dependencyManifest: _manifest, analysisHash: _analysis, analysisFingerprint: _analysisFingerprint, ...legacy } = identity;
+  const runtimeHash = 'c'.repeat(64), { engineHash, policyImplementationHash, engineVersion, rulesVersion } = legacy;
+  return { ...legacy, runtimeHash, fingerprint: hashCanonical({ engineHash, policyImplementationHash, runtimeHash, engineVersion, rulesVersion }) };
+};
 
 async function promotedProfile() {
   const data = new Map(), store = memoryStore({ data }), created = await createGraveMaw(store);

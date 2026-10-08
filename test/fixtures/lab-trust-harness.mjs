@@ -9,7 +9,7 @@ import { ExperimentStore } from '../../apps/lab-web/src/experiments/experiment-s
 import { hashCanonical } from '../../packages/shared/src/canonical.mjs';
 
 export const config = { profileId: 'core-advanced-authority', policyIds: ['control', 'tempo'], matchCount: 6, ordinalStart: 0, ordinalEnd: 6, ordinalBase: 0, seedStrategy: 'ordinal-hash' };
-export const summaries = (start, n) => Array.from({ length: n }, (_, i) => ({ matchId: `trust-${start + i}`, matchOrdinal: start + i, matchResultHash: hashCanonical({ ordinal: start + i }), terminationReason: 'NORMAL_VICTORY', winningSeat: 1, policyIds: config.policyIds }));
+export const summaries = (start, n) => Array.from({ length: n }, (_, i) => ({ identity: { schemaVersion: '2.0.0', executionFingerprint: LAB_IDENTITY.fingerprint, analysisFingerprint: LAB_IDENTITY.analysisFingerprint }, matchId: `trust-${start + i}`, matchOrdinal: start + i, matchResultHash: hashCanonical({ ordinal: start + i }), terminationReason: 'NORMAL_VICTORY', winningSeat: 1, policyIds: config.policyIds }));
 
 // Only UI/worker dependencies are stubbed. Domain, storage and controller
 // logic are real. Native IndexedDB proof is a separate browser command.
@@ -17,7 +17,7 @@ export async function controller(store) {
   const src = (await readFile(new URL('../../apps/lab-web/src/experiments/experiment-controller.mjs', import.meta.url), 'utf8'))
     .replace(/import\s[^;]*?from\s*'[^']*';/gs, '').replace(/^export /gm, '');
   const sandbox = { ...domain, ...portability, LAB_IDENTITY, ExperimentStore, hashCanonical, structuredClone, TextEncoder, setTimeout, queueMicrotask,
-    console: { warn() {} }, Worker: class { constructor() { throw Error('No worker in controlled regression'); } },
+    console: { warn() {}, error() {}, log() {} }, Worker: class { constructor() { throw Error('No worker in controlled regression'); } },
     state: { bootState: null, observatory: {}, aggregate: {}, evidenceBasis: null }, showToast() {}, updateRailContext() {}, rerender() {},
     RULES_VERSION: '4.3.1', ENGINE_VERSION: '4.2.6', LAB_VERSION: 'wave0-test' };
   const api = runInNewContext(src + '\n({initExperiments,beginExperimentRun,commitExperimentBatch,resumeExperimentRun,registerRunExecutor,storePersisted,finalizeExperimentRun,failExperimentRun,cancelExperimentRun,discardManifest,touchRunLease,getIncompleteRuns})', sandbox);

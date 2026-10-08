@@ -31,9 +31,9 @@
 // a complete tournament platform.
 // ═══════════════════════════════════════════════════════════════
 
-import { app, esc, state } from '../state.js?v=a90b812f827b';
-import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=a90b812f827b';
-import { renderTournamentBroadcast } from './tournament-broadcast.mjs?v=a90b812f827b';
+import { app, esc, state } from '../state.js?v=8951e2c35a42';
+import { isSupabaseConfigured } from '../play/network/supabase-client.js?v=8951e2c35a42';
+import { renderTournamentBroadcast } from './tournament-broadcast.mjs?v=8951e2c35a42';
 
 const _state = {
   loading: true,

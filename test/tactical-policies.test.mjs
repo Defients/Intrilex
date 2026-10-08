@@ -184,6 +184,8 @@ test('diagnostic policy modifiers filter legal actions without changing match st
 });
 test('local history admits older frozen implementations for inspection only and preserves their envelope',async()=>{
   const identity=await evolutionIdentity(),oldIdentity={...identity,policyImplementationHash:'b'.repeat(64),runtimeHash:'c'.repeat(64)};
+  // Historical v1 fixture has no v2 dependency attestation.
+  for(const key of ['identityContract','dependencyManifest','analysisHash','analysisFingerprint'])delete oldIdentity[key];
   const {engineHash,policyImplementationHash,runtimeHash,engineVersion,rulesVersion}=oldIdentity;
   oldIdentity.fingerprint=hashCanonical({engineHash,policyImplementationHash,runtimeHash,engineVersion,rulesVersion});
   const old=createLabRun({botA:'tempo',botB:'value',gameCount:2,seed:1337},oldIdentity);old.status='STOPPED';

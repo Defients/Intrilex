@@ -27,9 +27,8 @@ import {
   RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY, EXCLUSION_REASONS, RUN_INTEGRITY,
   MANIFEST_STATUS, MANIFEST_SCHEMA_VERSION, EXPERIMENT_LIMITS,
   createExperiment, createAnalysisSet, createRunRecord,
-  createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
-  commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
-  manifestRemainingSegments, manifestCommittedCoverage,
+  manifestTransition, manifestIsActive, manifestIsResumable,
+  manifestRemainingSegments, manifestCommittedCoverage, manifestRetainedOrdinals,
   batchSummariesHash, slimSummary,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
   contributingRuns, evidenceBasis, previewSelectionMetrics,
@@ -238,7 +237,7 @@ async function _refreshRuns() {
  * false so callers can disclose the retention limit.
  */
 async function _persistSet() {
-  try { await _store.putAnalysisSet(_set); return true; }
+  try { await _store.putAnalysisSet(_set); return _store.persisted === true; }
   catch (error) {
     console.warn('[experiments] analysis-set persist failed — selection kept for this session only:', error);
     return false;
@@ -264,7 +263,7 @@ async function _updateRun(updated) {
 async function _persistRunAndPayload(run, payload) {
   try {
     await _store.saveRun(run, payload);
-    return { run, persisted: true, payloadSessionOnly: false, metaFailed: false };
+    return { run, persisted: _store.persisted === true, payloadSessionOnly: _store.persisted !== true && payload != null, metaFailed: false };
   } catch (error) {
     // Payload too large or quota exhausted: the run record still persists but
     // the evidence lives only for this session — disclosed, never silent.
@@ -294,7 +293,7 @@ async function _persistRunAndPayload(run, payload) {
       _runs = [..._runs.filter(r => r.runId !== run.runId), memoryRun].sort(_byOrdinal);
       return { run: memoryRun, persisted: false, metaFailed: true, payloadSessionOnly: payload != null };
     }
-    return { run: sessionRun, persisted: true, payloadSessionOnly: payload != null, metaFailed: false };
+    return { run: sessionRun, persisted: _store.persisted === true, payloadSessionOnly: payload != null, metaFailed: false };
   }
 }
 
@@ -312,6 +311,7 @@ export async function recordCampaignRun({ config = {}, result = {}, summaries = 
     ordinal,
     status: RUN_STATUS.COMPLETED,
     config: {
+      ...config,
       presetId: config.presetId ?? null,
       profileId: config.profileId ?? aggregate?.profileId ?? null,
       policyIds: config.policyIds ?? aggregate?.policyIds ?? null,
@@ -324,9 +324,9 @@ export async function recordCampaignRun({ config = {}, result = {}, summaries = 
       experimentDesign: config.experimentDesign ?? aggregate?.experimentDesign ?? null,
     },
     provenance: {
-      rulesVersion: aggregate?.rulesVersion ?? RULES_VERSION,
+      rulesVersion: aggregate?.rulesVersion ?? null,
       engineVersion: aggregate?.engineVersion ?? result?.engineVersion ?? ENGINE_VERSION,
-      labVersion: aggregate?.labVersion ?? LAB_VERSION,
+      labVersion: aggregate?.labVersion ?? null,
       experimentHash: aggregate?.experimentHash ?? result?.canonicalResultHash ?? null,
       canonicalResultHash: aggregate?.canonicalResultHash ?? result?.canonicalResultHash ?? null,
       aggregateHash: aggregate?.aggregateHash ?? null,
@@ -350,7 +350,7 @@ export async function recordCampaignRun({ config = {}, result = {}, summaries = 
   });
   const { run: stored, persisted, payloadSessionOnly, metaFailed } = await _persistRunAndPayload(run, summaries.length ? { summaries, aggregate } : null);
   const { compatibility: compat, included, setPersisted } = await _registerStoredRun(stored, baseline);
-  return { run: stored, compatibility: compat, included, persisted, payloadSessionOnly, metaFailed, setPersisted };
+  return { run: stored, compatibility: compat, included, persistenceState: persisted && !payloadSessionOnly ? 'LOCALLY_COMMITTED' : 'SESSION_ONLY', persisted, payloadSessionOnly, metaFailed, setPersisted };
 }
 
 /** Shared post-persistence registration: baseline compatibility check,
@@ -506,12 +506,17 @@ export function registerRunExecutor(fn) { _runExecutor = fn; }
  * treated as ownership — the claimed manifest carries this controller's
  * lease and every subsequent mutation is fence-checked.
  */
+const executionFor = m => ({runId:m.runId,ownerId:m.owner?.ownerId,fencingToken:m.owner?.fencingToken});
+function assertExecution(manifest, execution) {
+  if(execution && (execution.runId!==manifest.runId || execution.ownerId!==manifest.owner?.ownerId || execution.fencingToken!==manifest.owner?.fencingToken))throw Object.assign(new Error('RUN_EXECUTION_STALE'),{code:'RUN_EXECUTION_STALE'});
+}
+
 export async function beginExperimentRun({ config = {}, segments = null, batchSize = 0 } = {}) {
   if (!_ready || !_experiment) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
   requirePersistentCampaign();
   const manifest = await _store.allocateRunManifest({ experimentId: _experiment.experimentId, config: { ...config, implementation: LAB_IDENTITY, seedStreamVersion: 'POLICY_V4', seedCatalogVersion: 'INTRILEX_LAB_SEED_CATALOG_V1', labVersion: LAB_VERSION }, segments, batchSize, owner: _newOwnerLease() });
   _manifests.set(manifest.runId, manifest);
-  return { runId: manifest.runId, manifest };
+  return { runId: manifest.runId, manifest, execution: executionFor(manifest) };
 }
 
 /**
@@ -521,8 +526,9 @@ export async function beginExperimentRun({ config = {}, segments = null, batchSi
  * treat that as a persistence failure (pause/fail the run, never continue
  * accumulating unsaved work).
  */
-export async function commitExperimentBatch(runId, { segmentIndex = 0, ordinalStart = null, ordinalEnd = null, summaries = [] } = {}) {
+export async function commitExperimentBatch(runId, { segmentIndex = 0, ordinalStart = null, ordinalEnd = null, summaries = [], execution = null } = {}) {
   const manifest = await _getManifest(runId);
+  if(manifest)assertExecution(manifest,execution);
   if (!manifest) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING' });
   if (!manifestIsActive(manifest)) {
     throw Object.assign(new Error('RUN_MANIFEST_NOT_ACTIVE'), { code: 'RUN_MANIFEST_NOT_ACTIVE' });
@@ -539,39 +545,31 @@ export async function commitExperimentBatch(runId, { segmentIndex = 0, ordinalSt
     committedAt: new Date().toISOString(),
     summaries,
   };
-  // Idempotent retained-coverage commit (R03): identical retries never
-  // double-count; conflicting digests for a retained sample identity are a
-  // durable integrity failure, not a silent overwrite.
-  const { manifest: planned, receipt } = planManifestBatchCommit(manifest, {
-    batchIndex, segmentIndex,
-    ordinalStart: batch.ordinalStart, ordinalEnd: batch.ordinalEnd,
-    matchCount: batch.matchCount,
-    summariesHash: batch.summariesHash,
-    matchResultHashes: summaries.map(s => ({ o: s.matchOrdinal, h: s.matchResultHash })),
-    committedAt: batch.committedAt,
-  });
-  if (!receipt.accepted) {
-    try { await _store.putManifestFenced(planned); } catch { /* the conflict mark is durable when the fence still holds */ }
-    _manifests.set(runId, planned);
-    throw Object.assign(new Error('RUN_BATCH_SAMPLE_CONFLICT'), { code: 'RUN_BATCH_SAMPLE_CONFLICT', conflicts: receipt.conflicts });
+  // Strict admission runs INSIDE the store transaction against the stored
+  // manifest (R03) — out-of-schedule ordinals, intra-batch duplicates,
+  // range/count mismatches and partial overlaps are rejected with a durable
+  // integrity mark; an identical whole-batch retry is an idempotent no-op.
+  const carrier = { ...manifest, owner: _renewedLease(manifest.owner) };
+  const committed = await _store.commitRunBatch({ manifest: carrier, batch });
+  _manifests.set(runId, committed.manifest ?? manifest);
+  if (committed.receipt && committed.accepted === false) {
+    const code = committed.receipt.code ?? 'RUN_BATCH_REJECTED';
+    throw Object.assign(new Error(code), { code, receipt: committed.receipt, conflicts: committed.receipt.conflicts });
   }
-  if (receipt.duplicate) {
-    return { runId, batchIndex, committedMatches: manifest.committedMatches ?? 0, requestedMatches: manifest.requestedMatches, duplicate: true };
+  if (committed.duplicate) {
+    return { runId, batchIndex, committedMatches: committed.manifest?.committedMatches ?? manifest.committedMatches ?? 0, requestedMatches: manifest.requestedMatches, duplicate: true };
   }
-  const next = { ...planned, owner: _renewedLease(planned.owner) };
-  next.headline = foldSummariesIntoHeadline(manifest.headline ? { ...manifest.headline, seatWins: { ...manifest.headline.seatWins } } : createManifestHeadline(), summaries);
-  const committed = await _store.commitRunBatch({ manifest: next, batch });
-  _manifests.set(runId, committed.manifest ?? next);
-  return { runId, batchIndex, committedMatches: next.committedMatches, requestedMatches: next.requestedMatches, receipt };
+  return { runId, batchIndex, committedMatches: committed.manifest?.committedMatches ?? manifest.committedMatches, requestedMatches: manifest.requestedMatches, receipt: committed.receipt };
 }
 
 /** Owner heartbeat — extend the lease on a manifest this controller holds.
  * No-op for foreign or inactive manifests; stale owners surface via the
  * store's fencing rejection. */
-export async function touchRunLease(runId) {
+export async function touchRunLease(runId, execution = null) {
   const manifest = _manifests.get(runId);
+  if(manifest)assertExecution(manifest,execution);
   if (!manifest?.owner || manifest.owner.ownerId !== _ownerId || !manifestIsActive(manifest)) return null;
-  const next = await _store.renewManifestLease(runId, { ownerId: _ownerId, fencingToken: manifest.owner.fencingToken, leaseMs: OWNER_LEASE_MS });
+  const next = await _store.renewManifestLease(runId, { ownerId: _ownerId, fencingToken: manifest.owner.fencingToken, storageRevision: manifest.storageRevision ?? 0, leaseMs: OWNER_LEASE_MS });
   _manifests.set(runId, next);
   return next;
 }
@@ -612,15 +610,36 @@ async function _aggregateCommitted(runId, descriptors, semantic) {
   }
 }
 
+/** Load and hash-verify every descriptor's batch row, returning the
+ * per-ordinal outcome digests in stored order. Throws RUN_PAYLOAD_MISSING /
+ * RUN_PAYLOAD_HASH_MISMATCH on any gap — the canonical seal hash is built
+ * only from verified evidence rows, never from manifest bookkeeping. */
+async function _collectVerifiedDigests(runId, descriptors) {
+  const hashEntries = [];
+  for (const d of descriptors) {
+    const batch = await _store.getRunBatch(runId, d.batchIndex);
+    if (!batch) throw Object.assign(new Error('RUN_PAYLOAD_MISSING'), { code: 'RUN_PAYLOAD_MISSING' });
+    if (batchSummariesHash(batch.summaries) !== d.summariesHash) {
+      throw Object.assign(new Error('RUN_PAYLOAD_HASH_MISMATCH'), { code: 'RUN_PAYLOAD_HASH_MISMATCH' });
+    }
+    for (const s of batch.summaries ?? []) {
+      hashEntries.push({ o: s?.matchOrdinal ?? s?.ordinal, h: s?.matchResultHash ?? s?.identity?.outcomeDigest ?? null });
+    }
+  }
+  return hashEntries.sort((a, b) => (a.o ?? 0) - (b.o ?? 0));
+}
+
 /**
  * Seal a manifest into an immutable Run. Committed batches stay in the
  * runBatches store; the payload row holds the descriptor chain + aggregate.
  * Finalize uses only committed work — sealing an interrupted manifest
  * produces honest partial evidence (requested vs committed is explicit).
  */
-export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
+export async function finalizeExperimentRun(runId, { durationMs = null, execution = null, requireComplete = false } = {}) {
   if (!_ready) return null;
-  let manifest = await _getManifest(runId);
+  let manifest = await _store.readRunRecovery(runId);
+  _manifests.set(runId,manifest);
+  if(manifest)assertExecution(manifest,execution);
   if (!manifest) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING' });
   if (manifest.sealedRunId) throw Object.assign(new Error('RUN_ALREADY_SEALED'), { code: 'RUN_ALREADY_SEALED' });
   // Sealing is a mutation — only the fenced owner may finalize (R02). An
@@ -640,10 +659,29 @@ export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
     await _persistManifest(failed).catch(() => {});
     throw Object.assign(new Error('RUN_NO_COMMITTED_EVIDENCE'), { code: 'RUN_NO_COMMITTED_EVIDENCE' });
   }
-  const committed = manifest.committedMatches ?? descriptors.reduce((n, d) => n + (d.matchCount ?? 0), 0);
+  // Exact-coverage seal (R03): the retained ordinal SET must be a subset of
+  // the reserved schedule — an extra/foreign ordinal is an integrity
+  // failure, not a completed run. `committedMatches == requestedMatches`
+  // alone proves nothing: {0,1,999} is three entries but not [0,3).
+  const retained = manifestRetainedOrdinals(manifest);
+  const scheduled = new Set();
+  for (const s of manifest.segments ?? []) {
+    for (let o = s.ordinalStart; o < s.ordinalEnd; o += 1) scheduled.add(o);
+  }
+  const extraOrdinals = [...retained.keys()].filter(o => !scheduled.has(o));
+  if (extraOrdinals.length) {
+    const marked = { ...manifest, integrityFailures: [...(manifest.integrityFailures ?? []), { code: 'RUN_COVERAGE_MISMATCH', reason: 'retained ordinals outside the reserved schedule', extraOrdinals: extraOrdinals.slice(0, 50), at: new Date().toISOString() }].slice(-50) };
+    try { await _store.putManifestFenced(marked); _manifests.set(runId, marked); } catch { /* the mark persists when the fence still holds */ }
+    throw Object.assign(new Error('RUN_COVERAGE_MISMATCH'), { code: 'RUN_COVERAGE_MISMATCH', extraOrdinals });
+  }
+  const committed = retained.size;
   const requested = manifest.requestedMatches ?? committed;
   const partial = committed < requested;
-  const hashEntries = descriptors.flatMap(d => d.matchResultHashes ?? []).sort((a, b) => (a.o ?? 0) - (b.o ?? 0));
+  if(requireComplete && partial)throw Object.assign(new Error('RUN_REQUESTED_EXECUTION_INCOMPLETE'),{code:'RUN_REQUESTED_EXECUTION_INCOMPLETE'});
+  // canonicalResultHash is rebuilt from VERIFIED batch rows — compact
+  // descriptors carry ranges, not per-match digests, so the seal hash reads
+  // the evidence itself.
+  const hashEntries = await _collectVerifiedDigests(runId, descriptors);
   const canonicalResultHash = hashCanonical(hashEntries.map(x => x.h));
   const semantic = {
     experimentHash: canonicalResultHash,
@@ -712,8 +750,9 @@ export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
 /** Mark a manifest run failed — committed evidence is preserved. Ownership
  * is released so the run remains resumable by another controller; a stale
  * owner's transition is rejected by the store fence and reported as a no-op. */
-export async function failExperimentRun(runId, error = null) {
+export async function failExperimentRun(runId, error = null, execution = null) {
   const manifest = await _getManifest(runId);
+  if(manifest)assertExecution(manifest,execution);
   if (!manifest) return null;
   if (_manifestForeignHeld(manifest)) return null; // another live owner decides
   const next = {
@@ -733,8 +772,9 @@ export async function failExperimentRun(runId, error = null) {
 
 /** Cancel a manifest run — committed evidence is preserved and resumable.
  * Ownership is released; stale-owner cancels are fence-rejected. */
-export async function cancelExperimentRun(runId) {
+export async function cancelExperimentRun(runId, execution = null) {
   const manifest = await _getManifest(runId);
+  if(manifest)assertExecution(manifest,execution);
   if (!manifest) return null;
   if (_manifestForeignHeld(manifest)) return null; // another live owner decides
   const next = {
@@ -780,10 +820,12 @@ export function getIncompleteRuns() {
  */
 export async function resumeExperimentRun(manifestId) {
   requirePersistentCampaign();
-  const manifest = await _getManifest(manifestId);
+  const manifest = await _store.readRunRecovery(manifestId);
+  _manifests.set(manifestId,manifest);
   if (!manifest) throw new Error('RUN_MANIFEST_MISSING');
   if (manifest.sealedRunId) throw new Error('RUN_ALREADY_SEALED');
   if (manifest.config?.implementation?.fingerprint !== LAB_IDENTITY.fingerprint || manifest.config?.seedStreamVersion !== 'POLICY_V4' || manifest.config?.seedCatalogVersion !== 'INTRILEX_LAB_SEED_CATALOG_V1') throw Object.assign(new Error('RUN_EXECUTION_IDENTITY_MISMATCH: inspect/export or start a new run; unknown historical identity cannot resume.'), { code: 'RUN_EXECUTION_IDENTITY_MISMATCH' });
+  if(manifest.config.implementation.analysisFingerprint!==LAB_IDENTITY.analysisFingerprint)throw Object.assign(new Error('RUN_PROTOCOL_IDENTITY_MISMATCH: inspect/export or start a new run; the original analysis protocol is unavailable.'),{code:'RUN_PROTOCOL_IDENTITY_MISMATCH'});
   if (manifestRemainingSegments(manifest).length === 0) {
     // Every ordinal committed but the seal never landed — no resimulation
     // needed, the caller just finalizes.
@@ -798,6 +840,7 @@ export async function resumeExperimentRun(manifestId) {
   const base = manifest.config?.ordinalStart ?? 0;
   const plan = {
     runId: manifestId,
+    execution: executionFor(acquired),
     config: manifest.config ?? {},
     batchSize: manifest.batchSize ?? 0,
     requestedMatches: manifest.requestedMatches ?? 0,
@@ -812,7 +855,7 @@ export async function resumeExperimentRun(manifestId) {
   };
   if (_runExecutor) {
     Promise.resolve(_runExecutor(plan)).catch(error => {
-      failExperimentRun(manifestId, error?.message ?? error).catch(() => {});
+      failExperimentRun(manifestId, error?.message ?? error,plan.execution).catch(() => {});
     });
   }
   return plan;
@@ -1513,7 +1556,7 @@ async function _admitRunArtifact({ run, payload, batches }) {
     batchIndex: d.batchIndex, segmentIndex: d.segmentIndex ?? 0,
     ordinalStart: d.ordinalStart, ordinalEnd: d.ordinalEnd,
     matchCount: d.matchCount, summariesHash: d.summariesHash,
-    matchResultHashes: [], committedAt: d.committedAt ?? run.createdAt,
+    committedAt: d.committedAt ?? run.createdAt,
   }));
   const sealedManifest = {
     manifestId: run.runId, runId: run.runId, experimentId: run.experimentId,

@@ -289,21 +289,30 @@ export async function runPlannedMeasurement({ store, manifestId, executeSeries, 
 }
 
 // ── Promotion challenge ────────────────────────────────────────────────────
-export const attemptKey = ({ challengerCheckpointId, incumbentCheckpointId, objectiveInstanceId, eraId }) => digest({ challengerCheckpointId, incumbentCheckpointId, objectiveInstanceId, eraId });
+export const attemptKey = ({ challengerCheckpointId, incumbentCheckpointId, objectiveInstanceId, eraId, policyDigest = null }) => digest({ challengerCheckpointId, incumbentCheckpointId, objectiveInstanceId, eraId, policyDigest });
 export async function prepareChallenge({ store, agentProfileId, nominationId, commandId }) {
-  const view = await store.profileView(agentProfileId), head = view.head;
-  const nomination = view.artifacts.find(a => a.id === nominationId && a.kind === 'CHALLENGER_NOMINATION');
+  return store.reserveChallenge({ commandId, agentProfileId, nominationId, build: view => {
+  const head = view.head;
+  const nomination = view.artifacts.find(a => a.id === nominationId && a.scope === agentProfileId && a.kind === 'CHALLENGER_NOMINATION');
   if (!nomination) fail('ARTIFACT_NOT_FOUND', nominationId);
   if (nomination.body.checkpointId === head.championCheckpointId) fail('CHALLENGER_IS_INCUMBENT');
   const revision = view.artifacts.find(a => a.id === head.activeRevisionId), objective = view.artifacts.find(a => a.id === revision.body.objectiveInstanceId);
   const policy = view.artifacts.find(a => a.id === head.promotionPolicyId), era = resolveEra({ identity: store.identity, objective });
   validatePolicyForObjective(policy.body, objective.body);
   if (era.id !== head.requiredEvaluationEraId) fail('REQUIRED_ERA_NOT_CURRENT');
-  const challenger = view.checkpoints.find(cp => cp.checkpointId === nomination.body.checkpointId) ?? await store.getCheckpoint(nomination.body.checkpointId);
+  const challenger = view.checkpoints.find(cp => cp.checkpointId === nomination.body.checkpointId);
   for (const cp of [challenger, view.checkpoints.find(c => c.checkpointId === head.championCheckpointId)]) { const v = canExecuteCheckpoint(cp, store.identity); if (!v.ok) fail('SUBJECT_NOT_EXECUTABLE', v.reasons); }
-  const key = attemptKey({ challengerCheckpointId: challenger.checkpointId, incumbentCheckpointId: head.championCheckpointId, objectiveInstanceId: objective.id, eraId: era.id });
-  const prior = view.artifacts.filter(a => a.kind === 'CHALLENGE_MANIFEST' && a.body.attempt.key === key).map(a => a.id).sort();
-  const exposures = await collectExposures(store, agentProfileId);
+  const key = attemptKey({ challengerCheckpointId: challenger.checkpointId, incumbentCheckpointId: head.championCheckpointId, objectiveInstanceId: objective.id, eraId: era.id, policyDigest: policy.digest });
+  const prior = view.artifacts.filter(a => a.scope === agentProfileId && a.kind === 'CHALLENGE_MANIFEST' && a.body.attempt.key === key).map(a => a.id).sort();
+  const scopes = [], seeds = new Set(), queue = [agentProfileId];
+  while (queue.length) {
+    const scope = queue.pop(); if (scopes.includes(scope)) continue; scopes.push(scope);
+    for (const a of view.artifacts.filter(a => a.scope === scope)) {
+      if (a.kind === 'EVIDENCE_PACK' || a.kind === 'EXPOSURE_RECORD') for (const seed of a.body.seeds ?? []) seeds.add(seed);
+      if (a.kind === 'EXPOSURE_RECORD' && a.body.kind === 'ANCESTRY_LINK') queue.push(a.body.ancestorAgentProfileId);
+    }
+  }
+  const exposures = { scopes, seeds };
   const pack = createPack({ agentProfileId, purpose: 'PROMOTION_CHALLENGE', rulesProfileId: objective.body.rulesProfileId, pairCount: policy.body.budget.blocks, derivationKey: { commandId, key, kind: 'CHALLENGE' }, excluded: exposures.seeds,
     layout: 'PER_OPPONENT', opponentCount: era.body.referenceOpponents.length });
   const imported = view.profile.origin !== 'LOCAL' || exposures.scopes.length > 1;
@@ -315,10 +324,11 @@ export async function prepareChallenge({ store, agentProfileId, nominationId, co
     plannedGames: policy.body.budget.blocks * era.body.referenceOpponents.length * 2 * 2, measurementManifestIds: { challenger: manifests.challenger.id, incumbent: manifests.incumbent.id },
     outcomeCoding: era.body.outcome, aggregationWeights: objective.body.aggregation.weights, practicalThreshold: policy.body.practicalThreshold, regressionFloor: policy.body.regressionFloor, tailGuard: policy.body.tailGuard,
     identityConstraints: revision.body.identityConstraints, estimator: policy.body.estimator, rules: { reliability: policy.body.reliability, retries: policy.body.retries, stopping: policy.body.stopping, precedence: policy.body.precedence, tie: 'NO_APPROVAL_ON_TIE' },
+    reservation: { contract: 'intrilex-challenge-reservation@1', commandId, consumedOn: 'RESERVATION_COMMIT' },
     attempt: { key, number: prior.length + 1, automaticEligible: prior.length === 0, priorAttemptIds: prior },
     exposureCheck: { disjointFromKnown: true, knownSeedCount: exposures.seeds.size, skippedForDisjointness: pack.body.sampling.skippedForDisjointness, ancestryScopes: exposures.scopes, unknownExternalExposure: imported ? 'NOT_RULED_OUT' : 'NONE_KNOWN' } }, { scope: agentProfileId });
-  await store.storeArtifacts({ artifacts: [era, pack, manifests.challenger, manifests.incumbent, manifest, exposureRecord(agentProfileId, pack, 'PROMOTION_DECISION')] });
-  return manifest;
+  return { manifest, artifacts: [era, pack, manifests.challenger, manifests.incumbent, manifest, exposureRecord(agentProfileId, pack, 'PROMOTION_DECISION')] };
+  } });
 }
 export async function runChallenge({ store, challengeId, executeSeries, workerCount = 1, signal, onProgress = () => {}, retainTraces = false }) {
   const manifest = await store.getArtifact(challengeId);

@@ -25,7 +25,7 @@ import {
   createExperiment, createAnalysisSet, createRunRecord,
   createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
   commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
-  manifestRemainingSegments, manifestCommittedCoverage,
+  manifestRemainingSegments, manifestCommittedCoverage, manifestRetainedOrdinals,
   runIdFor, batchSummariesHash, slimSummary,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
   contributingRuns, evidenceBasis, previewSelectionMetrics,
@@ -96,6 +96,7 @@ function createFakeIndexedDB() {
 }
 
 const fakeSummary = (ordinal, { winningSeat = 1, terminationReason = 'NORMAL_VICTORY', deep = false } = {}) => ({
+  identity: { schemaVersion: '2.0.0', executionFingerprint: LAB_IDENTITY.fingerprint, analysisFingerprint: LAB_IDENTITY.analysisFingerprint },
   matchId: `T-${ordinal}`, matchOrdinal: ordinal, ordinal, terminationReason,
   policyIds: ['score-rush', 'control'], seatOrder: ['P1', 'P2'],
   winner: winningSeat === 1 ? 'P1' : winningSeat === 2 ? 'P2' : null,
@@ -136,7 +137,7 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     createExperiment, createAnalysisSet, createRunRecord,
     createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
     commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
-    manifestRemainingSegments, manifestCommittedCoverage,
+    manifestRemainingSegments, manifestCommittedCoverage, manifestRetainedOrdinals,
     runIdFor, batchSummariesHash, slimSummary,
     nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
     contributingRuns, evidenceBasis, previewSelectionMetrics,
@@ -160,14 +161,18 @@ const initApi = async (idb, opts = {}) => {
   return { api, state, toasts, store };
 };
 
-/** Seal a 100-match batched run and return its ids. */
+/** Seal a 100-match batched run and return its ids. The committed range is
+ * the manifest's AUTHORITATIVE allocation — a stale requested base is
+ * rebased by the store, so commits follow manifest.segments, not the hint. */
 const sealRun = async (api, { ordinals = [0, 100], batchSize = 50, summariesOf = (o, n) => fakeSummaries(o, n) } = {}) => {
   const segments = [{ index: 0, ordinalStart: ordinals[0], ordinalEnd: ordinals[1] }];
   const config = { ...RUN_CFG, matchCount: ordinals[1] - ordinals[0], ordinalStart: ordinals[0], ordinalEnd: ordinals[1] };
-  const { runId } = await api.beginExperimentRun({ config, segments, batchSize });
-  for (let o = ordinals[0]; o < ordinals[1]; o += batchSize) {
-    const n = Math.min(batchSize, ordinals[1] - o);
-    await api.commitExperimentBatch(runId, { segmentIndex: 0, ordinalStart: o, ordinalEnd: o + n, summaries: summariesOf(o, n) });
+  const { runId, manifest } = await api.beginExperimentRun({ config, segments, batchSize });
+  for (const seg of manifest.segments) {
+    for (let o = seg.ordinalStart; o < seg.ordinalEnd; o += batchSize) {
+      const n = Math.min(batchSize, seg.ordinalEnd - o);
+      await api.commitExperimentBatch(runId, { segmentIndex: seg.index, ordinalStart: o, ordinalEnd: o + n, summaries: summariesOf(o, n) });
+    }
   }
   const rec = await api.finalizeExperimentRun(runId);
   return { runId, run: rec.run };

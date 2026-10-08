@@ -1,3 +1,4 @@
+import { acknowledgedSave, persistenceLabel } from './persistence-state.mjs';
 import { esc } from '../state.js';
 import { LAB_IDENTITY } from './identity.mjs';
 import { createLabRun, CLEAN_REASONS } from './evolution-domain.mjs';
@@ -8,7 +9,7 @@ import { EvolutionStore } from './evolution-store.mjs';
 import { collectExperimentEvidence } from '../experiments/experiment-controller.mjs';
 
 const store=new EvolutionStore(LAB_IDENTITY);
-const view={project:null,history:[],controller:null,error:'',progress:null,comparison:null,selectedA:null,selectedB:null,readConfig:null,serial:0,started:0,attempted:0,failed:0,archive:null};
+const view={project:null,history:[],controller:null,error:'',progress:null,comparison:null,selectedA:null,selectedB:null,readConfig:null,serial:0,started:0,attempted:0,failed:0,archive:null,persistenceState:'SESSION_ONLY',saveRevision:0};
 const busy=()=>!!view.controller;
 export function researchHtml(){return '<section id="evo-research" class="evo-section" data-testid="evo-research"></section>';}
 export function mountResearchPanel(readConfig,hooks={}){view.readConfig=readConfig;view.ingestRun=hooks.ingestRun??view.ingestRun??null;render();store.listResearch().then(history=>{view.history=history;render();}).catch(error=>{view.error=`Research storage: ${error.message}`;render();});}
@@ -31,7 +32,7 @@ function render(){
     <label>Hypothesis<input data-evo-draft-field id="evo-experiment-hypothesis" value="${field('evo-experiment-hypothesis',exp?.hypothesis??'')}" ${disabled}></label>
     <label>New held-out pairs<input data-evo-draft-field id="evo-pack-pairs" type="number" min="1" max="5000" value="${field('evo-pack-pairs',p?.packs.find(x=>x.purpose==='EVALUATION')?.seeds.length??2)}" ${disabled}></label>
     <label>Clone series seed (blank preserves)<input data-evo-draft-field id="evo-clone-seed" type="number" min="0" max="4294967295" placeholder="Preserve parent" value="${field('evo-clone-seed','')}" ${disabled}></label><button id="evo-create-experiment" class="secondary-button" ${disabled}>Create experiment</button><button id="evo-clone-experiment" class="secondary-button" ${!p||locked?'disabled':''}>Clone experiment</button></div><p>Rules profile, game seed and worker count come from Arena configuration. Workers are operational; frozen seed pools change only through new experiment creation.</p></section>
-    ${p?`<section class="evo-workbench"><header><h4>${esc(exp.name)} · ${esc(exp.type)}</h4><span id="evo-research-state" role="status">${esc(exp.status)}</span></header><code class="evo-hash">${exp.scientificId}</code>
+    ${p?`<section class="evo-workbench"><header><h4>${esc(exp.name)} · ${esc(exp.type)}</h4><span id="evo-research-state" role="status">${esc(exp.status)} · ${esc(persistenceLabel(view.persistenceState))}</span></header><code class="evo-hash">${exp.scientificId}</code>
     <details><summary>Committed scientific configuration · read only</summary><pre>${esc(JSON.stringify({scientific:exp.scientific,packs:p.packs.map(pack=>({packId:pack.packId,purpose:pack.purpose,seeds:pack.seeds,provenance:pack.provenance})),operational:exp.operational},null,2))}</pre></details>
     <details><summary>Changes from parent · ${exp.changes.length}</summary><pre>${esc(JSON.stringify({parentExperimentId:exp.parentExperimentId,changes:exp.changes},null,2))}</pre></details>
     <div class="toolbar"><label>Candidate / left checkpoint<select id="evo-checkpoint-left">${opts(view.selectedA)}</select></label><label>Right checkpoint<select id="evo-checkpoint-right">${opts(view.selectedB)}</select></label>
@@ -60,8 +61,14 @@ function campaignExperimentsHtml(){
   return `<div id="evo-research-campaigns" data-testid="evo-research-campaigns"><h4>Campaign experiments — experiment evidence store</h4><div class="evo-replay-row"><span><b>${esc(ev.experimentId??'Experiment')}</b> · ${ev.totalRuns} run${ev.totalRuns===1?'':'s'} · ${ev.includedRunCount} included · ${esc(String(ev.includedGames??0))} games in analysis · ${persisted} persisted record${persisted===1?'':'s'}${ev.incompleteRunCount?` · ${ev.incompleteRunCount} incomplete/resumable`:''}${ev.corruptCount+ev.quarantinedCount+ev.payloadUnavailableCount?` · <span class="danger">${ev.corruptCount+ev.quarantinedCount+ev.payloadUnavailableCount} integrity-blocked</span>`:''}</span></div></div>`;
 }
 function progressText(){const x=view.progress,cp=view.project?.checkpoints.find(c=>c.checkpointId===x?.checkpointId),gps=view.started ? view.attempted/((performance.now()-view.started)/1000) : 0;return x?`${x.mode} · generation ${cp?.generation??'—'} · ${x.opponent??''} · ${x.completed??0}/${x.total??0} suite games · ${view.attempted} attempts / ${view.failed} failed in this execution · ${gps.toFixed(2)} games/sec · ${x.packId?.slice(0,18)??''}`:'No research execution active.';}
-function pickProject(p){view.project=p;view.archive=null;view.progress=null;view.started=0;view.attempted=0;view.failed=0;view.selectedA=p.checkpoints[0]?.checkpointId;view.selectedB=p.checkpoints[1]?.checkpointId;view.comparison=null;view.error='';render();}
-async function persist(){if(!view.project)return;await store.saveResearch(view.project);view.history=await store.listResearch();render();}
+function pickProject(p,{savedLocally=false}={}){++view.saveRevision;view.persistenceState=savedLocally?'LOCALLY_COMMITTED':'SESSION_ONLY';view.project=p;view.archive=null;view.progress=null;view.started=0;view.attempted=0;view.failed=0;view.selectedA=p.checkpoints[0]?.checkpointId;view.selectedB=p.checkpoints[1]?.checkpointId;view.comparison=null;view.error='';render();}
+async function persist(){
+  if(!view.project)return;
+  const owner=view.project,snapshot=structuredClone(owner),revision=++view.saveRevision;
+  const updateState=state=>{if(view.project===owner && view.saveRevision===revision){view.persistenceState=state;render();}};
+  await acknowledgedSave(()=>store.saveResearch(snapshot),updateState);
+  view.history=await store.listResearch();render();
+}
 function bind(){
   document.getElementById('evo-archive-research')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>40*1024*1024)throw new Error('IMPORT_TOO_LARGE');view.archive=inspectResearchArtifact(await file.text());view.error='';render();}catch(error){view.error=error.message;render();}});
   document.getElementById('evo-export-research-archive')?.addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(view.archive.artifact)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='evolution-research-archive.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
@@ -86,7 +93,7 @@ function bind(){
   click('evo-research-stop',()=>view.controller?.abort());click('evo-save-research',persist);click('evo-save-conclusions',async()=>{view.project.experiment.conclusions=document.getElementById('evo-experiment-conclusions').value;await persist();});
   click('evo-export-research',()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(researchEnvelope(view.project))],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`${view.project.experiment.experimentId}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
   document.getElementById('evo-import-research')?.addEventListener('change',async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>40*1024*1024)throw new Error('IMPORT_TOO_LARGE');pickProject(parseResearchImport(await file.text(),LAB_IDENTITY));await persist();}catch(error){view.error=error.message;render();}});
-  document.getElementById('evo-research-history')?.addEventListener('click',async e=>{try{const b=e.target.closest('[data-load-experiment]');if(b&&!busy())pickProject(await store.loadResearch(b.dataset.loadExperiment));const archive=e.target.closest('[data-inspect-experiment]');if(archive&&!busy()){view.archive=inspectResearchArtifact(await store.read('research',archive.dataset.inspectExperiment));render();}}catch(error){view.error=error.message;render();}});
+  document.getElementById('evo-research-history')?.addEventListener('click',async e=>{try{const b=e.target.closest('[data-load-experiment]');if(b&&!busy())pickProject(await store.loadResearch(b.dataset.loadExperiment),{savedLocally:true});const archive=e.target.closest('[data-inspect-experiment]');if(archive&&!busy()){view.archive=inspectResearchArtifact(await store.read('research',archive.dataset.inspectExperiment));render();}}catch(error){view.error=error.message;render();}});
 }
 function progress(x){view.progress=x;if(x.record){view.attempted++;if(!CLEAN_REASONS.includes(x.record.terminationReason))view.failed++;}const value=progressText();for(const id of ['evo-research-progress','evo-training-live']){const el=document.getElementById(id);if(el)el.textContent=value;}notify('progress');}
 async function execute(fn){if(busy()||!view.project||view.archive)return;const owner=view.project,controller=new AbortController(),serial=++view.serial;view.controller=controller;view.progress=null;view.started=performance.now();view.attempted=0;view.failed=0;owner.experiment.status='RUNNING';view.error='';render();try{owner.experiment.status=await fn(controller.signal,owner);}catch(error){owner.experiment.status='ERROR';owner.faults.push({message:String(error.stack??error).slice(0,2000),experimentId:owner.experiment.experimentId});view.error=error.message;}finally{if(view.serial===serial){view.controller=null;await persist().catch(error=>{view.error=`Save failed: ${error.message}. Export research before leaving.`;});render();}}}

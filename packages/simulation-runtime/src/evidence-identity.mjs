@@ -25,3 +25,12 @@ export function sampleIdentity(config, implementation) {
     analysisFingerprint: implementation.analysisFingerprint, sampleInputs: inputs };
 }
 
+
+export const commandStreamStart = () => hashCanonical({ contract: 'intrilex-command-stream@1' });
+export const nextCommandDigest = (previous, command) => hashCanonical({ previous, command });
+export function outcomeIdentity(summary, commandDigest) {
+  const outcome = { contract: 'intrilex-outcome@1', commandDigest, profileId: summary.profileId,
+    terminationReason: summary.terminationReason, winner: summary.winner,
+    finalStateHash: summary.finalStateHash, finalScores: summary.finalScores };
+  return { outcomeContract: outcome.contract, commandDigest, outcomeDigest: hashCanonical(outcome) };
+}

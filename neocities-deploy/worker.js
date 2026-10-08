@@ -1,7 +1,7 @@
-import { RULES_VERSION } from './version.js?v=a90b812f827b';
-const engineModule = import('./engine/browser-entry.js?v=a90b812f827b');
-const autonomyModule = import('./autonomy-runtime.js?v=a90b812f827b');
-const analyticsModule = import('./browser-analytics.js?v=a90b812f827b');
+import { RULES_VERSION } from './version.js?v=8951e2c35a42';
+const engineModule = import('./engine/browser-entry.js?v=8951e2c35a42');
+const autonomyModule = import('./autonomy-runtime.js?v=8951e2c35a42');
+const analyticsModule = import('./browser-analytics.js?v=8951e2c35a42');
 let strategyStudyAbort=null;
 // Streaming aggregation accumulator — the main thread posts
 // run-autonomy-aggregate-begin, any number of -chunk messages, then -finish.
@@ -35,13 +35,13 @@ self.onmessage = async (event) => {
     const token=event.data.token??event.data.plan.artifactId;
     strategyStudyAbort=new AbortController();
     try {
-      const auto=await autonomyModule,{IntrilexEngine}=await engineModule,{executeStrategyBranch}=await import('./evolution/strategy-branch.mjs?v=a90b812f827b'),{validateCheckpoint}=await import('./evolution/evolution-domain.mjs?v=a90b812f827b'),{LAB_IDENTITY}=await import('./evolution/identity.mjs?v=a90b812f827b'),engine=new IntrilexEngine();
+      const auto=await autonomyModule,{IntrilexEngine}=await engineModule,{executeStrategyBranch}=await import('./evolution/strategy-branch.mjs?v=8951e2c35a42'),{validateCheckpoint}=await import('./evolution/evolution-domain.mjs?v=8951e2c35a42'),{LAB_IDENTITY}=await import('./evolution/identity.mjs?v=8951e2c35a42'),engine=new IntrilexEngine();
       const input=event.data;
       const authority={createState:auto.createState,execute:(state,command)=>engine.execute(state,command),view:auto.strictView,validateCheckpoint,
         frame:state=>{const advanced=auto.advance(state,256),actions=advanced.legalActionFrame?.actions??[];return {...advanced,policyActions:actions.map(a=>auto.actionView(a,input.event.identity.rulesProfile)),resolve:id=>actions.find(a=>a.actionId===id)?.command};}};
       let study;
       if(type==='run-information-study'){
-        const {prepareInformationStudy,executeInformationStudy}=await import('./evolution/strategy-information.mjs?v=a90b812f827b');
+        const {prepareInformationStudy,executeInformationStudy}=await import('./evolution/strategy-information.mjs?v=8951e2c35a42');
         const prepared=prepareInformationStudy({...input,identity:LAB_IDENTITY,authority});
         self.postMessage({type:'information-plan',token,...prepared});
         await new Promise((resolve,reject)=>{const receive=e=>{if(e.data.type==='information-plan-committed'&&e.data.token===token){self.removeEventListener('message',receive);resolve();}if(e.data.type==='cancel-strategy-study'){self.removeEventListener('message',receive);reject(new Error('INFORMATION_PLAN_CANCELLED'));}};self.addEventListener('message',receive);});
@@ -105,8 +105,8 @@ self.onmessage = async (event) => {
     const { epoch, workerIndex, ordinal } = event.data;
     try {
       const { runBrowserPolicyMatch } = await autonomyModule;
-      const domain = await import('./evolution/evolution-domain.mjs?v=a90b812f827b');
-      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=a90b812f827b');
+      const domain = await import('./evolution/evolution-domain.mjs?v=8951e2c35a42');
+      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=8951e2c35a42');
       const run = event.data.run;
       domain.assertIdentity(run.identity, LAB_IDENTITY);
       domain.labConfig(run.config);
@@ -115,8 +115,8 @@ self.onmessage = async (event) => {
       let evidence;
       const started = performance.now();
       try {
-        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null), adaptiveConfigs:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? (cp.adaptive ?? null) : null),
-          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true, ...(run.config.strategicTrace ? {strategyIdentities:await import('./evolution/strategy-contracts.mjs?v=a90b812f827b').then(m=>[1,2].map(seat=>m.decisionIdentity(run,plan,seat)))}:{}) });
+        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, checkpointIds:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.checkpointId), revisionIds:(plan.swapped ? [...(run.arenaProfiles?.snapshots ?? [null,null])].reverse() : (run.arenaProfiles?.snapshots ?? [null,null])).map(s=>s?.profile?.activeRevisionId ?? null), subjectSnapshots:plan.swapped ? [...(run.arenaProfiles?.snapshots ?? [null,null])].reverse() : (run.arenaProfiles?.snapshots ?? [null,null]), policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null), adaptiveConfigs:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? (cp.adaptive ?? null) : null),
+          profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true, ...(run.config.strategicTrace ? {strategyIdentities:await import('./evolution/strategy-contracts.mjs?v=8951e2c35a42').then(m=>[1,2].map(seat=>m.decisionIdentity(run,plan,seat)))}:{}) });
         const record = domain.gameEvidence(summary, plan, run, summary.replay, performance.now()-started);
         const keep = event.data.retainReplay || !domain.CLEAN_REASONS.includes(record.terminationReason);
         evidence = { record, replay: keep ? summary.replay : null };
@@ -127,8 +127,8 @@ self.onmessage = async (event) => {
   }
   if (type === 'inspect-evolution-replay') {
     try {
-      const domain = await import('./evolution/evolution-domain.mjs?v=a90b812f827b');
-      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=a90b812f827b');
+      const domain = await import('./evolution/evolution-domain.mjs?v=8951e2c35a42');
+      const { LAB_IDENTITY } = await import('./evolution/identity.mjs?v=8951e2c35a42');
       const runtime = await autonomyModule;
       const { IntrilexEngine, hashCanonical } = await engineModule;
       const run = domain.validateArtifact(event.data.artifact, LAB_IDENTITY);
@@ -154,19 +154,20 @@ self.onmessage = async (event) => {
     return;
   }
   if (type === 'run-autonomy-segment') {
+    const post=x=>self.postMessage({...x,...(event.data.execution?{execution:event.data.execution}:{})});
     try {
       const { runBrowserCampaign } = await autonomyModule;
       const cfg=event.data.config??{};
       // Batched mode: each segment streams bounded batches; committed
       // evidence flows to the store one batch at a time.
       if (cfg.batchSize) {
-        const campaignResult=runBrowserCampaign({...cfg,onBatch:batch=>self.postMessage({type:'autonomy-campaign-batch',workerIndex:event.data.workerIndex,ordinalStart:batch.ordinalStart,ordinalEnd:batch.ordinalEnd,summariesJson:JSON.stringify(batch.summaries)})},(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
-        self.postMessage({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, result:campaignResult });
+        const campaignResult=runBrowserCampaign({...cfg,onBatch:batch=>post({type:'autonomy-campaign-batch',workerIndex:event.data.workerIndex,ordinalStart:batch.ordinalStart,ordinalEnd:batch.ordinalEnd,summariesJson:JSON.stringify(batch.summaries)})},(progress)=>post({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
+        post({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, result:campaignResult });
         return;
       }
-      const campaignResult=runBrowserCampaign(cfg,(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
-      self.postMessage({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, summariesJson:JSON.stringify(campaignResult.summaries??[]) });
-    } catch(error){ self.postMessage({ type:'autonomy-segment-result', ok:false, workerIndex:event.data.workerIndex, error:error?.stack??String(error) }); }
+      const campaignResult=runBrowserCampaign(cfg,(progress)=>post({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
+      post({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, summariesJson:JSON.stringify(campaignResult.summaries??[]) });
+    } catch(error){ post({ type:'autonomy-segment-result', ok:false, workerIndex:event.data.workerIndex, error:error?.stack??String(error) }); }
     return;
   }
   if (type === 'run-mutation-segment') {
@@ -231,7 +232,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-counterfactual') {
     try {
-      const { runCounterfactualBranch } = await import('./decision-intelligence.js?v=a90b812f827b');
+      const { runCounterfactualBranch } = await import('./decision-intelligence.js?v=8951e2c35a42');
       const result = runCounterfactualBranch(event.data.config ?? {});
       self.postMessage({ type: 'counterfactual-result', ok: true, result });
     } catch (error) { self.postMessage({ type: 'counterfactual-result', ok: false, error: error?.stack ?? String(error) }); }
@@ -239,7 +240,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-paired-counterfactual') {
     try {
-      const { runPairedCounterfactual } = await import('./decision-intelligence.js?v=a90b812f827b');
+      const { runPairedCounterfactual } = await import('./decision-intelligence.js?v=8951e2c35a42');
       const cfg = event.data.config ?? {};
       // Load the authorized replay if not already provided in config
       if (!cfg.replay && cfg.fixtureId) {
@@ -255,7 +256,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'get-legal-actions') {
     try {
-      const { getCheckpointLegalActions } = await import('./decision-intelligence.js?v=a90b812f827b');
+      const { getCheckpointLegalActions } = await import('./decision-intelligence.js?v=8951e2c35a42');
       const { replay, checkpointIndex, profileId, fixtureId, replayKind } = event.data;
       let replayObj = replay;
       if (!replayObj && fixtureId) {
@@ -271,7 +272,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-all-actions') {
     try {
-      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js?v=a90b812f827b');
+      const { getCheckpointLegalActions, runCounterfactualBranch } = await import('./decision-intelligence.js?v=8951e2c35a42');
       const { replay, checkpointIndex, profileId, fixtureId, replayKind, rolloutCount, continuationPolicyIds, baseSeed, seatOrder, matchId } = event.data;
       let replayObj = replay;
       if (!replayObj && fixtureId) {
@@ -332,7 +333,7 @@ self.onmessage = async (event) => {
   }
   if (type === 'run-diagnostics') {
     try {
-      const { diagnosePolicy } = await import('./decision-intelligence.js?v=a90b812f827b');
+      const { diagnosePolicy } = await import('./decision-intelligence.js?v=8951e2c35a42');
       const summaries = JSON.parse(event.data.summariesJson ?? '[]');
       const decisions = JSON.parse(event.data.decisionsJson ?? '[]');
       const baseline = diagnosePolicy(summaries, decisions, event.data.baselinePolicyId);

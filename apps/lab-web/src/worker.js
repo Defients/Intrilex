@@ -115,7 +115,7 @@ self.onmessage = async (event) => {
       let evidence;
       const started = performance.now();
       try {
-        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, checkpointIds:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.checkpointId), policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null), adaptiveConfigs:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? (cp.adaptive ?? null) : null),
+        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, checkpointIds:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.checkpointId), revisionIds:(plan.swapped ? [...(run.arenaProfiles?.snapshots ?? [null,null])].reverse() : (run.arenaProfiles?.snapshots ?? [null,null])).map(s=>s?.profile?.activeRevisionId ?? null), subjectSnapshots:plan.swapped ? [...(run.arenaProfiles?.snapshots ?? [null,null])].reverse() : (run.arenaProfiles?.snapshots ?? [null,null]), policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null), adaptiveConfigs:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? (cp.adaptive ?? null) : null),
           profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true, ...(run.config.strategicTrace ? {strategyIdentities:await import('./evolution/strategy-contracts.mjs').then(m=>[1,2].map(seat=>m.decisionIdentity(run,plan,seat)))}:{}) });
         const record = domain.gameEvidence(summary, plan, run, summary.replay, performance.now()-started);
         const keep = event.data.retainReplay || !domain.CLEAN_REASONS.includes(record.terminationReason);
@@ -154,19 +154,20 @@ self.onmessage = async (event) => {
     return;
   }
   if (type === 'run-autonomy-segment') {
+    const post=x=>self.postMessage({...x,...(event.data.execution?{execution:event.data.execution}:{})});
     try {
       const { runBrowserCampaign } = await autonomyModule;
       const cfg=event.data.config??{};
       // Batched mode: each segment streams bounded batches; committed
       // evidence flows to the store one batch at a time.
       if (cfg.batchSize) {
-        const campaignResult=runBrowserCampaign({...cfg,onBatch:batch=>self.postMessage({type:'autonomy-campaign-batch',workerIndex:event.data.workerIndex,ordinalStart:batch.ordinalStart,ordinalEnd:batch.ordinalEnd,summariesJson:JSON.stringify(batch.summaries)})},(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
-        self.postMessage({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, result:campaignResult });
+        const campaignResult=runBrowserCampaign({...cfg,onBatch:batch=>post({type:'autonomy-campaign-batch',workerIndex:event.data.workerIndex,ordinalStart:batch.ordinalStart,ordinalEnd:batch.ordinalEnd,summariesJson:JSON.stringify(batch.summaries)})},(progress)=>post({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
+        post({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, result:campaignResult });
         return;
       }
-      const campaignResult=runBrowserCampaign(cfg,(progress)=>self.postMessage({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
-      self.postMessage({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, summariesJson:JSON.stringify(campaignResult.summaries??[]) });
-    } catch(error){ self.postMessage({ type:'autonomy-segment-result', ok:false, workerIndex:event.data.workerIndex, error:error?.stack??String(error) }); }
+      const campaignResult=runBrowserCampaign(cfg,(progress)=>post({type:'autonomy-campaign-progress',progress:{completed:progress.completed,total:progress.total,workerIndex:event.data.workerIndex}}));
+      post({ type:'autonomy-segment-result', ok:true, workerIndex:event.data.workerIndex, summariesJson:JSON.stringify(campaignResult.summaries??[]) });
+    } catch(error){ post({ type:'autonomy-segment-result', ok:false, workerIndex:event.data.workerIndex, error:error?.stack??String(error) }); }
     return;
   }
   if (type === 'run-mutation-segment') {

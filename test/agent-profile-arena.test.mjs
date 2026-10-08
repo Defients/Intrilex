@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { runLabGame } from '../packages/simulation-runtime/src/evolution-lab.mjs';
+import { sampleIdentity } from '../packages/simulation-runtime/src/evidence-identity.mjs';
 import assert from 'node:assert/strict';
 import { createProfileArenaRun, validateProfileArenaRun, profileChoice, profileArenaRoster } from '../packages/simulation-runtime/src/profile-arena.mjs';
 import { createLabRun, artifactEnvelope, validateArtifact, gamePlan } from '../packages/simulation-runtime/src/evolution-domain.mjs';
@@ -65,4 +67,17 @@ test('missing Profiles, mismatched rules and malformed selections fail without s
   await assert.rejects(createProfileArenaRun({ ...config, botA: profileChoice(a.agentProfileId), profileId: 'core-unrestricted-authority' }, identity, store), /RULES_MISMATCH/);
   await assert.rejects(createProfileArenaRun({ ...config, botA: 'weighted-heuristic-v1' }, identity, store), /CHOICE_NOT_ADMITTED/);
   assert.equal((await profileArenaRoster(store))[0].snapshot.profile.agentProfileId, a.agentProfileId);
+});
+
+test('Wave 1: executed Arena samples bind ordered checkpoints, revisions and frozen snapshots',async()=>{
+  const store=memoryStore(),a=await createGraveMaw(store);
+  const run=await createProfileArenaRun({...config,botA:profileChoice(a.agentProfileId)},identity,store,FIXED_CLOCK());
+  for(const ordinal of [0,1]){
+    const plan=gamePlan(run.config,ordinal),cp=plan.swapped?[...run.checkpoints].reverse():run.checkpoints;
+    const snapshots=plan.swapped?[...run.arenaProfiles.snapshots].reverse():run.arenaProfiles.snapshots;
+    const expected=sampleIdentity({...plan,profileId:run.config.profileId,checkpointIds:cp.map(c=>c.checkpointId),revisionIds:snapshots.map(s=>s?.profile?.activeRevisionId??null),subjectSnapshots:snapshots,policyStates:cp.map(c=>c.schemaVersion===2?c.policyState:null),adaptiveConfigs:cp.map(c=>c.schemaVersion===2?(c.adaptive??null):null),decisionLimit:run.config.decisionLimit,orchestrationCommandLimit:run.config.orchestrationCommandLimit},identity);
+    const {record}=runLabGame(run,ordinal);
+    assert.equal(record.evidenceIdentity.deterministicSampleId,expected.deterministicSampleId);
+    assert.deepEqual(record.evidenceIdentity.subjectDigests,expected.subjectDigests);
+  }
 });

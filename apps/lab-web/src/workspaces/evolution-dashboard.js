@@ -124,7 +124,7 @@ export function renderEvolutionLab() {
     ${researchHtml()}
     </div></section>`;
   bind(); refreshHistory(); refreshProfiles(); window.addEventListener('focus',refreshProfiles); mountResearchPanel(readResearchConfig,{ingestRun:r=>ingestRunEvidence(strategies,r)});
-  view.cockpit=mountCockpit(document.querySelector('[data-testid="evolution-lab"]'),{state:view.ui,research:cockpitResearch,getArena:()=>({run:run(),archive:view.archive,error:view.error,storageError:view.storageError,controlsLocked:active()||!!view.archive||!!cockpitResearch.getState().archive,renderHistory(query){view.historyQuery=query;const el=document.getElementById('evo-history');if(el)el.innerHTML=historyHtml();},closeArchive(){if(view.archive){view.archive=null;view.archiveEnvelope=null;aggregate(view.session?.run);view.inspection=null;renderEvolutionLab();}}}),loadRun:async id=>{const admitted=()=>{if(active()||view.archive||cockpitResearch.getState().archive)throw new Error('Stop the current arena or leave historical inspection before loading other evidence.');};admitted();const saved=await store.loadForInspection(id);admitted();if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run);}});
+  view.cockpit=mountCockpit(document.querySelector('[data-testid="evolution-lab"]'),{state:view.ui,research:cockpitResearch,getArena:()=>({run:run(),archive:view.archive,error:view.error,storageError:view.storageError,controlsLocked:active()||!!view.archive||!!cockpitResearch.getState().archive,renderHistory(query){view.historyQuery=query;const el=document.getElementById('evo-history');if(el)el.innerHTML=historyHtml();},closeArchive(){if(view.archive){view.archive=null;view.archiveEnvelope=null;aggregate(view.session?.run);view.inspection=null;renderEvolutionLab();}}}),loadRun:async id=>{const admitted=()=>{if(active()||view.archive||cockpitResearch.getState().archive)throw new Error('Stop the current arena or leave historical inspection before loading other evidence.');};admitted();const saved=await store.loadForInspection(id);admitted();if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run, { savedLocally: true });}});
 }
 function bot(seat,policy,wins,rate) { const cp=run()?.checkpoints[seat === 'A' ? 0 : 1], snapshot=run()?.arenaProfiles?.snapshots?.[seat === 'A' ? 0 : 1]; return `<div class="evo-bot"><h3>BOT ${seat}</h3><b>${esc(snapshot?.displayName ?? name(policy))}</b>${snapshot ? `<p>Custom Profile &middot; head ${snapshot.profile.headVersion}<br><code>${esc(snapshot.profile.activeRevisionId)}</code></p>` : ''}<p>Generation ${cp?.generation ?? 0} · ${cp?.schemaVersion === 2 ? 'immutable weighted checkpoint' : 'frozen policy'}</p><p><span id="evo-${seat}-wins">${fmt(wins)}</span> wins · <span id="evo-${seat}-rate">${pct(rate)}</span></p></div>`; }
 function analyticsModel() {
@@ -387,7 +387,7 @@ function bind() {
     if (watch) { const item=run()?.replays.find(r=>r.replayId===watch.dataset.watchReplay); if (item?.replay) { const { openReplay }=await import('../data-loader.js'); await openReplay({ kind:'object', replay:item.replay, id:item.replayId, label:`Arena game ${item.ordinal+1}` }); } }
     if (bookmark && run() && !view.archive) { const id=bookmark.dataset.bookmark,i=run().bookmarks.indexOf(id); if (i < 0) run().bookmarks.push(id); else run().bookmarks.splice(i,1); bookmark.textContent=i < 0 ? '★ Bookmarked' : '☆ Bookmark'; bookmark.setAttribute('aria-pressed',String(i < 0)); persist(); }
   });
-  document.getElementById('evo-history')?.addEventListener('click',async e => { const b=e.target.closest('[data-load-run]'); if (!b || active()) return; try { const saved=await store.loadForInspection(b.dataset.loadRun);if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run); } catch(error) { view.error=`Load rejected: ${error.message}`; renderEvolutionLab(); } });
+  document.getElementById('evo-history')?.addEventListener('click',async e => { const b=e.target.closest('[data-load-run]'); if (!b || active()) return; try { const saved=await store.loadForInspection(b.dataset.loadRun);if(saved.historical)openArchive(saved.envelope);else loadRun(saved.run, { savedLocally: true }); } catch(error) { view.error=`Load rejected: ${error.message}`; renderEvolutionLab(); } });
   bindInspection();
 }
 function aggregate(saved) {
@@ -402,10 +402,10 @@ function openArchive(envelope) {
   void (async()=>{view.strategyStats=await ingestRunEvidence(strategies,view.archive);if(view.mounted)storageStatus();})();
   renderEvolutionLab();
 }
-function loadRun(saved) {
+function loadRun(saved, { savedLocally = false } = {}) {
   validateProfileArenaRun(saved,LAB_IDENTITY);
   view.archive=null;view.archiveEnvelope=null;
-  release(); ++view.saveRevision; view.persistenceState='LOCALLY_COMMITTED'; view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[];
+  release(); ++view.saveRevision; view.persistenceState=savedLocally?'LOCALLY_COMMITTED':'SESSION_ONLY'; view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[];
   // Reconcile the analysis index against the saved record set. Offers are
   // serialized through one writer and deduplicate on sealed artifact identity,
   // so reopen, re-save, resume and re-import can never double-count games.
@@ -427,7 +427,7 @@ async function begin(kind,candidate) {
     const saved=await createProfileArenaRun({...input,kind},LAB_IDENTITY,profiles);
     if (!view.mounted || request !== startRequest) return;
     if (run()) persist();
-    release(); ++view.saveRevision; view.persistenceState='LOCALLY_COMMITTED'; view.session=new EvolutionSession(saved); view.config={...saved.config,botA:input.botA,botB:input.botB}; view.elapsed=0; view.agg=createSeriesAggregator(); view.samples=[]; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null;
+    release(); ++view.saveRevision; view.persistenceState='SESSION_ONLY'; view.session=new EvolutionSession(saved); view.config={...saved.config,botA:input.botA,botB:input.botB}; view.elapsed=0; view.agg=createSeriesAggregator(); view.samples=[]; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null;
     starting=false; persist(); launch();
   } catch(error) {
     if (view.mounted && request === startRequest) { starting=false; view.error=`Configuration rejected: ${error.message}`; renderEvolutionLab(); }

@@ -51,7 +51,7 @@ export const CONTRACTS = deepFreeze({
   constraintProjection: { id: 'FIXED_REJECTION_THEN_CLAMP_V1', version: 1 },
   promotionPolicy: { id: 'FIXED_BUDGET_PAIRED_GENERALIST', version: 1 },
   estimator: { id: 'PAIRED_BLOCK_STUDENT_T', version: 1 },
-  era: { id: 'EVALUATION_ERA', version: 1 },
+  era: { id: 'EVALUATION_ERA', version: 2 },
   measurement: { id: 'PROFILE_MEASUREMENT', version: 1 },
   journal: { id: 'LEARNING_JOURNAL', version: 1 },
   snapshot: { id: 'EXECUTION_SNAPSHOT', version: 1 },
@@ -270,7 +270,9 @@ export function validatePolicyForObjective(policyBody, objectiveBody) {
 /** EVALUATION_ERA v1: implementation fingerprint, rules profile, exact reference
  * opponents, seed protocol, seating, limits, outcome coding, metrics and objective
  * aggregation. Candidate identity and display metadata are excluded. */
-export function resolveEra({ identity, objective }) {
+// The v1 resolver retains its locked source and frozen era contract. It is
+// used only when original inputs lack the new implementation contract.
+const legacyResolveEra = ((CONTRACTS) => function resolveEra({ identity, objective }) {
   const o = validateObjectiveBody(objective.body ?? objective);
   const suite = createBaselineSuite(identity);
   return makeArtifact('EVALUATION_ERA', {
@@ -283,6 +285,12 @@ export function resolveEra({ identity, objective }) {
     metrics: Object.fromEntries(Object.entries(METRICS).map(([k, m]) => [k, m.version])),
     objective: { definitionId: o.definitionId, definitionVersion: o.definitionVersion, weights: o.aggregation.weights },
   });
+})({ ...CONTRACTS, era: { id: 'EVALUATION_ERA', version: 1 } });
+export function resolveEra(args) {
+  const legacy = legacyResolveEra(args);
+  if (args.identity.identityContract !== 'intrilex-implementation@2') return legacy;
+  return makeArtifact('EVALUATION_ERA', { ...legacy.body, eraVersion: CONTRACTS.era.version,
+    analysisFingerprint: args.identity.analysisFingerprint });
 }
 
 // ── Head token ─────────────────────────────────────────────────────────────
@@ -329,4 +337,4 @@ export function canCompareMeasurements(a, b, { purpose = 'EXPLORATORY' } = {}) {
 }
 
 export const ZERO_GENOME = () => baselinePolicyState();
-export const VERSIONED_CONTRACT_FUNCTIONS = { 'STRICT_CANONICAL_JSON_V1': strictCanonical, 'TRAIT_COMPILER_LINEAR@1': compileTraits, 'EVALUATION_ERA@1': resolveEra, 'GENERALIST_PAIRED_SCORE@1': resolveObjective, 'FIXED_BUDGET_PAIRED_GENERALIST@1': resolvePromotionPolicy, 'POLICY_OBJECTIVE_ALIGNMENT@1': validatePolicyForObjective };
+export const VERSIONED_CONTRACT_FUNCTIONS = { 'STRICT_CANONICAL_JSON_V1': strictCanonical, 'TRAIT_COMPILER_LINEAR@1': compileTraits, 'EVALUATION_ERA@1': legacyResolveEra, 'EVALUATION_ERA@2': resolveEra, 'GENERALIST_PAIRED_SCORE@1': resolveObjective, 'FIXED_BUDGET_PAIRED_GENERALIST@1': resolvePromotionPolicy, 'POLICY_OBJECTIVE_ALIGNMENT@1': validatePolicyForObjective };

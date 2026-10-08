@@ -609,13 +609,18 @@ export class CasterSession {
  * True when the reconstructed frames carry real hand card identities —
  * i.e. the viewer is authorized for face-up hands. Privacy-redacted
  * artifacts mark cards 'HIDDEN'/'OPAQUE-HIDDEN'; those must never be
- * presented face-up. Fails closed: no hand evidence → not authorized.
+ * presented face-up.
+ *
+ * FULL-REPLAY contract: EVERY frame is scanned, not a prefix window — an
+ * early authorized segment proves nothing about a later redacted frame, and
+ * authorization is established once, before any viewer-scoped state is
+ * built. Fails closed: any redaction or missing hand evidence anywhere in
+ * the replay → PUBLIC only.
  */
 function detectHandAuthorization(frames) {
   if (!Array.isArray(frames)) return false;
   let seen = 0;
-  const scanLimit = Math.min(frames.length, 50);
-  for (let f = 0; f < scanLimit; f += 1) {
+  for (let f = 0; f < frames.length; f += 1) {
     const state = frames[f]?.state ?? frames[f]?.omniscientState;
     const players = state?.players;
     const cards = state?.cards ?? {};

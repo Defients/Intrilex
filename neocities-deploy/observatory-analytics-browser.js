@@ -11,7 +11,7 @@
 // Formula hashes are sha256Text over the shared metric-registry formula text,
 // so they equal the canonical hashes by construction.
 
-import { sha256Text } from './engine/browser-entry.js?v=a90b812f827b';
+import { sha256Text } from './engine/browser-entry.js?v=8951e2c35a42';
 import {
   MECHANIC_REGISTRY,
   mechanicDisplayName,
@@ -21,15 +21,15 @@ import {
   analyticsEntityDefinition,
   synergyExcludedTags,
   areTagsInseparable,
-} from './mechanic-registry-browser.js?v=a90b812f827b';
+} from './mechanic-registry-browser.js?v=8951e2c35a42';
 
 // Metric identity, estimators and the synergy/mechanics inference core are
 // shared verbatim with canonical analytics (scripts/build.mjs copies them into
 // dist/shared-analytics/), so formula hashes and estimands cannot diverge.
-import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS } from './shared-analytics/metric-registry.mjs?v=a90b812f827b';
-import { wilsonInterval, differenceInProportions } from './shared-analytics/estimators.mjs?v=a90b812f827b';
-import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './shared-analytics/observatory-core.mjs?v=a90b812f827b';
-import { deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './shared-analytics/observatory-integrity.mjs?v=a90b812f827b';
+import { ANALYTICS_SCHEMA_VERSION, METRIC_DEFINITIONS } from './shared-analytics/metric-registry.mjs?v=8951e2c35a42';
+import { wilsonInterval, differenceInProportions } from './shared-analytics/estimators.mjs?v=8951e2c35a42';
+import { analyzeSynergiesCore, gradeMechanicRows, policyRecord, representativeMatches, stratumKey, unitDecisive, unitWon } from './shared-analytics/observatory-core.mjs?v=8951e2c35a42';
+import { deriveTagRelations, choiceSupportStatus, CHOICE_SUPPORT_MIN_DECLINES } from './shared-analytics/observatory-integrity.mjs?v=8951e2c35a42';
 
 export { ANALYTICS_SCHEMA_VERSION, wilsonInterval };
 const _formulaHashCache = {};
@@ -65,7 +65,7 @@ function summarizeNumbers(values) {
 // Paired AB/BA inference (McNemar, paired bootstrap, sign test) lives in the
 // shared crypto-free module mirrored at dist/shared-analytics/paired-tests.mjs
 // — identical code in Node and browser, so resamples cannot diverge.
-export { mcnemarPairedTest, pairedBootstrapABBA, binomialSignTest } from './shared-analytics/paired-tests.mjs?v=a90b812f827b';
+export { mcnemarPairedTest, pairedBootstrapABBA, binomialSignTest } from './shared-analytics/paired-tests.mjs?v=8951e2c35a42';
 
 // ── Internal helpers ──
 
@@ -364,4 +364,4 @@ export function detectAnomalies(summaries,detailedMatches=[]){
 // packages/analytics/src/paired-abba.mjs): verifies actual policy↔seat
 // assignment per block — fail-closed — and aggregates paired inference per
 // matchup rather than emitting one McNemar per individual pair.
-export { buildPairedABBAAnalysis, PAIRED_ABBA_SCHEMA_VERSION, PAIR_BLOCK_REASON, PAIR_DESIGN_STATUS, verifyPairBlock, seatAssignmentOf } from './shared-analytics/paired-abba.mjs?v=a90b812f827b';
+export { buildPairedABBAAnalysis, PAIRED_ABBA_SCHEMA_VERSION, PAIR_BLOCK_REASON, PAIR_DESIGN_STATUS, verifyPairBlock, seatAssignmentOf } from './shared-analytics/paired-abba.mjs?v=8951e2c35a42';

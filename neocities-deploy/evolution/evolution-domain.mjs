@@ -32,6 +32,10 @@ export function assertIdentity(identity, expected = identity) {
   if (!identity || identity.schemaVersion !== LAB_SCHEMA || !['fingerprint', 'engineHash', 'policyImplementationHash', 'runtimeHash'].every(k => digest(identity[k]))) fail('INVALID_IDENTITY');
   const { engineHash, policyImplementationHash, runtimeHash, engineVersion, rulesVersion } = identity;
   if (identity.fingerprint !== hashCanonical({ engineHash, policyImplementationHash, runtimeHash, engineVersion, rulesVersion })) fail('IDENTITY_HASH_MISMATCH');
+  if (identity.identityContract === 'intrilex-implementation@2') {
+    if (identity.runtimeHash !== hashCanonical(identity.dependencyManifest?.execution) || identity.analysisHash !== hashCanonical(identity.dependencyManifest?.analysis) ||
+        identity.analysisFingerprint !== hashCanonical({ fingerprint: identity.fingerprint, analysisHash: identity.analysisHash })) fail('IDENTITY_DEPENDENCY_MISMATCH');
+  }
   if (!expected || identity.fingerprint !== expected.fingerprint) fail('INCOMPATIBLE_IMPLEMENTATION');
   return identity;
 }
@@ -174,7 +178,8 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     ...(summary.terminalEvidence ? {terminalEvidence:summary.terminalEvidence} : {}),
     actionCounts: summary.decisionFamilyCounts ?? {}, eventCounts: summary.eventTypeCounts ?? {},
     mechanicCounts: summary.mechanicCounts ?? {}, ruleCompliance: summary.ruleCompliance?.status ?? 'UNAVAILABLE' };
-  return { ...core, resultHash: hashCanonical(core), durationMs };
+  const evidence = summary.identity?.schemaVersion === '2.0.0' ? { ...core, evidenceIdentity: summary.identity } : core;
+  return { ...evidence, resultHash: hashCanonical(evidence), durationMs };
 }
 
 export function gameFault(error, plan, run, durationMs = 0) {

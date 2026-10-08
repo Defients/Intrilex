@@ -16,6 +16,11 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
+import * as portability from '../packages/simulation-runtime/src/experiment-portability.mjs';
+import { hashCanonical } from '../packages/shared/src/canonical.mjs';
+import { evolutionIdentity } from '../scripts/evolution-identity.mjs';
 
 // ── Minimal browser shims (must precede the controller import) ────
 // state.js touches window/document/localStorage at module scope. Everything
@@ -49,8 +54,11 @@ globalThis.document = {
 
 const { state } = await import('../apps/lab-web/src/state.js');
 const { ExperimentStore } = await import('../apps/lab-web/src/experiments/experiment-store.mjs');
-const controller = await import('../apps/lab-web/src/experiments/experiment-controller.mjs');
 const domain = await import('../packages/simulation-runtime/src/experiment-domain.mjs');
+// Execute current controller source with its generated build identity supplied
+// explicitly; the checkout does not contain a generated identity source file.
+const source=(await readFile(new URL('../apps/lab-web/src/experiments/experiment-controller.mjs',import.meta.url),'utf8')).replace(/import\s[^;]*?from\s*'[^']*';/gs,'').replace(/^export /gm,'');
+const controller=runInNewContext(source+';({initExperiments,recordCampaignRun,recordFailedRun,applySelection,getExperimentRuns,getIncludedRuns,getEvidenceBasis,runsWithCompatibility,experimentsReady})',{...domain,...portability,LAB_IDENTITY:await evolutionIdentity(),ExperimentStore,hashCanonical,state,structuredClone,TextEncoder,setTimeout,queueMicrotask:globalThis.queueMicrotask,console,RULES_VERSION:'4.3.1',ENGINE_VERSION:'4.2.6',LAB_VERSION:'1.0.0',showToast(){},updateRailContext(){},rerender(){}});
 const {
   initExperiments, recordCampaignRun, recordFailedRun, applySelection,
   getExperimentRuns, getIncludedRuns, getEvidenceBasis, runsWithCompatibility,

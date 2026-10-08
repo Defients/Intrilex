@@ -1,8 +1,8 @@
+import { evolutionIdentity } from '../scripts/evolution-identity.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { hashCanonical } from '@intrilex/shared';
 import { ACTION_FIXTURES, actionFixture } from '../packages/policies/test/action-fixtures.mjs';
 import { createSimulationDecisionFrame, strictPolicyView } from '../packages/engine-adapter/src/adapter.mjs';
 import { chooseWeightedAction } from '../packages/policies/src/weighted-heuristic.mjs';
@@ -87,13 +87,12 @@ test('objective instances are immutable, versioned and distinct per rules profil
   assert.equal(code(() => validatePolicyForObjective({ ...policy.body, tailGuard: null }, a.body)), 'INVALID_PROMOTION_POLICY', 'the tail guard cannot be dropped');
 });
 
-test('evaluation eras bind implementation, opponents and objective; candidate identity is excluded', () => {
+test('evaluation eras bind implementation, opponents and objective; candidate identity is excluded', async () => {
   const objective = resolveObjective(), era = resolveEra({ identity, objective });
   assert.equal(era.body.referenceOpponents.length, 5);
   assert.equal(era.id, resolveEra({ identity, objective }).id);
   assert.notEqual(era.id, resolveEra({ identity, objective: resolveObjective({ rulesProfileId: 'first-contact-trigger-closure' }) }).id);
-  const runtimeHash = 'b'.repeat(64), { engineHash, policyImplementationHash, engineVersion, rulesVersion } = identity;
-  const other = { ...identity, runtimeHash, fingerprint: hashCanonical({ engineHash, policyImplementationHash, runtimeHash, engineVersion, rulesVersion }) };
+  const other = await evolutionIdentity({ readSource: async name => (await readFile(new URL('../' + name, import.meta.url), 'utf8')) + (name === 'packages/simulation-runtime/src/runtime.mjs' ? '\n// execution perturbation' : '') });
   assert.notEqual(era.id, resolveEra({ identity: other, objective }).id, 'a different implementation is a different era');
   assert.doesNotMatch(JSON.stringify(era.body), /CP2-/, 'no candidate checkpoint identity');
 });

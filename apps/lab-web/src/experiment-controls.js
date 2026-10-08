@@ -1,3 +1,4 @@
+import { campaignExecution } from './evolution/campaign-execution.mjs';
 import { persistenceLabel } from './evolution/persistence-state.mjs';
 // ═══════════════════════════════════════════════════════════════
 // experiment-controls.js — Experiment panel, campaign runner, global bindings
@@ -220,7 +221,10 @@ function setCampaignState(value) {
 // per worker regardless of run size.
 const RUN_BATCH_SIZE = 50;
 
+let activeExecution = null, launchEpoch = 0;
+
 async function runBrowserCampaign() {
+  const launch = ++launchEpoch;
   const status = document.querySelector('#experiment-status');
   setCampaignState('running');
   const profile = document.querySelector('#exp-profile').value;
@@ -256,6 +260,10 @@ async function runBrowserCampaign() {
   }
 
   // Segment layout: relative ordinals for workers, absolute for the manifest.
+  // `ordinalBase` is only a REQUEST HINT — the store reserves the actual
+  // sample range atomically inside allocation and may rebase it past ranges
+  // another tab already holds. Workers must be driven by the RETURNED
+  // manifest's ranges, never by the preliminary local frontier.
   const relSegments = splitOrdinals(count, workers).map((s, i) => ({ index: i, ordinalStart: s.start, ordinalEnd: s.end }));
   const absSegments = relSegments.map(s => ({ index: s.index, ordinalStart: ordinalBase + s.ordinalStart, ordinalEnd: ordinalBase + s.ordinalEnd }));
   status.textContent = 'Opening durable run — writing manifest…';
@@ -263,6 +271,7 @@ async function runBrowserCampaign() {
   try {
     begun = await beginExperimentRun({ config: runConfig, segments: absSegments, batchSize: RUN_BATCH_SIZE });
   } catch (error) {
+    if(launch!==launchEpoch)return;
     setCampaignState('failed');
     status.textContent = `Run could not start — manifest persistence failed: ${error?.message ?? error}`;
     document.querySelector('#run-experiment').disabled = false;
@@ -270,14 +279,23 @@ async function runBrowserCampaign() {
     showToast('The run manifest could not be persisted — no simulation started.', { type: 'error', title: 'Durability unavailable' });
     return;
   }
+  if(launch!==launchEpoch){await cancelExperimentRun(begun.runId,begun.execution);return;}
+  const manifest = begun.manifest;
+  const allocatedBase = manifest?.config?.ordinalBase ?? manifest?.config?.ordinalStart ?? ordinalBase;
+  const workerSegments = (manifest?.segments ?? absSegments).map(s => ({
+    index: s.index,
+    ordinalStart: s.ordinalStart - allocatedBase,
+    ordinalEnd: s.ordinalEnd - allocatedBase,
+  }));
   status.textContent = `Running ${count} matches with ${workers} worker(s)…`;
   await _driveRunSegments({
     runId: begun.runId,
-    config: runConfig,
+    execution: begun.execution,
+    config: manifest?.config ?? runConfig,
     batchSize: RUN_BATCH_SIZE,
-    requestedMatches: count,
+    requestedMatches: manifest?.requestedMatches ?? count,
     committedMatches: 0,
-    segments: relSegments,
+    segments: workerSegments,
   });
 }
 
@@ -288,147 +306,62 @@ async function runBrowserCampaign() {
  * manifest's committedMatches can never run ahead of durable evidence.
  */
 async function _driveRunSegments(plan) {
-  const status = document.querySelector('#experiment-status');
-  const count = plan.requestedMatches ?? plan.config?.matchCount ?? 0;
-  const priorCommitted = plan.committedMatches ?? 0;
-  const segs = plan.segments;
-  const startedAt = performance.now();
-  const segmentDone = segs.map(() => 0);
-  const segmentTotal = segs.map(s => s.ordinalEnd - s.ordinalStart);
-  let completedSegments = 0, failedSegment = null, finalized = false;
-  let committed = priorCommitted;
-  const spawned = [];
-  state.campaignWorkers = spawned;
-  state.campaignWorker = null;
-  state.activeRunManifest = plan.runId;
-
-  const commitQueue = { chain: Promise.resolve(), error: null };
-  let lastLeaseTouch = 0;
-  const reportProgress = () => {
-    const done = priorCommitted + segmentDone.reduce((a, b) => a + b, 0);
-    // Simulated vs saved locally are distinct numbers — always.
-    status.textContent = `Progress: ${done}/${count} simulated · ${committed} saved`;
-    updateCampaignProgress(done, Math.max(count, 1));
-    // Ownership heartbeat (R02): keep the lease live while this controller
-    // is driving; a stale-owner rejection is surfaced by the commit path.
-    if (performance.now() - lastLeaseTouch > 15000) {
-      lastLeaseTouch = performance.now();
-      touchRunLease(plan.runId).catch(() => {});
-    }
-  };
-  const enqueueCommit = msg => {
-    commitQueue.chain = commitQueue.chain.then(async () => {
-      const summaries = JSON.parse(msg.summariesJson ?? '[]');
-      const res = await commitExperimentBatch(plan.runId, {
-        segmentIndex: msg.workerIndex ?? 0,
-        ordinalStart: msg.ordinalStart,
-        ordinalEnd: msg.ordinalEnd,
-        summaries,
-      });
-      committed = res.committedMatches;
-      reportProgress();
-    }).catch(error => { if (!commitQueue.error) commitQueue.error = error; });
-  };
-  const finishRun = async () => {
-    if (finalized || completedSegments < segs.length) return;
-    finalized = true;
-    for (const w of spawned) { try { w.terminate(); } catch { /* already terminated */ } }
-    state.campaignWorker = null;
-    state.campaignWorkers = [];
-    state.activeRunManifest = null;
-    // Flush pending commits — the seal only counts durably committed work.
-    await commitQueue.chain;
-    document.querySelector('#run-experiment').disabled = false;
-    document.querySelector('#cancel-experiment').disabled = true;
-    const bar = document.querySelector('#campaign-progress');
-    if (bar) bar.hidden = true;
-    if (commitQueue.error) {
-      // Persistence failure: stop honestly — committed batches are retained,
-      // the run is resumable/sealable from Manage Runs.
-      await failExperimentRun(plan.runId, commitQueue.error?.message ?? commitQueue.error);
-      setCampaignState('failed');
-      status.textContent = `Persistence failed — ${committed} of ${count} matches saved locally. Resume or seal partial evidence from Manage Runs.`;
-      showToast(`Persistence failed at ${committed}/${count} — committed evidence is retained; the run is resumable from Manage Runs.`, { type: 'error', title: 'Run paused (persistence)' });
-      refreshRunsUi();
-      updateRailContext();
-      rerender();
-      return;
-    }
-    if (failedSegment) {
-      await failExperimentRun(plan.runId, failedSegment);
-      setCampaignState('failed');
-      status.textContent = `Failed: ${failedSegment} — ${committed} of ${count} matches committed. Resume or seal from Manage Runs.`;
-      showToast(failedSegment, { type: 'error', title: 'Run failed' });
-      refreshRunsUi();
-      updateRailContext();
-      rerender();
-      return;
-    }
-    try {
-      status.textContent = `Execution finished · ${persistenceLabel('PENDING')}…`;
-      const rec = await finalizeExperimentRun(plan.runId, { durationMs: Math.round(performance.now() - startedAt) });
-      const run = rec?.run;
-      const saveState = rec?.persistenceState ?? (rec?.persisted ? 'LOCALLY_COMMITTED' : 'SESSION_ONLY');
-      const mechCount = state.observatory?.mechanics?.length ?? 0;
-      const synCount = state.observatory?.synergies?.length ?? 0;
-      const basis = state.evidenceBasis;
-      const evidenceNote = basis && !basis.fallback
-        ? ` · evidence: ${fmt(basis.includedGames)} games from ${basis.includedRunCount} run${basis.includedRunCount === 1 ? '' : 's'}`
-        : '';
-      const runLabel = run ? `Run #${String(run.ordinal).padStart(3, '0')} · ` : '';
-      setCampaignState('complete');
-      status.textContent = `${runLabel}${run?.metrics?.matchCount ?? committed} matches committed, ${run?.metrics?.abortCount ?? 0} aborts · ${mechCount} mechanics, ${synCount} synergies${evidenceNote} · ${persistenceLabel(saveState)}`;
-      showToast(`${run?.metrics?.matchCount ?? committed} matches · ${persistenceLabel(saveState)}${evidenceNote}`, { type: 'success', title: run ? `Run #${String(run.ordinal).padStart(3, '0')} complete` : 'Run complete' });
-      if (rec?.included === false && run) {
-        showToast(`Run #${String(run.ordinal).padStart(3, '0')} recorded but auto-excluded — it differs materially from the current baseline. Inspect it under Manage Runs.`, { type: 'warning', title: 'Incompatible run' });
+  const status=document.querySelector('#experiment-status'),count=plan.requestedMatches ?? plan.config.matchCount;
+  const startedAt=performance.now(),segmentDone=new Map(),spawned=[];
+  let committed=plan.committedMatches ?? 0;
+  if(activeExecution)activeExecution.cancel();
+  const driver=campaignExecution({execution:plan.execution,
+    commit:async(msg,execution)=>{
+      const result=await commitExperimentBatch(plan.runId,{segmentIndex:plan.segments[msg.workerIndex]?.index ?? msg.workerIndex,ordinalStart:msg.ordinalStart,ordinalEnd:msg.ordinalEnd,summaries:JSON.parse(msg.summariesJson),execution});
+      committed=result.committedMatches;
+      if(activeExecution===driver)reportProgress();
+    },
+    heartbeat:execution=>touchRunLease(plan.runId,execution),
+    seal:execution=>finalizeExperimentRun(plan.runId,{durationMs:Math.round(performance.now()-startedAt),execution,requireComplete:true}),
+    fail:(cause,execution)=>failExperimentRun(plan.runId,cause?.message ?? cause,execution),
+    cancel:execution=>cancelExperimentRun(plan.runId,execution),
+    onProgress:(index,progress)=>{if(activeExecution!==driver)return;segmentDone.set(index,progress?.completed ?? 0);reportProgress();},
+    onTerminal:(phase,detail)=>{
+      if(activeExecution!==driver)return;
+      activeExecution=null;state.campaignWorkers=[];state.campaignWorker=null;state.activeRunManifest=null;
+      document.querySelector('#run-experiment').disabled=false;
+      document.querySelector('#cancel-experiment').disabled=true;
+      const bar=document.querySelector('#campaign-progress');if(bar)bar.hidden=true;
+      setCampaignState(phase);
+      if(phase==='complete'){
+        const run=detail?.run,saveState=detail?.persistenceState ?? 'SESSION_ONLY';
+        const basis=state.evidenceBasis,mechCount=state.observatory?.mechanics?.length ?? 0,synCount=state.observatory?.synergies?.length ?? 0;
+        const evidenceNote=basis && !basis.fallback ? ` · evidence: ${fmt(basis.includedGames)} games from ${basis.includedRunCount} runs` : '';
+        status.textContent=`${run?`Run #${String(run.ordinal).padStart(3,'0')} · `:''}${run?.metrics?.matchCount ?? committed} matches committed, ${run?.metrics?.abortCount ?? 0} aborts · ${mechCount} mechanics, ${synCount} synergies${evidenceNote} · ${persistenceLabel(saveState)}`;
+        showToast(status.textContent,{type:'success',title:'Run complete'});
+        if(detail?.included===false && run)showToast(`Run #${String(run.ordinal).padStart(3,'0')} recorded but auto-excluded — it differs materially from the current baseline. Inspect it under Manage Runs.`,{type:'warning',title:'Incompatible run'});
+        renderCampaignSummary({ok:true,result:{matchCount:run?.metrics?.matchCount ?? committed,abortCount:run?.metrics?.abortCount ?? 0,durationMs:run?.metrics?.durationMs ?? 0,canonicalResultHash:run?.provenance?.canonicalResultHash ?? null}});
+        state.lastCampaignResult=null;state.pendingRunConfig=null;
+      }else if(phase==='cancelled'){
+        status.textContent='Cancelled — committed batches are retained. Resume or seal partial evidence from Manage Runs.';
+      }else{
+        status.textContent=`Execution stopped: ${detail?.message ?? detail} — ${committed} of ${count} matches saved locally. Resume or seal partial evidence from Manage Runs.`;
+        showToast(status.textContent,{type:'error',title:'Run stopped'});
       }
-      renderCampaignSummary({ ok: true, result: { matchCount: run?.metrics?.matchCount ?? committed, abortCount: run?.metrics?.abortCount ?? 0, durationMs: run?.metrics?.durationMs ?? 0, canonicalResultHash: run?.provenance?.canonicalResultHash ?? null } });
-      state.lastCampaignResult = null;
-      state.pendingRunConfig = null;
-    } catch (error) {
-      await failExperimentRun(plan.runId, error?.message ?? error);
-      setCampaignState('failed');
-      status.textContent = `Seal failed: ${error?.message ?? error} — ${committed} of ${count} matches committed. Resume or seal from Manage Runs.`;
-      showToast(error?.message ?? 'Run seal failed', { type: 'error', title: 'Run seal failed' });
-    }
-    refreshRunsUi();
-    updateRailContext();
-    rerender();
-  };
-
-  segs.forEach((seg, i) => {
-    const worker = new Worker('worker.js', { type: 'module' });
-    spawned.push(worker);
-    worker.onmessage = e => {
-      const x = e.data;
-      if (x.type === 'autonomy-campaign-progress') {
-        const p = x.progress ?? {};
-        segmentDone[i] = p.completed ?? segmentDone[i];
-        reportProgress();
-      } else if (x.type === 'autonomy-campaign-batch') {
-        enqueueCommit(x);
-      } else if (x.type === 'autonomy-segment-result' || x.type === 'autonomy-campaign-result') {
-        if (x.ok !== true && !failedSegment) failedSegment = x.error ?? `Worker ${i} failed`;
-        completedSegments += 1;
-        segmentDone[i] = segmentTotal[i];
-        reportProgress();
-        finishRun();
-      }
-    };
-    worker.onerror = e => {
-      if (!failedSegment) failedSegment = e.message ?? `Worker ${i} error`;
-      completedSegments += 1;
-      segmentDone[i] = segmentTotal[i];
-      reportProgress();
-      finishRun();
-    };
-    worker.postMessage({
-      type: 'run-autonomy-segment',
-      workerIndex: seg.index,
-      config: { matchCount: count, policyIds: plan.config.policyIds, profileId: plan.config.profileId, seedStrategy: plan.config.seedStrategy, ordinalStart: seg.ordinalStart, ordinalEnd: seg.ordinalEnd, ordinalBase: plan.config.ordinalBase ?? plan.config.ordinalStart ?? 0, strategicTrace: plan.config.strategicTrace === true, batchSize: plan.batchSize || RUN_BATCH_SIZE },
-    });
+      refreshRunsUi();updateRailContext();rerender();
+    },
   });
+  const reportProgress=()=>{
+    const done=(plan.committedMatches ?? 0)+[...segmentDone.values()].reduce((a,b)=>a+b,0);
+    status.textContent=`Progress: ${done}/${count} simulated · ${committed} saved`;
+    updateCampaignProgress(done,Math.max(count,1));
+  };
+  activeExecution=driver;state.campaignWorkers=spawned;state.campaignWorker=null;state.activeRunManifest=plan.runId;
+  setCampaignState('running');
+  // Resume preserves all pinned executable/seed inputs; only hole ranges change.
+  try{
+    plan.segments.forEach((segment,index)=>{
+      const worker=new Worker('worker.js',{type:'module'});spawned.push(worker);
+      driver.attach(worker,{index,config:{...plan.config,matchCount:count,ordinalStart:segment.ordinalStart,ordinalEnd:segment.ordinalEnd,ordinalBase:plan.config.ordinalBase ?? plan.config.ordinalStart ?? 0,batchSize:plan.batchSize || RUN_BATCH_SIZE}});
+    });
+  }catch(cause){driver.startFailed(cause);}
   reportProgress();
+  return driver.done;
 }
 
 // Drives the campaign progress bar: fill width, percentage readout, and the
@@ -480,30 +413,16 @@ function refreshRunsUi() {
 }
 
 function cancelBrowserCampaign() {
-  if (state.campaignWorker) {
-    try { state.campaignWorker.terminate(); } catch { /* already terminated */ }
-    state.campaignWorker = null;
-  }
-  for (const w of state.campaignWorkers ?? []) { try { w.terminate(); } catch { /* already terminated */ } }
-  state.campaignWorkers = [];
-  if (experimentsReady() && state.activeRunManifest) {
-    // Committed batches stay durable — the manifest becomes a resumable
-    // cancelled run instead of a deleted one.
-    cancelExperimentRun(state.activeRunManifest).catch(() => {});
-  }
-  state.activeRunManifest = null;
-  state.pendingRunConfig = null;
+  ++launchEpoch;
+  if(activeExecution){activeExecution.cancel();return;}
+  state.pendingRunConfig=null;
   setCampaignState('cancelled');
-  document.querySelector('#experiment-status').textContent = 'Cancelled — committed batches are retained and resumable from Manage Runs.';
-  const bar = document.querySelector('#campaign-progress');
-  if (bar) bar.hidden = true;
-  document.querySelector('#run-experiment').disabled = false;
-  document.querySelector('#cancel-experiment').disabled = true;
+  document.querySelector('#experiment-status').textContent='Cancelled — committed batches are retained and resumable from Manage Runs.';
+  document.querySelector('#run-experiment').disabled=false;
+  document.querySelector('#cancel-experiment').disabled=true;
   refreshRunsUi();
 }
 
-// Resume entry point used by Manage Runs: the controller hands back a
-// segment plan and this driver re-executes only the remaining ordinals.
 registerRunExecutor(plan => _driveRunSegments(plan));
 
 function resetCampaignResults() {

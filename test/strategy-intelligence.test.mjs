@@ -255,7 +255,12 @@ test('expert guide is human-first per subject with provenance in the manifest',(
   assert.throws(()=>strategyGuide(claims,{...scope,eraId:'other'}),/CROSS_ERA/);
 });
 test('oversized game envelopes split into independently sealed chunks that re-ingest identically',()=>{
-  const source=strategyGameEvidence(run,record),size=new TextEncoder().encode(JSON.stringify(source)).byteLength,budget=Math.max(4096,Math.ceil(size/3));
+  const source=strategyGameEvidence(run,record),bytes=value=>new TextEncoder().encode(JSON.stringify(value)).byteLength;
+  // Every chunk retains its full implementation manifest. The budget must
+  // fit that immutable provenance plus at least one complete event.
+  const overhead=bytes({...source,events:[]}),largest=Math.max(...source.events.map(bytes));
+  const budget=Math.max(4096,Math.ceil(bytes(source)/3),overhead+largest+1);
+  assert.throws(()=>chunkStrategyEvidence(source,overhead+largest-1),/STRATEGY_EVENT_STORAGE_BUDGET/);
   const chunks=chunkStrategyEvidence(source,budget);
   assert.ok(chunks.length>=2);assert.equal(chunks.reduce((n,c)=>n+c.events.length,0),source.events.length);
   for(const c of chunks){validateStrategyEvidence(c);assert.equal(c.source.runId,source.source.runId);assert.equal(c.replayHash,source.replayHash);assert.ok(new TextEncoder().encode(JSON.stringify(c)).byteLength<=budget+8);}

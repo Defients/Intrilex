@@ -38,6 +38,8 @@ const customTimeout = args.includes('--timeout') ? parseInt(args[args.indexOf('-
 
 // ── Stage definitions (mirrors ci.sh) ──
 const STAGES = [
+  ['lab-trust-wave2', 'node', ['--test', 'test/lab-trust-wave2.test.mjs']],
+  ['lab-trust-wave1', 'node', ['--test', 'test/lab-trust-wave1.test.mjs']],
   ['lab-trust-wave0', 'node', ['--test', 'test/lab-trust-wave0.test.mjs']],
   ['release-inventory', 'node', ['--test', 'test/release-inventory.test.mjs']],
   ['auth-production-startup', 'node', ['--test', 'test/production-startup.test.mjs']],

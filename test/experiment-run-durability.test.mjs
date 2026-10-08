@@ -23,7 +23,7 @@ import {
   createExperiment, createAnalysisSet, createRunRecord,
   createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
   commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
-  manifestRemainingSegments, manifestCommittedCoverage,
+  manifestRemainingSegments, manifestCommittedCoverage, manifestRetainedOrdinals,
   runIdFor, batchSummariesHash, slimSummary,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
   contributingRuns, evidenceBasis, previewSelectionMetrics,
@@ -87,6 +87,7 @@ function createFakeIndexedDB() {
 }
 
 const fakeSummary = (ordinal, { winningSeat = 1, terminationReason = 'NORMAL_VICTORY', heavy = false } = {}) => ({
+  identity: { schemaVersion: '2.0.0', executionFingerprint: LAB_IDENTITY.fingerprint, analysisFingerprint: LAB_IDENTITY.analysisFingerprint },
   matchId: `T-${ordinal}`, matchOrdinal: ordinal, ordinal, terminationReason,
   policyIds: ['score-rush', 'control'], seatOrder: ['P1', 'P2'],
   winner: winningSeat === 1 ? 'P1' : winningSeat === 2 ? 'P2' : null,
@@ -119,7 +120,7 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     createExperiment, createAnalysisSet, createRunRecord,
     createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
     commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
-    manifestRemainingSegments, manifestCommittedCoverage,
+    manifestRemainingSegments, manifestCommittedCoverage, manifestRetainedOrdinals,
     runIdFor, batchSummariesHash, slimSummary,
     nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
     contributingRuns, evidenceBasis, previewSelectionMetrics,
@@ -219,9 +220,12 @@ test('IDB v2 stores manifests and batches; commit+seal are atomic transactions',
   assert.equal(m2.committedMatches, 50);
   assert.equal((await store2.getRunBatch('RUN-T-0001', 0)).summaries.length, 50);
   assert.equal((await store2.listRunBatches('RUN-T-0001')).length, 1);
-  // A failed transaction commits neither side.
+  // A failed transaction commits neither side. (The batch must be a VALID
+  // next range — strict admission rejects overlapping ordinals before the
+  // injected transaction failure would surface.)
+  const nextBatchSummaries = fakeSummaries(50, 50);
   idb._failNextTransaction({ name: 'QuotaExceededError' });
-  await assert.rejects(() => store2.commitRunBatch({ manifest: m2, batch: { ...batch, batchId: 'RUN-T-0001#1', batchIndex: 1 } }), /QUOTA/i);
+  await assert.rejects(() => store2.commitRunBatch({ manifest: m2, batch: { ...batch, batchId: 'RUN-T-0001#1', batchIndex: 1, ordinalStart: 50, ordinalEnd: 100, summaries: nextBatchSummaries, summariesHash: batchSummariesHash(nextBatchSummaries) } }), /QUOTA/i);
   assert.equal((await store2.listRunBatches('RUN-T-0001')).length, 1, 'failed batch commit leaves no partial record');
 });
 

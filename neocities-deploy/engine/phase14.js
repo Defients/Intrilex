@@ -1,7 +1,7 @@
-import { canonicalClone } from "./canonical-json.js?v=a90b812f827b";
-import { nextIndex } from "./rng.js?v=a90b812f827b";
-import { moveCard } from "./state.js?v=a90b812f827b";
-import { nextPlayerAssignments } from "./phase11.js?v=a90b812f827b";
+import { canonicalClone } from "./canonical-json.js?v=8951e2c35a42";
+import { nextIndex } from "./rng.js?v=8951e2c35a42";
+import { moveCard } from "./state.js?v=8951e2c35a42";
+import { nextPlayerAssignments } from "./phase11.js?v=8951e2c35a42";
 function fail(code, message, details) {
     return details === undefined ? { ok: false, code, message } : { ok: false, code, message, details };
 }

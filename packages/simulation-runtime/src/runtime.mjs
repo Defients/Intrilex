@@ -1,5 +1,5 @@
 import { evolutionIdentity } from '../../../scripts/evolution-identity.mjs';
-import { sampleIdentity } from './evidence-identity.mjs';
+import { sampleIdentity, commandStreamStart, nextCommandDigest, outcomeIdentity } from './evidence-identity.mjs';
 const CURRENT_IMPLEMENTATION = await evolutionIdentity();
 import { recordActionCoverage, decomposePolicyScore } from '@intrilex/policies/scoring';
 import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './strategic-telemetry.mjs';
@@ -814,7 +814,7 @@ export function runPolicyMatch(config) {
   // instance are lifecycle values — they live on the result envelope, never
   // inside the canonical summary.
   const identity = { ...sampleIdentity({ ...config, seed: setup.seed, profileId, seatOrder, policyIds, decisionLimit }, CURRENT_IMPLEMENTATION),
-    legacyMatchId: matchId, outcomeDigest: summary.matchResultHash, displayOrdinal: config.ordinal ?? null };
+    legacyMatchId: matchId, ...outcomeIdentity(summary, commands.reduce(nextCommandDigest, commandStreamStart())), displayOrdinal: config.ordinal ?? null };
   summary.identity = identity;
   const base = { summary, decisions, facts, provenance, identity: { ...identity, executionOccurrenceId, runInstanceId } };
   if(fieldManual) summary.strategyDecisions = fieldManual.finish({initialState,commands,finalStateHash:summary.finalStateHash,winner:summary.winner,terminationReason,finalScores,gameLength:summary.completedFullTurns});

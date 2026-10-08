@@ -10,9 +10,9 @@
  * isolates separate campaign executions even when they share matchIds.
  */
 
-import { createPolicyDefinition } from "./browser-policy-sdk.js?v=a90b812f827b";
-import { createHybrixAgent} from "./agent.js?v=a90b812f827b";
-import { DEFAULT_CONFIG } from "./config.js?v=a90b812f827b";
+import { createPolicyDefinition } from "./browser-policy-sdk.js?v=8951e2c35a42";
+import { createHybrixAgent} from "./agent.js?v=8951e2c35a42";
+import { DEFAULT_CONFIG } from "./config.js?v=8951e2c35a42";
 
 /**
  * Create a HYBRIX-backed policy definition.
