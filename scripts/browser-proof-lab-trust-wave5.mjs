@@ -25,8 +25,9 @@ const server = http.createServer(async (req, res) => {
     if (name === '/proof.html') { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end('<!doctype html><title>Wave 5 integrated trust proof</title>'); return; }
     const target = path.resolve(dist, '.' + decodeURIComponent(name));
     if (!target.startsWith(dist + path.sep)) throw new Error('OUTSIDE_ROOT');
+    const body = await readFile(target);
     res.writeHead(200, { 'Content-Type': /\.(mjs|js)$/.test(name) ? 'text/javascript' : 'application/json' });
-    res.end(await readFile(target));
+    res.end(body);
   } catch { res.writeHead(404); res.end(); }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -54,7 +55,15 @@ try {
       const api = new Function('deps', 'with(deps){' + source + ';return {initExperiments,beginExperimentRun,commitExperimentBatch,finalizeExperimentRun,failExperimentRun,cancelExperimentRun,resumeExperimentRun,importRunArtifact,exportRunArtifactText,applySelection,setRunIncluded,isolateRun,getExperimentRuns};}')(deps);
       await api.initExperiments({ store });
       globalThis.proof = { api, store, state, domain, portable, admission, LAB_IDENTITY, hashCanonical,
-        config: { matchCount: 2, workers: 1, profileId: 'core-advanced-authority', policyIds: ['control', 'tempo'], seed: 42 } };
+        config: { matchCount: 2, workers: 1, profileId: 'core-advanced-authority', policyIds: ['control', 'tempo'], seed: 42 },
+        match: config => new Promise((resolve, reject) => {
+          const worker = new Worker('/worker.js', { type: 'module' });
+          const timer = setTimeout(() => { worker.terminate(); reject(new Error('MATCH_PROOF_TIMEOUT')); }, 60000);
+          worker.onerror = event => { clearTimeout(timer); worker.terminate(); reject(new Error(event.message)); };
+          worker.onmessage = ({ data }) => { if (data.type !== 'autonomy-match-result') return; clearTimeout(timer); worker.terminate();
+            if (data.ok) resolve(data.result.summary); else reject(new Error(data.error)); };
+          worker.postMessage({ type: 'run-autonomy-match', config });
+        }) };
     }, source);
   }
   const [a, b] = pages;
@@ -90,9 +99,9 @@ try {
   report.scenarios.staleWriter = { status: 'PASS', errors: stale };
 
   const commits = await b.evaluate(async () => {
-    const p = globalThis.proof, { runBrowserPolicyMatch } = await import('/autonomy-runtime.js');
+    const p = globalThis.proof;
     const m = p.begun.manifest, start = m.config.ordinalStart;
-    const summaries = [0, 1].map(i => runBrowserPolicyMatch({ ...p.config, ordinal: start + i, seed: 100 + i, includeReplay: false, telemetryEnabled: false }));
+    const summaries = await Promise.all([0, 1].map(i => p.match({ ...p.config, ordinal: start + i, seed: 100 + i, includeReplay: false, telemetryEnabled: false })));
     const batch = { execution: p.begun.execution, ordinalStart: start, ordinalEnd: start + 2, summaries };
     await p.api.commitExperimentBatch(m.runId, batch);
     const duplicate = await p.api.commitExperimentBatch(m.runId, batch);
@@ -107,15 +116,12 @@ try {
   const resume = await b.evaluate(async () => {
     const p = globalThis.proof, errors = {}, unchanged = [];
     for (const key of ['fingerprint', 'analysisFingerprint']) {
-      const begun = await p.api.beginExperimentRun({ config: p.config });
-      await p.api.cancelExperimentRun(begun.runId, begun.execution);
-      const original = await p.store.getManifest(begun.runId);
-      await p.store._transact(['manifests'], async ops => {
-        await ops.put('manifests', { ...original, config: { ...original.config, implementation: { ...original.config.implementation, [key]: 'incompatible-original-version' } } });
-      });
-      const before = await p.store.getManifest(begun.runId);
-      try { await p.api.resumeExperimentRun(begun.runId); errors[key] = 'ACCEPTED'; } catch (error) { errors[key] = error.code; }
-      unchanged.push(p.hashCanonical(before) === p.hashCanonical(await p.store.getManifest(begun.runId)));
+      const original = await p.store.allocateRunManifest({ experimentId: 'EXP-LAB', owner: null,
+        config: { ...p.config, seedStreamVersion: 'POLICY_V4', seedCatalogVersion: 'INTRILEX_LAB_SEED_CATALOG_V1',
+          implementation: { ...p.LAB_IDENTITY, [key]: 'incompatible-original-version' } } });
+      const before = await p.store.getManifest(original.runId);
+      try { await p.api.resumeExperimentRun(original.runId); errors[key] = 'ACCEPTED'; } catch (error) { errors[key] = error.code; }
+      unchanged.push(p.hashCanonical(before) === p.hashCanonical(await p.store.getManifest(original.runId)));
     }
     return { errors, unchanged };
   });
@@ -185,11 +191,12 @@ try {
     // An old worker callback already captured by an event queue cannot mutate the new execution.
     late({ data: firstMessage });
     const result = await resumed.done, final = await p.store.getManifest(begun.runId);
-    return { workerFailure: { terminal: failure.state, status: failureManifest.status, count: failureManifest.committedMatches },
+    return { workerFailure: { terminal: failure.state, manifestStatus: failureManifest.status, count: failureManifest.committedMatches },
       cancelRestart: { cancelled: cancelled.state, partial: partial.committedMatches, final: final.committedMatches, terminal: result.state,
         oldFence: begun.execution.fencingToken, newFence: plan.execution.fencingToken, oldEpoch: driver.token.epoch, newEpoch: resumed.token.epoch } };
   });
   assert.equal(execution.workerFailure.terminal, 'failed'); assert.equal(execution.workerFailure.count, 0);
+  assert.equal(execution.workerFailure.manifestStatus, 'failed');
   assert.equal(execution.cancelRestart.cancelled, 'cancelled'); assert.equal(execution.cancelRestart.partial, 1);
   assert.equal(execution.cancelRestart.final, 2); assert.equal(execution.cancelRestart.terminal, 'complete');
   assert.ok(execution.cancelRestart.newFence > execution.cancelRestart.oldFence); assert.notEqual(execution.cancelRestart.oldEpoch, execution.cancelRestart.newEpoch);
@@ -197,9 +204,9 @@ try {
   report.scenarios.cancelRestartRace = { status: 'PASS', ...execution.cancelRestart };
 
   const selection = await b.evaluate(async () => {
-    const p = globalThis.proof, { runBrowserPolicyMatch } = await import('/autonomy-runtime.js');
+    const p = globalThis.proof;
     const { sampleIdentity, outcomeIdentity } = await import('/evolution/evidence-identity.mjs');
-    const row = runBrowserPolicyMatch({ ...p.config, ordinal: 0, seed: 999, telemetryEnabled: false, includeReplay: false });
+    const row = await p.match({ ...p.config, ordinal: 0, seed: 999, telemetryEnabled: false, includeReplay: false });
     const storeRun = async (rows, ordinal) => {
       const payload = { summaries: rows, aggregate: null }, headline = p.domain.foldSummariesIntoHeadline(p.domain.createManifestHeadline(), rows);
       const run = p.domain.createRunRecord({ experimentId: 'EXP-LAB', ordinal, config: { ...p.config, matchCount: rows.length },
@@ -215,7 +222,7 @@ try {
     const archived = JSON.parse(await p.api.exportRunArtifactText(historical));
     const classification = p.portable.validateExperimentRunArtifact(archived).admission;
     const foreign = structuredClone(row), identity = { ...p.LAB_IDENTITY, fingerprint: 'f'.repeat(64), analysisFingerprint: 'a'.repeat(64) };
-    foreign.identity = { ...sampleIdentity({ ...p.config, seed: foreign.seed }, identity), ...outcomeIdentity(foreign, row.identity.commandStreamDigest) };
+    foreign.identity = { ...sampleIdentity({ ...p.config, seed: foreign.seed }, identity), ...outcomeIdentity(foreign, row.identity.commandDigest) };
     const other = await storeRun([foreign], 504);
     const snapshot = p.state.evidenceSnapshot;
     await p.api.setRunIncluded(other, { force: true });
@@ -228,6 +235,7 @@ try {
   });
   assert.equal(selection.duplicates.retained, 1); assert.equal(selection.duplicates.repeatCount, 1);
   assert.equal(selection.legacy.classification, 'RESTRICTED_LEGACY'); assert.equal(selection.legacy.eligible, false);
+  assert.deepEqual(selection.legacy.original, { matchOrdinal: 0, seed: 999, winningSeat: 1, terminationReason: 'NORMAL_VICTORY' });
   assert.equal(selection.mixed.error, 'EVIDENCE_COHORT_SELECTION_REQUIRED'); assert.equal(selection.mixed.stale, true); assert.equal(selection.mixed.sameSnapshot, true);
   assert.equal(selection.selected.rows, 1); assert.equal(selection.selected.cohorts, 2); assert.equal(selection.selected.stale, false);
   report.scenarios.duplicateSampleInclusion = { status: 'PASS', ...selection.duplicates };
