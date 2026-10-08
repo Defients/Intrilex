@@ -115,7 +115,7 @@ self.onmessage = async (event) => {
       let evidence;
       const started = performance.now();
       try {
-        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null), adaptiveConfigs:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? (cp.adaptive ?? null) : null),
+        const summary = runBrowserPolicyMatch({ seed: plan.seed, ordinal, policyIds: plan.policyIds, checkpointIds:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.checkpointId), policyStates:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? cp.policyState : null), adaptiveConfigs:(plan.swapped ? [...run.checkpoints].reverse() : run.checkpoints).map(cp=>cp.schemaVersion===2 ? (cp.adaptive ?? null) : null),
           profileId: run.config.profileId, decisionLimit: run.config.decisionLimit, orchestrationCommandLimit: run.config.orchestrationCommandLimit, recordReplay: true, strategicTelemetryEnabled:true,strategicTrace:run.config.strategicTrace===true, ...(run.config.strategicTrace ? {strategyIdentities:await import('./evolution/strategy-contracts.mjs').then(m=>[1,2].map(seat=>m.decisionIdentity(run,plan,seat)))}:{}) });
         const record = domain.gameEvidence(summary, plan, run, summary.replay, performance.now()-started);
         const keep = event.data.retainReplay || !domain.CLEAN_REASONS.includes(record.terminationReason);

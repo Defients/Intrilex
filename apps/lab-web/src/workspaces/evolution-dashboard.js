@@ -1,3 +1,4 @@
+import { acknowledgedSave, persistenceLabel } from '../evolution/persistence-state.mjs';
 import '../evolution/evolution-training-ui.js';
 import {researchHtml,mountResearchPanel,cleanupResearchPanel,cockpitResearch} from '../evolution/evolution-research-ui.js';
 import {createCockpitState,mountCockpit} from '../evolution/evolution-cockpit.js';
@@ -34,7 +35,7 @@ let starting = false;
 const seatChoice = (cfg, i) => run()?.arenaProfiles?.snapshots?.[i]?.profile ? profileChoice(run().arenaProfiles.snapshots[i].profile.agentProfileId) : (i ? cfg.botB : cfg.botA);
 const view = { config: { botA:'tempo-tactical', botB:'value-tactical', gameCount:1000, seed:1337, workerCount:2, mirrorSeats:true, profileId:'core-advanced-authority' },
   session:null, workers:[], timers:new Map(), tick:null, start:0, elapsed:0, agg:createSeriesAggregator(), samples:[],
-  archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null, strategyWriter:null, strategyStats:null, batchWriter:null };
+  archive:null, archiveEnvelope:null, history:[], storageError:'', error:'', mounted:false, inspection:null, inspectionWorker:null, inspectionTimer:null, step:0, saveChain:Promise.resolve(), saveRevision:0, persistenceState:'SESSION_ONLY', ui:createCockpitState(), cockpit:null, analytics:{window:100,from:1,to:10000}, analyticsCache:null, turnMetricsCache:null, strategyWriter:null, strategyStats:null, batchWriter:null };
 const run = () => view.archive ?? view.session?.run;
 view.matrixAbort=null;
 view.batch={selected:new Set(),lab:null,v1:null,error:'',progressText:'',cell:null,focus:null,storage:'',saved:null,queue:null,abort:null,games:64,seed:1337,workers:2,profileId:'core-advanced-authority',trace:false};
@@ -162,7 +163,7 @@ function inspectionHtml() {
   const step=x.steps[view.step],command=typeof step.command==='string'?step.command:step.command?.type??'Unavailable';
   return `<p><strong>VERIFIED</strong> · seed/initial state and final hash match · ${x.steps.length-1} commands</p><div class="toolbar"><button id="evo-prev" class="ghost-button" ${view.step ? '' : 'disabled'}>Previous</button><label>Command<input id="evo-step" type="range" min="0" max="${x.steps.length-1}" value="${view.step}"></label><button id="evo-next" class="ghost-button" ${view.step === x.steps.length-1 ? 'disabled' : ''}>Next</button></div><section class="evo-workbench"><h4>Command ${step.index} · ${esc(command)}</h4><p>Turn ${step.turn??'Unavailable'} · revision ${step.revision??'Unavailable'} · phase ${esc(step.phase??'Unavailable')}</p><p>P1 score ${step.scores?.P1??'Unavailable'} · P2 score ${step.scores?.P2??'Unavailable'} · ${step.events?.length??0} engine events</p><p>Arrow keys step commands; Home / End jump to endpoints.</p><details><summary>Command and event diagnostics</summary><pre>${esc(JSON.stringify(step,null,2))}</pre></details></section><code class="evo-hash">${esc(x.finalStateHash)}</code>`;
 }
-function storageSummary() { const expRuns=experimentRunsSnapshot().length; return `${view.history.length} saved lab artifacts · ${(view.history.reduce((s,r) => s+(r.bytes ?? 0),0)/1048576).toFixed(2)} MiB${expRuns ? ` · ${expRuns} experiment run${expRuns===1?'':'s'} in the experiment store` : ''}`; }
+function storageSummary() { const expRuns=experimentRunsSnapshot().length; return `${run() && !view.archive ? persistenceLabel(view.persistenceState)+' · ' : ''}${view.history.length} saved lab artifacts · ${(view.history.reduce((s,r) => s+(r.bytes ?? 0),0)/1048576).toFixed(2)} MiB${expRuns ? ` · ${expRuns} experiment run${expRuns===1?'':'s'} in the experiment store` : ''}`; }
 function historyHtml() {
   const query=(view.historyQuery??'').toLowerCase(),rows=view.history.filter(h=>!query||JSON.stringify(h).toLowerCase().includes(query));
   if (rows.length) return `<p>${rows.length} matching runs; first 50 shown. Search all saved metadata to narrow.</p>`+rows.slice(0,50).map(h => `<div class="evo-replay-row"><span>${esc(h.kind)} · ${esc(h.botA)} / ${esc(h.botB)} · ${h.games} games · ${esc(h.status)} · ${esc(h.createdAt)}<br><code>${esc(h.runId)}</code><br>Fingerprint ${esc(h.fingerprint?.slice(0,24)??'Unavailable')}</span><button class="ghost-button" data-load-run="${esc(h.runId)}" ${active() ? 'disabled' : ''}>Load</button></div>`).join('');
@@ -275,8 +276,11 @@ function storageStatus() {
 function persist() {
   if (!run() || view.archive) return Promise.resolve();
   const snapshot=structuredClone(run()); snapshot.elapsedMs=elapsed();
-  view.saveChain=view.saveChain.then(() => store.save(snapshot)).then(() => { view.storageError=''; return refreshHistory(); }).catch(error => {
+  const revision=++view.saveRevision; view.persistenceState='PENDING'; if(view.mounted)storageStatus();
+  const updateState=state=>{if(revision===view.saveRevision && run()?.runId===snapshot.runId){view.persistenceState=state;if(view.mounted)storageStatus();}};
+  view.saveChain=view.saveChain.then(() => acknowledgedSave(() => store.save(snapshot),updateState)).then(() => { if(revision===view.saveRevision && run()?.runId===snapshot.runId)view.storageError=''; return refreshHistory(); }).catch(error => {
     const detail=error?.artifactSize?` Artifact is ${(error.artifactSize/1048576).toFixed(1)} MiB vs the ${((error.persistLimit??0)/1048576).toFixed(0)} MiB browser archive limit.`:'';
+    if(revision!==view.saveRevision || run()?.runId!==snapshot.runId)return;
     view.storageError=`Save failed: ${error.message}.${detail} The run remains in memory. ${strategyEvidenceNote()}`; if (view.mounted) storageStatus();
   }); return view.saveChain;
 }
@@ -401,7 +405,7 @@ function openArchive(envelope) {
 function loadRun(saved) {
   validateProfileArenaRun(saved,LAB_IDENTITY);
   view.archive=null;view.archiveEnvelope=null;
-  release(); view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[];
+  release(); ++view.saveRevision; view.persistenceState='LOCALLY_COMMITTED'; view.session=new EvolutionSession(saved); view.elapsed=saved.elapsedMs; view.error=''; view.inspection=null; view.agg=createSeriesAggregator(); view.samples=[];
   // Reconcile the analysis index against the saved record set. Offers are
   // serialized through one writer and deduplicate on sealed artifact identity,
   // so reopen, re-save, resume and re-import can never double-count games.
@@ -423,7 +427,7 @@ async function begin(kind,candidate) {
     const saved=await createProfileArenaRun({...input,kind},LAB_IDENTITY,profiles);
     if (!view.mounted || request !== startRequest) return;
     if (run()) persist();
-    release(); view.session=new EvolutionSession(saved); view.config={...saved.config,botA:input.botA,botB:input.botB}; view.elapsed=0; view.agg=createSeriesAggregator(); view.samples=[]; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null;
+    release(); ++view.saveRevision; view.persistenceState='LOCALLY_COMMITTED'; view.session=new EvolutionSession(saved); view.config={...saved.config,botA:input.botA,botB:input.botB}; view.elapsed=0; view.agg=createSeriesAggregator(); view.samples=[]; view.error=''; view.inspection=null; view.strategyWriter=null; view.strategyStats=null;
     starting=false; persist(); launch();
   } catch(error) {
     if (view.mounted && request === startRequest) { starting=false; view.error=`Configuration rejected: ${error.message}`; renderEvolutionLab(); }

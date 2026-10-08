@@ -51,7 +51,7 @@ const _normalizeTxError = (err) => {
 };
 const _ownerIsLive = (owner, now = Date.now()) =>
   Boolean(owner?.ownerId) && Number.isFinite(Date.parse(owner?.leaseUntil ?? '')) && Date.parse(owner.leaseUntil) > now;
-const _assertSameFence = (stored, incoming) => {
+const _assertSameFence = (stored, incoming, { sealing = false } = {}) => {
   const exp = stored?.owner ?? null;
   const sup = incoming?.owner ?? null;
   if ((exp?.fencingToken ?? null) !== (sup?.fencingToken ?? null) || (exp?.ownerId ?? null) !== (sup?.ownerId ?? null)) {
@@ -60,7 +60,7 @@ const _assertSameFence = (stored, incoming) => {
   if (stored?.owner && (stored.storageRevision ?? 0) !== (incoming.storageRevision ?? 0)) {
     throw Object.assign(new Error('RUN_MANIFEST_VERSION_CONFLICT'), { code: 'RUN_MANIFEST_VERSION_CONFLICT' });
   }
-  if (stored?.sealedRunId || ['COMPLETED', 'FAILED', 'CANCELLED', 'INTERRUPTED'].includes(stored?.status)) {
+  if (stored?.sealedRunId || (!sealing && ['COMPLETED', 'FAILED', 'CANCELLED', 'INTERRUPTED'].includes(stored?.status))) {
     throw Object.assign(new Error('RUN_MANIFEST_TERMINAL'), { code: 'RUN_MANIFEST_TERMINAL' });
   }
 };
@@ -283,9 +283,9 @@ export class ExperimentStore {
       const used = new Set([...runs, ...manifests].filter(r => r.experimentId === experimentId && r.origin !== 'bundled').map(r => r.ordinal));
       let ordinal = 0; while (used.has(ordinal)) ordinal++;
       const runId = runIdFor(experimentId, ordinal);
-      const manifest = { ...createRunManifest({ runId, experimentId, ordinal, config, requestedMatches: config.matchCount ?? 0, segments, batchSize, owner }), storageRevision: 0 };
+      const manifest = { ...createRunManifest({ runId, experimentId, ordinal, config, requestedMatches: config.matchCount ?? 0, segments, batchSize, owner }), storageRevision: 0, executionOccurrenceId: `OCC-${globalThis.crypto.randomUUID()}` };
       if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
-      await ops.add(STORES.MANIFESTS, manifest);
+      await ops.put(STORES.MANIFESTS, manifest);
       return manifest;
     });
   }
@@ -455,11 +455,12 @@ export class ExperimentStore {
   // ── Run manifests (durable checkpoints) ───────────────────────
   // Manifests are small mutable records — read/written freely during a run.
   async putManifest(manifest) {
-    if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) {
-      throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
-    }
-    await this._putAll([[STORES.MANIFESTS, manifest]]);
-    return manifest.manifestId;
+    return this._transact([STORES.MANIFESTS], async ops => {
+      const cur = await ops.get(STORES.MANIFESTS, manifest.manifestId);
+      if (cur?.owner) { _assertSameFence(cur, manifest); manifest = nextRevision(cur, manifest); }
+      if (byteSize(manifest) > EXPERIMENT_LIMITS.metaBytes) throw Object.assign(new Error('RUN_MANIFEST_TOO_LARGE'), { code: 'RUN_MANIFEST_TOO_LARGE' });
+      await ops.put(STORES.MANIFESTS, manifest); return manifest.manifestId;
+    });
   }
   async getManifest(manifestId) { return (await this._get(STORES.MANIFESTS, manifestId)) ?? null; }
   async listManifests(experimentId = null) {
@@ -522,7 +523,7 @@ export class ExperimentStore {
       if (manifest) {
         const stored = await ops.get(STORES.MANIFESTS, manifest.manifestId);
         if (!stored) throw Object.assign(new Error('RUN_MANIFEST_MISSING'), { code: 'RUN_MANIFEST_MISSING', manifestId: manifest.manifestId });
-        _assertSameFence(stored, manifest);
+        _assertSameFence(stored, manifest, { sealing: true });
       }
       await ops.put(STORES.RUNS, run);
       if (payload) await ops.put(STORES.PAYLOADS, { runId: run.runId, storedAt: new Date().toISOString(), ...payload });
@@ -553,13 +554,15 @@ export class ExperimentStore {
   }
 
   /** Delete an unfinalized manifest plus every batch it committed. */
-  async deleteManifestCascade(manifestId) {
-    const batches = await this.listRunBatches(manifestId);
-    await this._delAll([
-      ...batches.map(b => [STORES.RUN_BATCHES, b.batchId]),
-      [STORES.MANIFESTS, manifestId],
-    ]);
-    return { deleted: manifestId, batches: batches.length };
+  async deleteManifestCascade(manifestId, expected = null) {
+    return this._transact([STORES.MANIFESTS, STORES.RUN_BATCHES], async ops => {
+      const cur = await ops.get(STORES.MANIFESTS, manifestId);
+      if (cur?.sealedRunId) throw Object.assign(new Error('RUN_ALREADY_SEALED'), { code: 'RUN_ALREADY_SEALED' });
+      if (cur?.owner) _assertSameFence(cur, expected, { sealing: true });
+      const batches = (await ops.all(STORES.RUN_BATCHES)).filter(b => b.runId === manifestId);
+      for (const b of batches) await ops.del(STORES.RUN_BATCHES, b.batchId);
+      await ops.del(STORES.MANIFESTS, manifestId); return { deleted: manifestId, batches: batches.length };
+    });
   }
 
   /** Multi-store delete in one transaction. */

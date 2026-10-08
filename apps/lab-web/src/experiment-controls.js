@@ -1,3 +1,4 @@
+import { persistenceLabel } from './evolution/persistence-state.mjs';
 // ═══════════════════════════════════════════════════════════════
 // experiment-controls.js — Experiment panel, campaign runner, global bindings
 // ═══════════════════════════════════════════════════════════════
@@ -305,7 +306,7 @@ async function _driveRunSegments(plan) {
   let lastLeaseTouch = 0;
   const reportProgress = () => {
     const done = priorCommitted + segmentDone.reduce((a, b) => a + b, 0);
-    // Simulated vs durably committed are distinct numbers — always.
+    // Simulated vs saved locally are distinct numbers — always.
     status.textContent = `Progress: ${done}/${count} simulated · ${committed} saved`;
     updateCampaignProgress(done, Math.max(count, 1));
     // Ownership heartbeat (R02): keep the lease live while this controller
@@ -346,7 +347,7 @@ async function _driveRunSegments(plan) {
       // the run is resumable/sealable from Manage Runs.
       await failExperimentRun(plan.runId, commitQueue.error?.message ?? commitQueue.error);
       setCampaignState('failed');
-      status.textContent = `Persistence failed — ${committed} of ${count} matches durably committed. Resume or seal partial evidence from Manage Runs.`;
+      status.textContent = `Persistence failed — ${committed} of ${count} matches saved locally. Resume or seal partial evidence from Manage Runs.`;
       showToast(`Persistence failed at ${committed}/${count} — committed evidence is retained; the run is resumable from Manage Runs.`, { type: 'error', title: 'Run paused (persistence)' });
       refreshRunsUi();
       updateRailContext();
@@ -364,8 +365,10 @@ async function _driveRunSegments(plan) {
       return;
     }
     try {
+      status.textContent = `Execution finished · ${persistenceLabel('PENDING')}…`;
       const rec = await finalizeExperimentRun(plan.runId, { durationMs: Math.round(performance.now() - startedAt) });
       const run = rec?.run;
+      const saveState = rec?.persistenceState ?? (rec?.persisted ? 'LOCALLY_COMMITTED' : 'SESSION_ONLY');
       const mechCount = state.observatory?.mechanics?.length ?? 0;
       const synCount = state.observatory?.synergies?.length ?? 0;
       const basis = state.evidenceBasis;
@@ -374,8 +377,8 @@ async function _driveRunSegments(plan) {
         : '';
       const runLabel = run ? `Run #${String(run.ordinal).padStart(3, '0')} · ` : '';
       setCampaignState('complete');
-      status.textContent = `${runLabel}${run?.metrics?.matchCount ?? committed} matches committed, ${run?.metrics?.abortCount ?? 0} aborts · ${mechCount} mechanics, ${synCount} synergies${evidenceNote} · persisted`;
-      showToast(`${run?.metrics?.matchCount ?? committed} matches durably committed${evidenceNote}`, { type: 'success', title: run ? `Run #${String(run.ordinal).padStart(3, '0')} complete` : 'Run complete' });
+      status.textContent = `${runLabel}${run?.metrics?.matchCount ?? committed} matches committed, ${run?.metrics?.abortCount ?? 0} aborts · ${mechCount} mechanics, ${synCount} synergies${evidenceNote} · ${persistenceLabel(saveState)}`;
+      showToast(`${run?.metrics?.matchCount ?? committed} matches · ${persistenceLabel(saveState)}${evidenceNote}`, { type: 'success', title: run ? `Run #${String(run.ordinal).padStart(3, '0')} complete` : 'Run complete' });
       if (rec?.included === false && run) {
         showToast(`Run #${String(run.ordinal).padStart(3, '0')} recorded but auto-excluded — it differs materially from the current baseline. Inspect it under Manage Runs.`, { type: 'warning', title: 'Incompatible run' });
       }

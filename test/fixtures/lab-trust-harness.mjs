@@ -1,3 +1,5 @@
+import { evolutionIdentity } from '../../scripts/evolution-identity.mjs';
+const LAB_IDENTITY = await evolutionIdentity();
 /* global queueMicrotask */
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
@@ -14,7 +16,7 @@ export const summaries = (start, n) => Array.from({ length: n }, (_, i) => ({ ma
 export async function controller(store) {
   const src = (await readFile(new URL('../../apps/lab-web/src/experiments/experiment-controller.mjs', import.meta.url), 'utf8'))
     .replace(/import\s[^;]*?from\s*'[^']*';/gs, '').replace(/^export /gm, '');
-  const sandbox = { ...domain, ...portability, ExperimentStore, hashCanonical, structuredClone, TextEncoder, setTimeout, queueMicrotask,
+  const sandbox = { ...domain, ...portability, LAB_IDENTITY, ExperimentStore, hashCanonical, structuredClone, TextEncoder, setTimeout, queueMicrotask,
     console: { warn() {} }, Worker: class { constructor() { throw Error('No worker in controlled regression'); } },
     state: { bootState: null, observatory: {}, aggregate: {}, evidenceBasis: null }, showToast() {}, updateRailContext() {}, rerender() {},
     RULES_VERSION: '4.3.1', ENGINE_VERSION: '4.2.6', LAB_VERSION: 'wave0-test' };

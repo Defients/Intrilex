@@ -275,6 +275,7 @@ export function resolveEra({ identity, objective }) {
   const suite = createBaselineSuite(identity);
   return makeArtifact('EVALUATION_ERA', {
     eraContract: CONTRACTS.era.id, eraVersion: CONTRACTS.era.version,
+    ...(identity.analysisFingerprint ? { analysisFingerprint: identity.analysisFingerprint } : {}),
     implementation: { fingerprint: identity.fingerprint, engineVersion: identity.engineVersion, rulesVersion: identity.rulesVersion },
     rulesProfileId: o.rulesProfileId, referenceSuiteId: suite.suiteId,
     referenceOpponents: suite.checkpoints.map(cp => ({ policyId: cp.policyId, checkpointId: cp.checkpointId })),

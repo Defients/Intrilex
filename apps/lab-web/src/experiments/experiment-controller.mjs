@@ -1,3 +1,4 @@
+import { LAB_IDENTITY } from '../evolution/identity.mjs';
 // ═══════════════════════════════════════════════════════════════
 // experiment-controller.mjs — Persistent experiment evidence orchestration
 //
@@ -29,7 +30,7 @@ import {
   createRunManifest, createManifestHeadline, foldSummariesIntoHeadline,
   commitManifestBatch, planManifestBatchCommit, manifestTransition, manifestIsActive, manifestIsResumable,
   manifestRemainingSegments, manifestCommittedCoverage,
-  runIdFor, batchSummariesHash, slimSummary,
+  batchSummariesHash, slimSummary,
   nextRunOrdinal, nextOrdinalStart, classifyRunCompatibility, compatibilityBaseline,
   contributingRuns, evidenceBasis, previewSelectionMetrics,
   includeRunInSet, excludeRunFromSet, invalidateRun, archiveRun, restoreRun, pinRun,
@@ -508,7 +509,7 @@ export function registerRunExecutor(fn) { _runExecutor = fn; }
 export async function beginExperimentRun({ config = {}, segments = null, batchSize = 0 } = {}) {
   if (!_ready || !_experiment) throw Object.assign(new Error('EXPERIMENTS_NOT_READY'), { code: 'EXPERIMENTS_NOT_READY' });
   requirePersistentCampaign();
-  const manifest = await _store.allocateRunManifest({ experimentId: _experiment.experimentId, config, segments, batchSize, owner: _newOwnerLease() });
+  const manifest = await _store.allocateRunManifest({ experimentId: _experiment.experimentId, config: { ...config, implementation: LAB_IDENTITY, seedStreamVersion: 'POLICY_V4', seedCatalogVersion: 'INTRILEX_LAB_SEED_CATALOG_V1', labVersion: LAB_VERSION }, segments, batchSize, owner: _newOwnerLease() });
   _manifests.set(manifest.runId, manifest);
   return { runId: manifest.runId, manifest };
 }
@@ -647,9 +648,9 @@ export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
   const semantic = {
     experimentHash: canonicalResultHash,
     profileId: manifest.config?.profileId ?? null,
-    engineVersion: ENGINE_VERSION,
-    rulesVersion: RULES_VERSION,
-    labVersion: LAB_VERSION,
+    engineVersion: manifest.config?.implementation?.engineVersion ?? null,
+    rulesVersion: manifest.config?.implementation?.rulesVersion ?? null,
+    labVersion: manifest.config?.labVersion ?? null,
     canonicalResultHash,
   };
   const { aggregate, observatory } = await _aggregateCommitted(runId, descriptors, semantic);
@@ -664,9 +665,10 @@ export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
       ...(partial ? { requestedMatchCount: requested, ordinalCoverage: manifestCommittedCoverage(manifest) } : {}),
     },
     provenance: {
-      rulesVersion: RULES_VERSION,
-      engineVersion: ENGINE_VERSION,
-      labVersion: LAB_VERSION,
+      implementation: manifest.config?.implementation ?? null,
+      rulesVersion: manifest.config?.implementation?.rulesVersion ?? null,
+      engineVersion: manifest.config?.implementation?.engineVersion ?? null,
+      labVersion: manifest.config?.labVersion ?? null,
       experimentHash: aggregate?.experimentHash ?? canonicalResultHash,
       canonicalResultHash,
       aggregateHash: aggregate?.aggregateHash ?? null,
@@ -704,7 +706,7 @@ export async function finalizeExperimentRun(runId, { durationMs = null } = {}) {
   _manifests.set(runId, finalized.manifest ?? finalManifest);
   const { compatibility: compat, included, setPersisted } = await _registerStoredRun(sealed, baseline);
   await applySelection({ fastPath: { aggregate, observatory } });
-  return { run: sealed, compatibility: compat, included, persisted: _store.persisted === true, payloadSessionOnly: false, metaFailed: false, setPersisted, aggregate, observatory };
+  return { run: sealed, compatibility: compat, included, persistenceState: _store.persisted === true ? 'LOCALLY_COMMITTED' : 'SESSION_ONLY', persisted: _store.persisted === true, payloadSessionOnly: false, metaFailed: false, setPersisted, aggregate, observatory };
 }
 
 /** Mark a manifest run failed — committed evidence is preserved. Ownership
@@ -722,7 +724,7 @@ export async function failExperimentRun(runId, error = null) {
   };
   try { await _persistManifest(next); }
   catch (e) {
-    if (e?.code === 'RUN_OWNERSHIP_STALE') { console.warn('[experiments] fail-transition rejected — ownership superseded:', runId); return null; }
+    if (['RUN_OWNERSHIP_STALE', 'RUN_MANIFEST_VERSION_CONFLICT', 'RUN_MANIFEST_TERMINAL'].includes(e?.code)) { console.warn('[experiments] fail-transition rejected — ownership superseded:', runId); return null; }
     console.warn('[experiments] fail-transition persist failed:', e); _manifests.set(runId, next);
   }
   _syncEvidenceBasis();
@@ -743,7 +745,7 @@ export async function cancelExperimentRun(runId) {
   };
   try { await _persistManifest(next); }
   catch (e) {
-    if (e?.code === 'RUN_OWNERSHIP_STALE') { console.warn('[experiments] cancel-transition rejected — ownership superseded:', runId); return null; }
+    if (['RUN_OWNERSHIP_STALE', 'RUN_MANIFEST_VERSION_CONFLICT', 'RUN_MANIFEST_TERMINAL'].includes(e?.code)) { console.warn('[experiments] cancel-transition rejected — ownership superseded:', runId); return null; }
     console.warn('[experiments] cancel-transition persist failed:', e); _manifests.set(runId, next);
   }
   _syncEvidenceBasis();
@@ -781,6 +783,7 @@ export async function resumeExperimentRun(manifestId) {
   const manifest = await _getManifest(manifestId);
   if (!manifest) throw new Error('RUN_MANIFEST_MISSING');
   if (manifest.sealedRunId) throw new Error('RUN_ALREADY_SEALED');
+  if (manifest.config?.implementation?.fingerprint !== LAB_IDENTITY.fingerprint || manifest.config?.seedStreamVersion !== 'POLICY_V4' || manifest.config?.seedCatalogVersion !== 'INTRILEX_LAB_SEED_CATALOG_V1') throw Object.assign(new Error('RUN_EXECUTION_IDENTITY_MISMATCH: inspect/export or start a new run; unknown historical identity cannot resume.'), { code: 'RUN_EXECUTION_IDENTITY_MISMATCH' });
   if (manifestRemainingSegments(manifest).length === 0) {
     // Every ordinal committed but the seal never landed — no resimulation
     // needed, the caller just finalizes.
@@ -822,7 +825,8 @@ export async function discardManifest(manifestId) {
   if (!manifest) throw new Error('RUN_MANIFEST_MISSING');
   if (manifest.sealedRunId) throw new Error('RUN_ALREADY_SEALED');
   if (_manifestForeignHeld(manifest)) throw Object.assign(new Error('RUN_OWNERSHIP_HELD'), { code: 'RUN_OWNERSHIP_HELD', manifestId });
-  await _store.deleteManifestCascade(manifestId);
+  const owned = await _store.acquireManifestOwnership(manifestId, { ownerId: _ownerId, leaseMs: OWNER_LEASE_MS });
+  await _store.deleteManifestCascade(manifestId, owned);
   _manifests.delete(manifestId);
   _syncEvidenceBasis();
   return manifestId;

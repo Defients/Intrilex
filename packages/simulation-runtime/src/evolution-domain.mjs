@@ -174,7 +174,8 @@ export function gameEvidence(summary, plan, run, replay, durationMs = 0) {
     ...(summary.terminalEvidence ? {terminalEvidence:summary.terminalEvidence} : {}),
     actionCounts: summary.decisionFamilyCounts ?? {}, eventCounts: summary.eventTypeCounts ?? {},
     mechanicCounts: summary.mechanicCounts ?? {}, ruleCompliance: summary.ruleCompliance?.status ?? 'UNAVAILABLE' };
-  return { ...core, resultHash: hashCanonical(core), durationMs };
+  const evidence = summary.identity?.schemaVersion === '2.0.0' ? { ...core, evidenceIdentity: summary.identity } : core;
+  return { ...evidence, resultHash: hashCanonical(evidence), durationMs };
 }
 
 export function gameFault(error, plan, run, durationMs = 0) {

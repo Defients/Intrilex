@@ -25,4 +25,3 @@ export function sampleIdentity(config, implementation) {
     analysisFingerprint: implementation.analysisFingerprint, sampleInputs: inputs };
 }
 
-export const persistenceLabel = state => ({ PENDING: 'Save pending', LOCALLY_COMMITTED: 'Saved locally', FAILED: 'Save failed', SESSION_ONLY: 'Session only' })[state] ?? 'Not saved';

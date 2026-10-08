@@ -36,7 +36,12 @@ export async function evolutionIdentity({ readSource = name => readFile(path.joi
     if (!specifier.startsWith('.')) return null;
     if (name.startsWith('apps/lab-web/src/')) {
       if (specifier.includes('/evolution/identity.mjs')) return null;
+      if (specifier === './evolution/weighted-heuristic.mjs') return 'packages/policies/src/weighted-heuristic.mjs';
       if (specifier.startsWith('./evolution/')) return `packages/simulation-runtime/src/${specifier.slice('./evolution/'.length)}`;
+      if (specifier === './engine/browser-entry.js') return 'packages/engine-adapter/src/adapter.mjs';
+      if (specifier === './policy-scoring.js') return 'packages/policies/src/scoring.mjs';
+      if (specifier.startsWith('./hybrix/')) return `packages/game-ai/src/${specifier.slice('./hybrix/'.length).replace(/\.js$/, '.mjs')}`;
+      if (specifier.includes('shared-analytics/')) { const file = specifier.split('shared-analytics/')[1]; return `packages/${['estimators.mjs', 'paired-tests.mjs'].includes(file) ? 'statistics' : 'analytics'}/src/${file}`; }
       if (specifier.startsWith('./engine/')) return `runtime/autonomy-engine-dist/src/${specifier.slice('./engine/'.length)}`;
     }
     return normalize(path.posix.join(path.posix.dirname(name), specifier));

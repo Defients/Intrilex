@@ -1,3 +1,5 @@
+import { LAB_IDENTITY } from './evolution/identity.mjs';
+import { sampleIdentity } from './evolution/evidence-identity.mjs';
 import { chooseWeightedAction, WEIGHTED_POLICY_ID, validatePolicyState } from './evolution/weighted-heuristic.mjs';
 import {
   IntrilexEngine,
@@ -119,7 +121,7 @@ function buildRuleCompliance({decisions,events,state}){
   return{status:violationCount===0?'PASS':'FAIL',violationCount,...checks,authorizedFullTurnSkips,consumedFullTurnSkips,pendingFullTurnSkips};
 }
 
-export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,pairedLeg=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[],adaptiveConfigs=[],strategicTelemetryEnabled=false,strategicTrace=false,strategyIdentities=null,ruleOverrides=null}){
+export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-legal'],decisionLimit=1800,ordinal=0,profileId=DEFAULT_PROFILE_ID,initialState=null,seatOrder=null,seatSwapped=false,pairedRunId=null,pairedLeg=null,recordReplay=false,orchestrationCommandLimit=16,policyStates=[],adaptiveConfigs=[],strategicTelemetryEnabled=false,strategicTrace=false,strategyIdentities=null,ruleOverrides=null,checkpointIds=null,revisionIds=null,subjectSnapshots=null,seedStreamVersion,seedCatalogVersion}){
   if(policyIds.length!==2||policyIds.some((id,i)=>!POLICY_IDS.includes(id) && !(id===WEIGHTED_POLICY_ID && validatePolicyState(policyStates[i]))))throw new Error('INVALID_POLICY_PAIR');
   const seats=seatOrder??['P1','P2'];const setup={profileId,playerIds:seats,enabledModules:[],eventApprovedModules:[],seed:(seed>>>0)||1,seatOrder:seats,...(ruleOverrides?{ruleOverrides}:{})};
   let state=initialState?structuredClone(initialState):createState(setup);const engine=new IntrilexEngine();
@@ -239,7 +241,7 @@ export function runBrowserPolicyMatch({seed,policyIds=['random-legal','random-le
   // hash and deterministic sample id are enumerable/canonical; the execution
   // occurrence is a lifecycle token — non-enumerable so it is readable for
   // this session but never serialized into evidence or hashed surfaces.
-  const identity={schemaVersion:'1.0.0',matchIdVersion:executableParts?2:1,deterministicSampleId:matchId,executableHash:executableParts?hashCanonical(executableParts):null,displayOrdinal:ordinal};
+  const identity={...sampleIdentity({seed:setup.seed,profileId,seatOrder:seats,policyIds,policyStates,adaptiveConfigs,checkpointIds,revisionIds,subjectSnapshots,seedStreamVersion,seedCatalogVersion,decisionLimit,orchestrationCommandLimit,ruleOverrides,initialState},LAB_IDENTITY),legacyMatchId:matchId,outcomeDigest:_matchResult.matchResultHash,displayOrdinal:ordinal};
   Object.defineProperty(identity,'executionOccurrenceId',{value:executionInstanceToken,enumerable:false});
   _matchResult.identity=identity;
   if(recordReplay)_matchResult.replay={initialState:replayInitialState,commands:replayCommands};

@@ -1,3 +1,6 @@
+import { evolutionIdentity } from '../../../scripts/evolution-identity.mjs';
+import { sampleIdentity } from './evidence-identity.mjs';
+const CURRENT_IMPLEMENTATION = await evolutionIdentity();
 import { recordActionCoverage, decomposePolicyScore } from '@intrilex/policies/scoring';
 import { createStrategicTracker, decisionObservation, terminalEvidence, publicTerminalAnchorCounts } from './strategic-telemetry.mjs';
 import { createStrategyCapture } from './strategy-contracts.mjs';
@@ -413,7 +416,6 @@ export function runPolicyMatch(config) {
     for (const event of items) increment(eventTypeCounts, event.type);
   };
   const matchId = createMatchId({ ...config, profileId, seatOrder, policyIds });
-  const executableParts = executableIdentityParts({ ...config, profileId, seatOrder, policyIds, decisionLimit });
   // Execution occurrence: a unique instance identity, distinct from the
   // deterministic sample (matchId) it executed. Re-running the same sample
   // mints a new occurrence — repeats never inflate independent sample size.
@@ -811,13 +813,8 @@ export function runPolicyMatch(config) {
   // (safe inside canonical whole-summary hashing); occurrence and run
   // instance are lifecycle values — they live on the result envelope, never
   // inside the canonical summary.
-  const identity = {
-    schemaVersion: '1.0.0',
-    matchIdVersion: executableParts ? 2 : 1,
-    deterministicSampleId: matchId,
-    executableHash: executableParts ? hashCanonical(executableParts) : null,
-    displayOrdinal: config.ordinal ?? null,
-  };
+  const identity = { ...sampleIdentity({ ...config, seed: setup.seed, profileId, seatOrder, policyIds, decisionLimit }, CURRENT_IMPLEMENTATION),
+    legacyMatchId: matchId, outcomeDigest: summary.matchResultHash, displayOrdinal: config.ordinal ?? null };
   summary.identity = identity;
   const base = { summary, decisions, facts, provenance, identity: { ...identity, executionOccurrenceId, runInstanceId } };
   if(fieldManual) summary.strategyDecisions = fieldManual.finish({initialState,commands,finalStateHash:summary.finalStateHash,winner:summary.winner,terminationReason,finalScores,gameLength:summary.completedFullTurns});

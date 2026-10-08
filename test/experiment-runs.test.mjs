@@ -1,3 +1,5 @@
+import { evolutionIdentity } from '../scripts/evolution-identity.mjs';
+const LAB_IDENTITY = await evolutionIdentity();
 // experiment-runs.test.mjs — Persistent Experiment Runs & Analysis Sets
 //
 // Covers the spec's required cases:
@@ -471,7 +473,7 @@ async function experimentController({ state: stateOverrides = {} } = {}) {
     state, showToast: (msg, opts) => toasts.push({ msg, ...opts }),
     updateRailContext() {}, rerender() {},
     RULES_VERSION: '4.3.1', LAB_VERSION: '0.29.0', ENGINE_VERSION: '4.2.6',
-    hashCanonical, ExperimentStore,
+    hashCanonical, LAB_IDENTITY, ExperimentStore,
     DEFAULT_EXPERIMENT_ID, DEFAULT_ANALYSIS_SET_ID, BUNDLED_RUN_ID,
     RUN_STATUS, RUN_LIFECYCLE, COMPATIBILITY, EXCLUSION_REASONS, RUN_INTEGRITY,
     MANIFEST_STATUS,

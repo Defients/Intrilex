@@ -289,11 +289,11 @@ export async function runPlannedMeasurement({ store, manifestId, executeSeries, 
 }
 
 // ── Promotion challenge ────────────────────────────────────────────────────
-export const attemptKey = ({ challengerCheckpointId, incumbentCheckpointId, objectiveInstanceId, eraId }) => digest({ challengerCheckpointId, incumbentCheckpointId, objectiveInstanceId, eraId });
+export const attemptKey = ({ challengerCheckpointId, incumbentCheckpointId, objectiveInstanceId, eraId, policyDigest = null }) => digest({ challengerCheckpointId, incumbentCheckpointId, objectiveInstanceId, eraId, policyDigest });
 export async function prepareChallenge({ store, agentProfileId, nominationId, commandId }) {
   return store.reserveChallenge({ commandId, agentProfileId, nominationId, build: view => {
   const head = view.head;
-  const nomination = view.artifacts.find(a => a.id === nominationId && a.kind === 'CHALLENGER_NOMINATION');
+  const nomination = view.artifacts.find(a => a.id === nominationId && a.scope === agentProfileId && a.kind === 'CHALLENGER_NOMINATION');
   if (!nomination) fail('ARTIFACT_NOT_FOUND', nominationId);
   if (nomination.body.checkpointId === head.championCheckpointId) fail('CHALLENGER_IS_INCUMBENT');
   const revision = view.artifacts.find(a => a.id === head.activeRevisionId), objective = view.artifacts.find(a => a.id === revision.body.objectiveInstanceId);
@@ -302,7 +302,7 @@ export async function prepareChallenge({ store, agentProfileId, nominationId, co
   if (era.id !== head.requiredEvaluationEraId) fail('REQUIRED_ERA_NOT_CURRENT');
   const challenger = view.checkpoints.find(cp => cp.checkpointId === nomination.body.checkpointId);
   for (const cp of [challenger, view.checkpoints.find(c => c.checkpointId === head.championCheckpointId)]) { const v = canExecuteCheckpoint(cp, store.identity); if (!v.ok) fail('SUBJECT_NOT_EXECUTABLE', v.reasons); }
-  const key = attemptKey({ challengerCheckpointId: challenger.checkpointId, incumbentCheckpointId: head.championCheckpointId, objectiveInstanceId: objective.id, eraId: era.id });
+  const key = attemptKey({ challengerCheckpointId: challenger.checkpointId, incumbentCheckpointId: head.championCheckpointId, objectiveInstanceId: objective.id, eraId: era.id, policyDigest: policy.digest });
   const prior = view.artifacts.filter(a => a.scope === agentProfileId && a.kind === 'CHALLENGE_MANIFEST' && a.body.attempt.key === key).map(a => a.id).sort();
   const scopes = [], seeds = new Set(), queue = [agentProfileId];
   while (queue.length) {

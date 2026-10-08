@@ -126,7 +126,8 @@ test('R01: identity record distinguishes sample, executable subject, and occurre
   const cfg = { seed: 42, profileId: 'core-advanced-authority', policyIds: [WEIGHTED_POLICY_ID, 'control'], decisionLimit: 1800, telemetryEnabled: false, includeReplay: false };
   const x = runPolicyMatch({ ...cfg, policyStates: [a, null] });
   const y = runPolicyMatch({ ...cfg, policyStates: [a, null] });
-  assert.equal(x.summary.identity?.deterministicSampleId, x.summary.matchId);
+  assert.match(x.summary.identity?.deterministicSampleId, /^M3-/);
+  assert.equal(x.summary.identity?.legacyMatchId, x.summary.matchId);
   assert.equal(x.summary.identity?.executableHash != null, true, 'compiled subject hash recorded');
   assert.equal(x.summary.matchId, y.summary.matchId, 'same deterministic inputs — same sample identity');
   assert.notEqual(x.identity?.executionOccurrenceId, y.identity?.executionOccurrenceId,
